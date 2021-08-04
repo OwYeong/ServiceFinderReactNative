@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {        
+        "@assets": ["src/assets/*"],
+        "@components": ["src/components/*"],
+        "@atoms": ["src/components/atoms/*"],
+        "@molecules": ["src/components/molecules/*"],
+        "@organisms": ["src/components/organisms/*"],
+        "@navigations": ["src/navigations/*"],
+        "@pages": ["src/pages/*"],
+        "@services": ["src/services/*"],
+        "@styles": ["src/styles/index.js"],
+        "@utils": ["src/utils/*"],
+        "~*": ["src/*"]
+      }
+    },
+    "exclude": ["node_modules"]
+}

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "105438375417",
+    "project_id": "servicefinder-84d4d",
+    "storage_bucket": "servicefinder-84d4d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105438375417:android:14851613afe3129784e128",
+        "android_client_info": {
+          "package_name": "com.owyeong.servicefinder"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "105438375417-c1h6v0v6a19l8od4mb1ellpfs0i35j91.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDseSA5tf1aZeTqXRYzg5IOsYrB8kgBMuA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "105438375417-c1h6v0v6a19l8od4mb1ellpfs0i35j91.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
