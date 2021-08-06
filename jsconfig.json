@@ -2,16 +2,16 @@
     "compilerOptions": {
       "baseUrl": ".",
       "paths": {        
-        "@assets": ["src/assets/*"],
-        "@components": ["src/components/*"],
-        "@atoms": ["src/components/atoms/*"],
-        "@molecules": ["src/components/molecules/*"],
-        "@organisms": ["src/components/organisms/*"],
+        "@assets/*": ["src/assets/*"],
+        "@atoms/*": ["src/components/atoms/*"],
+        "@molecules/*": ["src/components/molecules/*"],
+        "@organisms/*": ["src/components/organisms/*"],        
+        "@components/*": ["src/components/atoms/*"],
         "@navigations": ["src/navigations/*"],
-        "@pages": ["src/pages/*"],
-        "@services": ["src/services/*"],
+        "@pages/*": ["src/pages/*"],
+        "@services/*": ["src/services/*"],
         "@styles": ["src/styles/index.js"],
-        "@utils": ["src/utils/*"],
+        "@utils/*": ["src/utils/*"],
         "~*": ["src/*"]
       }
     },

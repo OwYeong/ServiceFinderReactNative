@@ -1,32 +1,39 @@
 import {CustomColors, CustomTypography} from '@styles';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {StatusBar, StyleSheet, Text, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import { SvgCss, SvgXml } from 'react-native-svg';
+import {SvgCss, SvgXml} from 'react-native-svg';
 import LogoSvg from '@assets/images/logo.svg';
 import LoadingCharacter from '@components/atoms/LoadingCharacter';
+import { useNavigation } from '@react-navigation/native';
 
 const SplashPage = () => {
-    console.log(LogoSvg)
-    console.log(LogoSvg)
+    const navigation = useNavigation();
+    useEffect(()=>{
+        setTimeout(()=>{
+            navigation.navigate('LoginPage')
+        },5000)
+    },[])
+
+
     return (
         <LinearGradient
-            colors={[
-                CustomColors.PRIMARY_BLUE,
-                CustomColors.SECONDARY_BLUE_PURPLE,
-            ]}
+            colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
             style={styles.linearGradient}>
-            <StatusBar backgroundColor={'transparent'} translucent/>
+            <StatusBar backgroundColor={'transparent'} translucent />
             <SafeAreaView>
                 <View style={styles.splashContainer}>
-                    {/* <SvgCss width="200" height="200" xml={LogoSvg} />   */}
-                    <View style={styles.logo}> 
-                        <LogoSvg />
+                    <View style={styles.logo}>
+                        <LogoSvg fill={CustomColors.WHITE} />
                     </View>
-                    <LoadingCharacter text="ServiceFinder" fontSize={30} fontFamily={CustomTypography.FONT_FAMILY_MEDIUM}/>
+                    <LoadingCharacter
+                        text="ServiceFinder"
+                        fontSize={CustomTypography.FONT_SIZE_30}
+                        fontFamily={CustomTypography.FONT_FAMILY_MEDIUM}
+                        animationDelayAfterEachLoop={1000}
+                    />
                 </View>
-                
             </SafeAreaView>
         </LinearGradient>
     );
@@ -38,16 +45,16 @@ const styles = StyleSheet.create({
     linearGradient: {
         flex: 1,
     },
-    splashContainer:{
+    splashContainer: {
         width: '100%',
         height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingBottom: 40
+        paddingBottom: 40,
     },
     logo: {
-        width: 80, 
+        width: 80,
         height: 64,
-        marginBottom: 10
+        marginBottom: 10,
     },
 });

@@ -9,15 +9,7 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import type {Node} from 'react';
 import firestore from '@react-native-firebase/firestore';
-import {
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    useColorScheme,
-    View,
-} from 'react-native';
+import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
 
 import {
     Colors,
@@ -31,8 +23,23 @@ import {createStackNavigator} from '@react-navigation/stack';
 import LoginPage from '@pages/LoginPage';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import SplashPage from '@pages/SplashPage';
+import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
+import {CustomColors} from '@styles';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const Stack = createStackNavigator();
+const theme = {
+    ...DefaultTheme,
+    roundness: 2,
+    colors: {
+        ...DefaultTheme.colors,
+        primary: '#3498db',
+        accent: '#f1c40f',
+        background: CustomColors.WHITE,
+        surface: CustomColors.WHITE,
+        backdrop: 'white',
+    },
+};
 
 const App: () => Node = () => {
     const isDarkMode = useColorScheme() === 'dark';
@@ -50,14 +57,20 @@ const App: () => Node = () => {
     // });
 
     return (
-        <NavigationContainer>
-            <SafeAreaProvider>                
-                <Stack.Navigator>
-                    <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}}/>
-                    <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}}/>
-                </Stack.Navigator>
-            </SafeAreaProvider>
-        </NavigationContainer>
+        <PaperProvider
+            settings={{
+                icon: props => <Icon {...props} />,
+            }}
+            theme={theme}>
+            <NavigationContainer>
+                <SafeAreaProvider>
+                    <Stack.Navigator>
+                        <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
+                        <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
+                    </Stack.Navigator>
+                </SafeAreaProvider>
+            </NavigationContainer>
+        </PaperProvider>
     );
 };
 

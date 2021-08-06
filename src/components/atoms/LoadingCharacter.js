@@ -13,7 +13,7 @@ function LoadingCharacter({
     textColor = 'white',
     fontSize = CustomTypography.FONT_SIZE_24,
     fontFamily = CustomTypography.FONT_FAMILY_BOLD,
-    bounceHeight = 10,
+    bounceHeight = 5,
     animationDelayAfterEachLoop = 2000,
 }) {
     const [animations, setAnimations] = useState([]);
@@ -49,11 +49,13 @@ function LoadingCharacter({
                 toValue: -bounceHeight,
                 easing: Easing.bezier(0.41, -0.15, 0.56, 1.21),
                 delay,
+                duration: 300,
                 useNativeDriver: true,
             }),
             Animated.timing(node, {
                 toValue: 0,
                 delay:20,
+                duration: 300,
                 useNativeDriver: true,
             }),
         ]);
@@ -63,7 +65,7 @@ function LoadingCharacter({
     function loadingAnimation(nodes) {
         Animated.parallel(
             nodes.map((node, index) =>
-                floatAnimation(node, index * 100, index),
+                floatAnimation(node, index * 40, index),
             ),
         ).start(() => {
             setTimeout(()=>{
