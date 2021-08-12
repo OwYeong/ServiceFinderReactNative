@@ -23,8 +23,10 @@ import Ripple from 'react-native-material-ripple';
 
 import HorizontalLineWithText from '@atoms/HorizontalLineWithText';
 import * as Animatable from 'react-native-animatable';
+import { useNavigation } from '@react-navigation/native';
 
 const LoginPage = () => {
+    const navigation = useNavigation();
     const [isPasswordHide, setIsPasswordHide] = useState(true);
     const [isForgotPasswordClicked, setIsForgotPasswordClicked] = useState(false);
     const [isRegisterClicked, setIsRegisterClicked] = useState(false);
@@ -90,7 +92,7 @@ const LoginPage = () => {
     }, [isKeyboardVisible]);
 
     return (
-        <Fragment>
+        <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}}>
@@ -107,7 +109,6 @@ const LoginPage = () => {
                                 <Icon
                                     name="more-vert"
                                     size={CustomTypography.ICON_SMALL}
-                                    u
                                     color={CustomColors.GRAY_DARK}></Icon>
                             </TouchableRipple>
                         </View>
@@ -241,6 +242,7 @@ const LoginPage = () => {
                                     <Ripple
                                         onPress={() => {
                                             setIsRegisterClicked(true);
+                                            navigation.navigate('RegisterPage')
                                         }}>
                                         <Text
                                             style={[
@@ -258,7 +260,7 @@ const LoginPage = () => {
                     </View>
                 </ScrollView>
             </SafeAreaView>
-        </Fragment>
+        </View>
     );
 };
 

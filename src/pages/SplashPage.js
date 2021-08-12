@@ -12,7 +12,10 @@ const SplashPage = () => {
     const navigation = useNavigation();
     useEffect(()=>{
         setTimeout(()=>{
-            navigation.navigate('LoginPage')
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'LoginPage' }],
+              })
         },5000)
     },[])
 
