@@ -128,6 +128,7 @@ const RegisterPage = () => {
             });
         });
     };
+    
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />

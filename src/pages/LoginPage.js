@@ -23,7 +23,10 @@ import Ripple from 'react-native-material-ripple';
 
 import HorizontalLineWithText from '@atoms/HorizontalLineWithText';
 import * as Animatable from 'react-native-animatable';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
+import {AccessToken, LoginManager, LoginButton} from 'react-native-fbsdk-next';
+import auth from '@react-native-firebase/auth';
+import UserService from '@services/UserService';
 
 const LoginPage = () => {
     const navigation = useNavigation();
@@ -72,12 +75,63 @@ const LoginPage = () => {
         }
     };
 
+    const signInWithFacebook = async () => {
+        try {
+            // Login the User and get his public profile and email id.
+            const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+
+            // If the user cancels the login process, the result will have a
+            // isCancelled boolean set to true. We can use that to break out of this function.
+            if (result.isCancelled) {
+                throw 'User cancelled the login process';
+            }
+
+            // Get the Access Token
+            const data = await AccessToken.getCurrentAccessToken();
+
+            // If we don't get the access token, then something has went wrong.
+            if (!data) {
+                throw 'Something went wrong obtaining access token';
+            }
+
+            // Use the Access Token to create a facebook credential.
+            const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+
+            console.log('trying');
+            auth()
+                .signInWithCredential(facebookCredential)
+                .then(auth => {
+                    UserService.updateUserData(
+                        {
+                            firstName: auth.additionalUserInfo.profile.first_name,
+                            lastName: auth.additionalUserInfo.profile.last_name,
+                        },
+                        auth.user.uid,
+                    )
+                        .then(data => {
+                            console.log(data);
+                        })
+                        .catch(err => {
+                            alert(err);
+                        });
+                });
+                
+        } catch (error) {
+            alert(error);
+        }
+    };
+
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-            setIsKeyboardVisible(true);// Update the keyboard state
+            setIsKeyboardVisible(true); // Update the keyboard state
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             setIsKeyboardVisible(false); // Update the keyboard state
+        });
+
+        auth().onAuthStateChanged(user => {
+            console.log('yoyo, authenticated');
+            console.log(auth().currentUser);
         });
 
         return () => {
@@ -230,7 +284,7 @@ const LoginPage = () => {
                                             <FacebookSvg fill="white" />
                                         </View>
                                     )}
-                                    onPress={() => console.log('Pressed')}>
+                                    onPress={signInWithFacebook}>
                                     Facebook
                                 </Button>
                             </View>
@@ -242,7 +296,7 @@ const LoginPage = () => {
                                     <Ripple
                                         onPress={() => {
                                             setIsRegisterClicked(true);
-                                            navigation.navigate('RegisterPage')
+                                            navigation.navigate('RegisterPage');
                                         }}>
                                         <Text
                                             style={[

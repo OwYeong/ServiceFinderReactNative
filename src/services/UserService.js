@@ -4,7 +4,6 @@ import firestore from '@react-native-firebase/firestore';
 const UserService = {
     registerAccount: (firstName, lastName, email, password) => {
         return new Promise((resolve, reject) => {
-            
             auth()
                 .createUserWithEmailAndPassword(email, password)
                 .then(authUser => {
@@ -33,6 +32,24 @@ const UserService = {
                         console.log('That email address is invalid!');
                         reject('Email address is invalid!');
                     }
+                });
+        });
+    },
+    updateUserData: (data, documentId) => {
+        return new Promise((resolve, reject) => {
+            const usersCollection = firestore().collection('users');
+            console.log(documentId)
+            usersCollection
+                .doc(documentId)
+                .set({
+                    ...data
+                })
+                .then(() => {
+                    resolve('User Succesfully Registered!');
+                })
+                .catch(err=>{
+                    console.log(err);
+                    reject('Some error occur');
                 });
         });
     },
