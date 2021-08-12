@@ -26,6 +26,7 @@ import SplashPage from '@pages/SplashPage';
 import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
 import {CustomColors} from '@styles';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import RegisterPage from '@pages/RegisterPage';
 
 const Stack = createStackNavigator();
 const theme = {
@@ -38,6 +39,7 @@ const theme = {
         background: CustomColors.WHITE,
         surface: CustomColors.WHITE,
         backdrop: 'white',
+        error: 'red'
     },
 };
 
@@ -64,9 +66,10 @@ const App: () => Node = () => {
             theme={theme}>
             <NavigationContainer>
                 <SafeAreaProvider>
-                    <Stack.Navigator>
+                    <Stack.Navigator screenOptions={{unmountInactiveRoutes:true, unmountOnBlur: true}}>
                         <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
                         <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
+                        <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
                     </Stack.Navigator>
                 </SafeAreaProvider>
             </NavigationContainer>
