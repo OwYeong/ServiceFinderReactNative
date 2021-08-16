@@ -24,9 +24,11 @@ import Ripple from 'react-native-material-ripple';
 import HorizontalLineWithText from '@atoms/HorizontalLineWithText';
 import * as Animatable from 'react-native-animatable';
 import {useNavigation} from '@react-navigation/native';
-import {AccessToken, LoginManager, LoginButton} from 'react-native-fbsdk-next';
 import auth from '@react-native-firebase/auth';
 import UserService from '@services/UserService';
+
+import CustomModal from '@organisms/CustomModal';
+import {Constants} from '~constants';
 
 const LoginPage = () => {
     const navigation = useNavigation();
@@ -35,6 +37,13 @@ const LoginPage = () => {
     const [isRegisterClicked, setIsRegisterClicked] = useState(false);
     const [bigLogoAnimatedValue, setBigLogoAnimatedValue] = useState(new Animated.Value(1)); // 1 is small logo
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+    const [modal, setModal] = useState({
+        isVisible: false,
+        modalTitle: '',
+        modalDesc: '',
+        modalType: '',
+        onDismiss: () => {},
+    });
 
     const smallLogoRef = useRef(null);
 
@@ -47,7 +56,6 @@ const LoginPage = () => {
         inputRange: [0, 0.5, 1],
         outputRange: [0, 0, 1], // <-- any value larger than your content's height
     });
-    console.log('im called');
 
     const triggerSmallLogoUI = yesOrNo => {
         if (yesOrNo) {
@@ -75,50 +83,36 @@ const LoginPage = () => {
         }
     };
 
-    const signInWithFacebook = async () => {
-        try {
-            // Login the User and get his public profile and email id.
-            const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-
-            // If the user cancels the login process, the result will have a
-            // isCancelled boolean set to true. We can use that to break out of this function.
-            if (result.isCancelled) {
-                throw 'User cancelled the login process';
-            }
-
-            // Get the Access Token
-            const data = await AccessToken.getCurrentAccessToken();
-
-            // If we don't get the access token, then something has went wrong.
-            if (!data) {
-                throw 'Something went wrong obtaining access token';
-            }
-
-            // Use the Access Token to create a facebook credential.
-            const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
-
-            console.log('trying');
-            auth()
-                .signInWithCredential(facebookCredential)
-                .then(auth => {
-                    UserService.updateUserData(
-                        {
-                            firstName: auth.additionalUserInfo.profile.first_name,
-                            lastName: auth.additionalUserInfo.profile.last_name,
-                        },
-                        auth.user.uid,
-                    )
-                        .then(data => {
-                            console.log(data);
-                        })
-                        .catch(err => {
-                            alert(err);
-                        });
+    const signInWithFacebook = () => {
+        UserService.signInWithFacebook()
+            .then(result => {})
+            .catch(error => {
+                setModal({
+                    isVisible: true,
+                    modalType: 'error',
+                    modalTitle: 'Login failed !',
+                    modalDesc: error,
+                    onDismiss: () => {
+                        setModal({...modal, isVisible: false});
+                    },
                 });
-                
-        } catch (error) {
-            alert(error);
-        }
+            });
+    };
+
+    const signInWithGmail = async () => {
+        UserService.signInWithGmail()
+            .then(result => {})
+            .catch(error => {
+                setModal({
+                    isVisible: true,
+                    modalType: 'error',
+                    modalTitle: 'Login failed !',
+                    modalDesc: error,
+                    onDismiss: () => {
+                        setModal({...modal, isVisible: false});
+                    },
+                });
+            });
     };
 
     useEffect(() => {
@@ -128,6 +122,8 @@ const LoginPage = () => {
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             setIsKeyboardVisible(false); // Update the keyboard state
         });
+
+        
 
         auth().onAuthStateChanged(user => {
             console.log('yoyo, authenticated');
@@ -158,7 +154,9 @@ const LoginPage = () => {
                             <TouchableRipple
                                 style={styles.moreOptionIcon}
                                 borderless={true}
-                                onPress={() => console.log('Pressed')}
+                                onPress={() => {
+                                    UserService.signOut();
+                                }}
                                 rippleColor="rgba(0, 0, 0, .32)">
                                 <Icon
                                     name="more-vert"
@@ -266,7 +264,7 @@ const LoginPage = () => {
                                             <GoogleSvg />
                                         </View>
                                     )}
-                                    onPress={() => console.log('Pressed')}>
+                                    onPress={signInWithGmail}>
                                     Gmail
                                 </Button>
                                 <Button
@@ -311,6 +309,17 @@ const LoginPage = () => {
                                 </View>
                             </View>
                         </View>
+                        <CustomModal
+                            animationIn={'bounceIn'}
+                            animationOut={'bounceOut'}
+                            animationOutTiming={150}
+                            isVisible={modal.isVisible}
+                            modalType={modal.modalType}
+                            modalTitle={modal.modalTitle}
+                            modalDesc={modal.modalDesc}
+                            buttonOnPressCallback={modal.onDismiss}
+                            statusBarTranslucent={true}
+                            useNativeDriver={true}></CustomModal>
                     </View>
                 </ScrollView>
             </SafeAreaView>

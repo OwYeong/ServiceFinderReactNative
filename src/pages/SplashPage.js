@@ -7,15 +7,16 @@ import {SvgCss, SvgXml} from 'react-native-svg';
 import LogoSvg from '@assets/images/logo.svg';
 import LoadingCharacter from '@components/atoms/LoadingCharacter';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { setIsLoading } from '@slices/appSlice';
 
 const SplashPage = () => {
     const navigation = useNavigation();
+    const dispatch = useDispatch()
+
     useEffect(()=>{
         setTimeout(()=>{
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'LoginPage' }],
-              })
+            dispatch(setIsLoading(false))
         },5000)
     },[])
 

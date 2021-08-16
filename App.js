@@ -6,7 +6,7 @@
  *
  */
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, {useEffect} from 'react';
 import type {Node} from 'react';
 import firestore from '@react-native-firebase/firestore';
 import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
@@ -27,6 +27,10 @@ import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
 import {CustomColors} from '@styles';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import RegisterPage from '@pages/RegisterPage';
+import {GoogleSignin} from 'react-native-google-signin';
+import {Provider, useSelector} from 'react-redux';
+import store from './store';
+import RootStack from '@navigations/RootStack';
 
 const Stack = createStackNavigator();
 const theme = {
@@ -39,24 +43,27 @@ const theme = {
         background: CustomColors.WHITE,
         surface: CustomColors.WHITE,
         backdrop: 'white',
-        error: 'red'
+        error: 'red',
     },
 };
 
 const App: () => Node = () => {
     const isDarkMode = useColorScheme() === 'dark';
+    const isLoading = useSelector(state => state.appState.isLoading);
 
     const backgroundStyle = {
         backgroundColor: 'blue',
     };
 
     console.log('hahaha');
-    // firestore().collection('users').get().then(querySnapshot=>{
 
-    //   querySnapshot.forEach(documentSnapshot => {
-    //     console.log('User ID: ', documentSnapshot.id, documentSnapshot.data());
-    //   });
-    // });
+    useEffect(() => {
+        GoogleSignin.configure({
+            scopes: ['email'], // what API you want to access on behalf of the user, default is email and profile
+            webClientId: '105438375417-c1h6v0v6a19l8od4mb1ellpfs0i35j91.apps.googleusercontent.com', // client ID of type WEB for your server (needed to verify user ID and offline access)
+            offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
+        });
+    }, []);
 
     return (
         <PaperProvider
@@ -66,11 +73,12 @@ const App: () => Node = () => {
             theme={theme}>
             <NavigationContainer>
                 <SafeAreaProvider>
-                    <Stack.Navigator screenOptions={{unmountInactiveRoutes:true, unmountOnBlur: true}}>
+                    <RootStack isAuth={false} isLoading={isLoading}></RootStack>
+                    {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
                         <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
                         <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
                         <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
-                    </Stack.Navigator>
+                    </Stack.Navigator> */}
                 </SafeAreaProvider>
             </NavigationContainer>
         </PaperProvider>
