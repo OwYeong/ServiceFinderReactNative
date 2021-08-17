@@ -7,11 +7,12 @@
         "@molecules/*": ["src/components/molecules/*"],
         "@organisms/*": ["src/components/organisms/*"],        
         "@components/*": ["src/components/atoms/*"],
-        "@navigations": ["src/navigations/*"],
+        "@navigations/*": ["src/navigations/*"],
         "@pages/*": ["src/pages/*"],
         "@services/*": ["src/services/*"],
         "@styles": ["src/styles/index.js"],
         "@utils/*": ["src/utils/*"],
+        "@slices/*": ["src/redux/slices/*"],
         "~*": ["src/*"]
       }
     },
