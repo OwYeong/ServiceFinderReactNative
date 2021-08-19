@@ -6,7 +6,7 @@
  *
  */
 import 'react-native-gesture-handler';
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import type {Node} from 'react';
 import firestore from '@react-native-firebase/firestore';
 import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
@@ -28,9 +28,10 @@ import {CustomColors} from '@styles';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import RegisterPage from '@pages/RegisterPage';
 import {GoogleSignin} from 'react-native-google-signin';
-import {Provider, useSelector} from 'react-redux';
-import store from './store';
+import {useSelector, useDispatch} from 'react-redux';
+import auth from '@react-native-firebase/auth';
 import RootStack from '@navigations/RootStack';
+import {setLoginBlock} from '@slices/appSlice';
 
 const Stack = createStackNavigator();
 const theme = {
@@ -50,7 +51,10 @@ const theme = {
 const App: () => Node = () => {
     const isDarkMode = useColorScheme() === 'dark';
     const isLoading = useSelector(state => state.appState.isLoading);
-
+    const [isAuth, setIsAuth] = useState(false);
+    const dispatch = useDispatch();
+    const loginBlock = useSelector(state => state.appState.loginBlock);
+    const userInfo = useSelector(state => state.loginState.userInfo);
     const backgroundStyle = {
         backgroundColor: 'blue',
     };
@@ -63,7 +67,26 @@ const App: () => Node = () => {
             webClientId: '105438375417-c1h6v0v6a19l8od4mb1ellpfs0i35j91.apps.googleusercontent.com', // client ID of type WEB for your server (needed to verify user ID and offline access)
             offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
         });
+
+        const authenticationListener = auth().onAuthStateChanged(user => {
+            console.log('yoyo, authenticated');
+
+            if (!!auth().currentUser) {
+                //LoggedIn
+                setIsAuth(true);
+            } else {
+                setIsAuth(false);
+                dispatch(setLoginBlock(false));
+            }
+        });
+
+        return authenticationListener;
     }, []);
+
+    useEffect(() => {
+        console.log('logged in use');
+        console.log(userInfo);
+    }, [userInfo]);
 
     return (
         <PaperProvider
@@ -73,7 +96,7 @@ const App: () => Node = () => {
             theme={theme}>
             <NavigationContainer>
                 <SafeAreaProvider>
-                    <RootStack isAuth={false} isLoading={isLoading}></RootStack>
+                    <RootStack isAuth={isAuth} isLoading={isLoading} loginBlock={loginBlock}></RootStack>
                     {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
                         <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
                         <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />

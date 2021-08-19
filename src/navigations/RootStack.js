@@ -6,7 +6,7 @@ import CustomerStack from './CustomerStack';
 
 const Stack = createStackNavigator();
 
-const RootStack = ({isAuth, isLoading}) => {
+const RootStack = ({isAuth, isLoading, loginBlock}) => {
     return (
         <Stack.Navigator>
             {isLoading ? (
@@ -21,7 +21,7 @@ const RootStack = ({isAuth, isLoading}) => {
                 }}
             /> */}
 
-            {isAuth ? (
+            {isAuth && !loginBlock ? (
                 <Stack.Screen
                     name="Customer"
                     component={CustomerStack}

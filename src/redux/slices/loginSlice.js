@@ -11,7 +11,7 @@ export const loginStateSlice = createSlice({
       state.isAuth = action.payload
     },
     setUserInfo: (state, action) => {
-      state.userInfo += action.payload
+      state.userInfo = action.payload
     }
   }
 })

@@ -1,11 +1,11 @@
-import { CustomTypography } from '@styles';
+import {CustomTypography} from '@styles';
 import React, {useState, useEffect, useRef} from 'react';
-import {StyleSheet, Animated, Easing, Text} from 'react-native';
+import {StyleSheet, Animated, Easing, Text, View} from 'react-native';
 
 /**
  * Jumping text animation
  * Modified from https://github.com/alexvcasillas/react-native-loading-dots
- * 
+ *
  */
 
 function LoadingCharacter({
@@ -19,6 +19,8 @@ function LoadingCharacter({
     const [animations, setAnimations] = useState([]);
 
     const opacity = useRef(new Animated.Value(0)).current;
+    var appearAnimationRef = null;
+    var charAnimationRef = null;
 
     useEffect(() => {
         const charAnimations = [];
@@ -27,6 +29,11 @@ function LoadingCharacter({
             charAnimations.push(new Animated.Value(0));
         }
         setAnimations(charAnimations);
+
+        return () => {
+            appearAnimationRef.stop();
+            charAnimationRef.stop();
+        };
     }, []);
 
     useEffect(() => {
@@ -36,11 +43,13 @@ function LoadingCharacter({
     }, [animations]);
 
     function appearAnimation() {
-        Animated.timing(opacity, {
+        appearAnimationRef = Animated.timing(opacity, {
             toValue: 1,
             easing: Easing.ease,
             useNativeDriver: true,
-        }).start();
+        });
+
+        appearAnimationRef.start();
     }
 
     function floatAnimation(node, delay) {
@@ -54,7 +63,7 @@ function LoadingCharacter({
             }),
             Animated.timing(node, {
                 toValue: 0,
-                delay:20,
+                delay: 20,
                 duration: 300,
                 useNativeDriver: true,
             }),
@@ -63,17 +72,14 @@ function LoadingCharacter({
     }
 
     function loadingAnimation(nodes) {
-        Animated.parallel(
-            nodes.map((node, index) =>
-                floatAnimation(node, index * 40, index),
-            ),
-        ).start(() => {
-            setTimeout(()=>{
-                loadingAnimation(animations);// call the animation again when its end, keep infinite loop
-            },animationDelayAfterEachLoop);
+        charAnimationRef = Animated.parallel(nodes.map((node, index) => floatAnimation(node, index * 15, index)));
+
+        charAnimationRef.start(() => {
+            setTimeout(() => {
+                loadingAnimation(animations); // call the animation again when its end, keep infinite loop
+            }, animationDelayAfterEachLoop);
         });
     }
-
 
     return (
         <Animated.View style={[styles.loading, {opacity}]}>
@@ -81,16 +87,18 @@ function LoadingCharacter({
                 <Animated.View
                     // eslint-disable-next-line react/no-array-index-key
                     key={`loading-anim-${index}`}
-                    style={[
-                        {transform: [{translateY: animation}]},
-                    ]}
-                >
-                    <Text style={{
-                            fontSize: fontSize,
-                            color: textColor,
-                            fontFamily: fontFamily,
-                            margin:1.2
-                        }}>{text[index]}</Text>
+                    style={[{transform: [{translateY: animation}]}]}>
+                    <View>
+                        <Text
+                            style={{
+                                fontSize: fontSize,
+                                color: textColor,
+                                fontFamily: fontFamily,
+                                margin: 1.2,
+                            }}>
+                            {text[index]}
+                        </Text>
+                    </View>
                 </Animated.View>
             ))}
         </Animated.View>
@@ -101,8 +109,7 @@ const styles = StyleSheet.create({
     loading: {
         display: 'flex',
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
     },
 });
 
