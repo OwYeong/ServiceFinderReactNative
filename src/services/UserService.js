@@ -4,6 +4,10 @@ import {Constants} from '~constants';
 
 import {GoogleSignin, GoogleSigninButton, statusCodes} from 'react-native-google-signin';
 import {AccessToken, LoginManager, LoginButton} from 'react-native-fbsdk-next';
+import {useDispatch} from 'react-redux';
+import {setUserInfo} from '@slices/loginSlice';
+import {setLoginBlock} from '@slices/appSlice';
+import store from '../../store';
 
 const UserService = {
     registerAccount: (firstName, lastName, email, password) => {
@@ -14,17 +18,50 @@ const UserService = {
                     console.log('User account created & signed in!');
                     console.log(authUser);
 
+                    store.dispatch(setLoginBlock(true));
+
                     const usersCollection = firestore().collection('users');
 
                     usersCollection
-                        .doc(authUser.uid)
+                        .doc(authUser.user.uid)
                         .set({
                             firstName: firstName,
                             lastName: lastName,
-                            loginType: Constants.LOGIN_PROVIDER_FIREBASE,
+                            loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
+                        })
+                        .then(() => {});
+
+                    //update user display name for email verification
+                    authUser.user
+                        .updateProfile({
+                            displayName: firstName + ' ' + lastName,
                         })
                         .then(() => {
-                            resolve('User Succesfully Registered!');
+                            //Send email verification
+                            authUser.user
+                                .sendEmailVerification()
+                                .then(result => {
+                                    console.log('verification email successfully sent');
+
+                                    //Signout silently as the account is automatically sign in when creating.
+                                    auth()
+                                        .signOut()
+                                        .then(() => {
+                                            console.log('Silently Logged out.');
+                                            resolve('Silent loggout');
+                                        })
+                                        .catch(err => {
+                                            console.log('Silent Loggout Error.');
+                                        });
+                                })
+                                .catch(error => {
+                                    console.log('Error occured when sending email verification.');
+                                    console.log(error);
+                                });
+                        })
+                        .catch(error => {
+                            // An error occurred
+                            // ...
                         });
                 })
                 .catch(error => {
@@ -58,6 +95,32 @@ const UserService = {
                 });
         });
     },
+    createUserDataIfNotExist: (data, documentId) => {
+        return new Promise(async (resolve, reject) => {
+            const usersCollection = firestore().collection('users');
+
+            let document = await usersCollection.doc(documentId).get();
+
+            if (!!document && document.exists) {
+                //Already exist
+                resolve('document already exist');
+                return;
+            }
+
+            usersCollection
+                .doc(documentId)
+                .set({
+                    ...data,
+                })
+                .then(() => {
+                    resolve('User data created');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
     isEmailAlreadyRegistered: email => {
         return new Promise((resolve, reject) => {
             auth()
@@ -78,6 +141,42 @@ const UserService = {
                 });
         });
     },
+    signInWithEmail: (email, password) => {
+        return new Promise(async (resolve, reject) => {
+            store.dispatch(setLoginBlock(true));
+            auth()
+                .signInWithEmailAndPassword(email, password)
+                .then(authUser => {
+                    console.log(authUser);
+                    if (!authUser.user.emailVerified) {
+                        
+
+                        //Signout silently as the account is automatically sign in when creating.
+                        auth()
+                            .signOut()
+                            .then(() => {
+                                console.log('Silently Logged outz.');
+                                reject('Please verify your email and try again.');
+                            })
+                            .catch(err => {
+                                console.log('Silent Loggout Error.');
+                            });
+
+                        return;
+                    }
+                    
+                    store.dispatch(setLoginBlock(false));
+                    resolve('Success');
+                })
+                .catch(error => {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    console.log(error);
+
+                    reject('The email or password is incorrect.');
+                });
+        });
+    },
     signInWithGmail: () => {
         return new Promise(async (resolve, reject) => {
             try {
@@ -90,16 +189,17 @@ const UserService = {
 
                 auth()
                     .signInWithCredential(credential)
-                    .then(auth => {
+                    .then(authUser => {
                         console.log('gmail inside');
-                        console.log(auth);
-                        UserService.updateUserData(
+                        console.log(authUser);
+                        UserService.createUserDataIfNotExist(
                             {
-                                firstName: auth.additionalUserInfo.profile.family_name,
-                                lastName: auth.additionalUserInfo.profile.given_name,
+                                firstName: authUser.additionalUserInfo.profile.family_name,
+                                lastName: authUser.additionalUserInfo.profile.given_name,
+                                email: authUser.additionalUserInfo.profile.email,
                                 loginProvider: Constants.LOGIN_PROVIDER_GOOGLE,
                             },
-                            auth.user.uid,
+                            authUser.user.uid,
                         )
                             .then(data => {
                                 resolve('Success');
@@ -149,14 +249,15 @@ const UserService = {
 
                 auth()
                     .signInWithCredential(facebookCredential)
-                    .then(auth => {
-                        UserService.updateUserData(
+                    .then(authUser => {
+                        UserService.createUserDataIfNotExist(
                             {
-                                firstName: auth.additionalUserInfo.profile.first_name,
-                                lastName: auth.additionalUserInfo.profile.last_name,
+                                firstName: authUser.additionalUserInfo.profile.first_name,
+                                lastName: authUser.additionalUserInfo.profile.last_name,
+                                email: authUser.additionalUserInfo.profile.email,
                                 loginProvider: Constants.LOGIN_PROVIDER_FACEBOOK,
                             },
-                            auth.user.uid,
+                            authUser.user.uid,
                         )
                             .then(data => {
                                 resolve('success');
@@ -170,13 +271,13 @@ const UserService = {
             }
         });
     },
-    signOut: () => {
+    logOut: () => {
         return new Promise(async (resolve, reject) => {
             try {
                 if (auth().currentUser == null) {
                     return; //already sign out
                 }
-
+                console.log('my uid is ' + auth().currentUser.uid);
                 const currentUser = await firestore().collection('users').doc(auth().currentUser.uid).get();
 
                 if (currentUser.data().loginProvider == Constants.LOGIN_PROVIDER_GOOGLE) {
@@ -187,6 +288,29 @@ const UserService = {
                 auth()
                     .signOut()
                     .then(() => resolve('Logout success'));
+            } catch (error) {
+                console.log(error);
+                reject('Some Error occurs');
+            }
+        });
+    },
+    fetchLoggedInUserDataToRedux: () => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (auth().currentUser == null) {
+                    reject('User not logged in');
+                }
+
+                const currentUserEmail = auth().currentUser.email;
+
+                const currentUser = await firestore().collection('users').doc(auth().currentUser.uid).get();
+
+                const loggedInUserData = {
+                    email: currentUserEmail,
+                    ...currentUser.data(),
+                };
+
+                store.dispatch(setUserInfo(loggedInUserData));
             } catch (error) {
                 reject('Some Error occurs');
             }

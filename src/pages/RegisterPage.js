@@ -1,6 +1,6 @@
 import Triangle from '@atoms/Triangle';
 import {CustomColors, CustomTypography, CustomMixins} from '@styles';
-import React, {Fragment, useState} from 'react';
+import React, {Fragment, useState, useCallback} from 'react';
 import {StyleSheet, Text, View, Alert, StatusBar, ScrollView, Platform, TouchableOpacity} from 'react-native';
 import {TextInput, Button, IconButton} from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -8,11 +8,13 @@ import Svg, {Rect, Circle, Polygon} from 'react-native-svg';
 import * as Animatable from 'react-native-animatable';
 
 import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
-import {Field, Formik} from 'formik';
+import {FastField, Field, Formik} from 'formik';
 import * as yup from 'yup';
 import CustomModal from '@organisms/CustomModal';
 import UserService from '@services/UserService';
 import {CommonActions, useNavigation} from '@react-navigation/native';
+import LoadingModal from '@organisms/LoadingModal';
+import {debounce} from 'lodash';
 
 const floatingShapes = {
     0: {
@@ -52,7 +54,7 @@ const floatingShapes = {
     },
 };
 
-const loginValidationSchema = yup.object().shape({
+const registerValidationSchema = yup.object().shape({
     firstName: yup
         .string()
         .max(40)
@@ -103,32 +105,55 @@ const RegisterPage = () => {
         modalType: '',
         onDismiss: () => {},
     });
+
+    const [loadingModal, setLoadingModal] = useState({
+        isVisible: false,
+        modalTitle: 'Creating account...',
+    });
+
     const [initialFormValue, setInitialFormValue] = useState({
         firstName: '',
         lastName: '',
         email: '',
         password: '',
     });
-    var formikReset = null;
 
-    const registerAccountCallback = values => {
+    const registerAccount = values => {
         const {firstName, lastName, email, password} = values;
 
         console.log('gagagaga');
-        UserService.registerAccount(firstName, lastName, email, password).then(msg => {
-            console.log(msg);
-            setModal({
-                isVisible: true,
-                modalType: 'success',
-                modalTitle: 'Register Success !',
-                modalDesc: 'Your account is successfully registered. You will now redirect to login page.',
-                onDismiss: () => {
-                    navigation.goBack();
-                },
+
+        UserService.registerAccount(firstName, lastName, email, password)
+            .then(msg => {
+                setLoadingModal({isVisible: false, modalTitle: 'Creating account...'});
+                setModal({
+                    isVisible: true,
+                    modalType: 'success',
+                    modalTitle: 'Register Success !',
+                    modalDesc: 'Your account is successfully registered. Please verify your email before logging in.',
+                    onDismiss: () => {
+                        navigation.goBack();
+                    },
+                });
+            })
+            .catch(error => {
+                setLoadingModal({isVisible: false, modalTitle: ''});
+                setModal({
+                    isVisible: true,
+                    modalType: 'error',
+                    modalTitle: 'Register failed !',
+                    modalDesc: 'Some Error occured when registering. Please try again later.',
+                    onDismiss: () => {
+                        setModal({...modal, isVisible: false});
+                    },
+                });
+                console.log('Error occured when register.');
+                console.log(error);
             });
-        });
     };
-    
+
+    const registerAccountCallback = useCallback(debounce(registerAccount, 1000), []);
+
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
@@ -222,10 +247,12 @@ const RegisterPage = () => {
                         </View>
                         <Formik
                             initialValues={initialFormValue}
-                            validationSchema={loginValidationSchema}
-                            onSubmit={registerAccountCallback}>
-                            {({handleSubmit, isValid, errors, resetForm}) => {
-                                formikReset = resetForm;
+                            validationSchema={registerValidationSchema}
+                            onSubmit={(values, settings) => {
+                                setLoadingModal({isVisible: true, modalTitle: 'Creating account...'});
+                                registerAccountCallback(values, settings);
+                            }}>
+                            {({handleSubmit, isValid, errors, resetForm, isSubmitting}) => {
                                 return (
                                     <>
                                         <Field
@@ -260,6 +287,7 @@ const RegisterPage = () => {
                                                     <TextInput.Icon
                                                         name="visibility"
                                                         onPress={() => {
+                                                            console.log('hellow');
                                                             setIsPasswordHide(false);
                                                         }}
                                                     />
@@ -276,6 +304,7 @@ const RegisterPage = () => {
                                             <Button
                                                 style={styles.registerBtn}
                                                 mode="contained"
+                                                disabled={isSubmitting}
                                                 contentStyle={{height: 50}}
                                                 color={CustomColors.PRIMARY_BLUE}
                                                 dark
@@ -306,6 +335,14 @@ const RegisterPage = () => {
                                             buttonOnPressCallback={modal.onDismiss}
                                             statusBarTranslucent={true}
                                             useNativeDriver={true}></CustomModal>
+                                        <LoadingModal
+                                            animationIn={'bounceIn'}
+                                            animationOut={'bounceOut'}
+                                            animationOutTiming={150}
+                                            isVisible={loadingModal.isVisible}
+                                            modalTitle={loadingModal.modalTitle}
+                                            statusBarTranslucent={true}
+                                            useNativeDriver={true}></LoadingModal>
                                     </>
                                 );
                             }}

@@ -1,4 +1,4 @@
-import React, {Fragment, useState, useRef, useEffect} from 'react';
+import React, {Fragment, useState, useRef, useEffect, useCallback} from 'react';
 import {
     StyleSheet,
     Text,
@@ -28,7 +28,17 @@ import auth from '@react-native-firebase/auth';
 import UserService from '@services/UserService';
 
 import CustomModal from '@organisms/CustomModal';
+import {Field, Formik} from 'formik';
+import * as yup from 'yup';
 import {Constants} from '~constants';
+import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
+import LoadingModal from '@organisms/LoadingModal';
+import {debounce} from 'lodash';
+
+const loginValidationSchema = yup.object().shape({
+    email: yup.string().max(80).email('Please enter valid email address').required('Email Address is required.'),
+    password: yup.string().required('Password is required'),
+});
 
 const LoginPage = () => {
     const navigation = useNavigation();
@@ -43,6 +53,15 @@ const LoginPage = () => {
         modalDesc: '',
         modalType: '',
         onDismiss: () => {},
+    });
+    const [loadingModal, setLoadingModal] = useState({
+        isVisible: false,
+        modalTitle: '',
+    });
+
+    const [initialFormValue, setInitialFormValue] = useState({
+        email: '',
+        password: '',
     });
 
     const smallLogoRef = useRef(null);
@@ -84,8 +103,11 @@ const LoginPage = () => {
     };
 
     const signInWithFacebook = () => {
+        setLoadingModal({isVisible: true, modalTitle: 'Logging in...'});
         UserService.signInWithFacebook()
-            .then(result => {})
+            .then(result => {
+                UserService.fetchLoggedInUserDataToRedux();
+            })
             .catch(error => {
                 setModal({
                     isVisible: true,
@@ -100,8 +122,11 @@ const LoginPage = () => {
     };
 
     const signInWithGmail = async () => {
+        setLoadingModal({isVisible: true, modalTitle: 'Logging in...'});
         UserService.signInWithGmail()
-            .then(result => {})
+            .then(result => {
+                UserService.fetchLoggedInUserDataToRedux();
+            })
             .catch(error => {
                 setModal({
                     isVisible: true,
@@ -115,19 +140,39 @@ const LoginPage = () => {
             });
     };
 
+    const signInWithEmail = (values, {setSubmitting}) => {
+        setSubmitting(true);
+        const {email, password} = values;
+
+        UserService.signInWithEmail(email, password)
+            .then(result => {
+                setLoadingModal({isVisible: false, modalTitle: ''});
+                UserService.fetchLoggedInUserDataToRedux();
+                setSubmitting(false);
+            })
+            .catch(error => {
+                setLoadingModal({isVisible: false, modalTitle: ''});
+                setModal({
+                    isVisible: true,
+                    modalType: 'error',
+                    modalTitle: 'Login failed !',
+                    modalDesc: error,
+                    onDismiss: () => {
+                        setModal({...modal, isVisible: false});
+                    },
+                });
+                setSubmitting(false);
+            });
+    };
+
+    const signInWithEmailCallback = useCallback(debounce(signInWithEmail, 1000), []);
+
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
             setIsKeyboardVisible(true); // Update the keyboard state
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             setIsKeyboardVisible(false); // Update the keyboard state
-        });
-
-        
-
-        auth().onAuthStateChanged(user => {
-            console.log('yoyo, authenticated');
-            console.log(auth().currentUser);
         });
 
         return () => {
@@ -145,7 +190,7 @@ const LoginPage = () => {
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView contentContainerStyle={{flexGrow: 1}}>
+                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
                     <View style={styles.bigContainer}>
                         <View style={styles.moreOptionContainer}>
                             <Animatable.View ref={smallLogoRef} style={styles.smallLogo}>
@@ -176,75 +221,109 @@ const LoginPage = () => {
                         </Animated.View>
                         <View style={styles.loginPromptContainer}>
                             <Text style={styles.loginTitle}>Login to your account</Text>
-                            <TextInput
-                                style={styles.input}
-                                mode="outlined"
-                                label="Email"
-                                left={
-                                    <TextInput.Icon
-                                        rippleColor="rgba(0, 0, 0, .0)"
-                                        name="email"
-                                        color={CustomColors.PRIMARY_DARK_BLUE}
-                                    />
-                                }
-                            />
-                            <TextInput
-                                style={styles.input}
-                                mode="outlined"
-                                label="Password"
-                                secureTextEntry={isPasswordHide}
-                                left={
-                                    <TextInput.Icon
-                                        rippleColor="rgba(0, 0, 0, .0)"
-                                        name="lock"
-                                        color={CustomColors.PRIMARY_DARK_BLUE}
-                                    />
-                                }
-                                right={
-                                    isPasswordHide ? (
-                                        <TextInput.Icon
-                                            name="visibility"
-                                            onPress={() => {
-                                                setIsPasswordHide(false);
-                                            }}
-                                        />
-                                    ) : (
-                                        <TextInput.Icon
-                                            name="visibility-off"
-                                            onPress={() => {
-                                                setIsPasswordHide(true);
-                                            }}
-                                        />
-                                    )
-                                }
-                            />
-                            <Ripple
-                                style={styles.forgotPasswordLabelContainer}
-                                onPress={() => {
-                                    setIsForgotPasswordClicked(true);
+                            <Formik
+                                initialValues={initialFormValue}
+                                validationSchema={loginValidationSchema}
+                                onSubmit={(values, settings) => {
+                                    setLoadingModal({isVisible: true, modalTitle: 'Logging in...'});
+                                    signInWithEmailCallback(values, settings);
                                 }}>
-                                <Text
-                                    style={[
-                                        styles.forgotPasswordLabel,
-                                        {
-                                            color: isForgotPasswordClicked
-                                                ? CustomColors.PRIMARY_BLUE
-                                                : CustomColors.PRIMARY_DARK_BLUE,
-                                            textDecorationLine: isForgotPasswordClicked ? 'underline' : 'none',
-                                        },
-                                    ]}>
-                                    Forgot password?
-                                </Text>
-                            </Ripple>
-                            <Button
-                                style={styles.loginBtn}
-                                contentStyle={{height: 50}}
-                                color={CustomColors.PRIMARY_BLUE}
-                                dark
-                                mode="contained"
-                                onPress={() => console.log('Pressed')}>
-                                Login
-                            </Button>
+                                {({handleSubmit, isValid, errors, resetForm, isSubmitting}) => {
+                                    return (
+                                        <>
+                                            <Field
+                                                component={CustomFormikTextInput}
+                                                style={styles.input}
+                                                mode="outlined"
+                                                label="Email"
+                                                name="email"
+                                                keyboardType="email-address"
+                                                left={
+                                                    <TextInput.Icon
+                                                        rippleColor="rgba(0, 0, 0, .0)"
+                                                        name="email"
+                                                        color={CustomColors.PRIMARY_DARK_BLUE}
+                                                    />
+                                                }
+                                                placeholder="Your Email address"></Field>
+                                            <Field
+                                                component={CustomFormikTextInput}
+                                                style={styles.input}
+                                                mode="outlined"
+                                                label="Password"
+                                                name="password"
+                                                placeholder="Your Password"
+                                                secureTextEntry={isPasswordHide}
+                                                left={
+                                                    <TextInput.Icon
+                                                        rippleColor="rgba(0, 0, 0, .0)"
+                                                        name="lock"
+                                                        color={CustomColors.PRIMARY_DARK_BLUE}
+                                                    />
+                                                }
+                                                right={
+                                                    isPasswordHide ? (
+                                                        <TextInput.Icon
+                                                            name="visibility"
+                                                            onPress={() => {
+                                                                setIsPasswordHide(false);
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <TextInput.Icon
+                                                            name="visibility-off"
+                                                            onPress={() => {
+                                                                setIsPasswordHide(true);
+                                                            }}
+                                                        />
+                                                    )
+                                                }></Field>
+                                            <Ripple
+                                                style={styles.forgotPasswordLabelContainer}
+                                                onPress={() => {
+                                                    setIsForgotPasswordClicked(true);
+                                                }}>
+                                                <Text
+                                                    style={[
+                                                        styles.forgotPasswordLabel,
+                                                        {
+                                                            color: isForgotPasswordClicked
+                                                                ? CustomColors.PRIMARY_BLUE
+                                                                : CustomColors.PRIMARY_DARK_BLUE,
+                                                            textDecorationLine: isForgotPasswordClicked
+                                                                ? 'underline'
+                                                                : 'none',
+                                                        },
+                                                    ]}>
+                                                    Forgot password?
+                                                </Text>
+                                            </Ripple>
+                                            <Button
+                                                style={styles.loginBtn}
+                                                contentStyle={{height: 50}}
+                                                color={CustomColors.PRIMARY_BLUE}
+                                                disabled={isSubmitting}
+                                                dark
+                                                mode="contained"
+                                                onPress={() => {
+                                                    Object.keys(errors).length > 0
+                                                        ? setModal({
+                                                              isVisible: true,
+                                                              modalType: 'error',
+                                                              modalTitle: 'Error !',
+                                                              modalDesc: 'Please make sure all inputs are correct.',
+                                                              onDismiss: () => {
+                                                                  setModal({...modal, isVisible: false});
+                                                              },
+                                                          })
+                                                        : handleSubmit();
+                                                }}>
+                                                Login
+                                            </Button>
+                                        </>
+                                    );
+                                }}
+                            </Formik>
 
                             <HorizontalLineWithText textName="Or sign in with"></HorizontalLineWithText>
 
@@ -320,6 +399,14 @@ const LoginPage = () => {
                             buttonOnPressCallback={modal.onDismiss}
                             statusBarTranslucent={true}
                             useNativeDriver={true}></CustomModal>
+                        <LoadingModal
+                            animationIn={'bounceIn'}
+                            animationOut={'bounceOut'}
+                            animationOutTiming={150}
+                            isVisible={loadingModal.isVisible}
+                            modalTitle={loadingModal.modalTitle}
+                            statusBarTranslucent={true}
+                            useNativeDriver={true}></LoadingModal>
                     </View>
                 </ScrollView>
             </SafeAreaView>

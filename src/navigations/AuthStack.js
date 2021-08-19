@@ -7,7 +7,7 @@ const Stack = createStackNavigator();
 
 const AuthStack = () => {
     return (
-        <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
+        <Stack.Navigator >
             <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
             <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
         </Stack.Navigator>
