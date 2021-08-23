@@ -14,6 +14,7 @@ import * as Animatable from 'react-native-animatable';
 import CharacterSvg from '@assets/images/character.svg';
 import Cloud1Svg from '@assets/images/cloud-1.svg';
 import Cloud2Svg from '@assets/images/cloud-2.svg';
+import ProviderService from '@services/ProviderService';
 
 const moveCloud = {
     0: {
@@ -113,7 +114,8 @@ const CustomerHomepage = () => {
                     <View style={styles.bigContainer}>
                         <Button
                             onPress={() => {
-                                UserService.logOut();
+                                ProviderService.getPopularServiceOfTheMonth();
+                                // UserService.logOut();
                             }}
                             title="LogOut"></Button>
                         <Text>I am the customer Home page</Text>
