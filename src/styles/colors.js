@@ -1,7 +1,7 @@
 // Color set for app
 export const PRIMARY_BLUE = '#38b3f9';
 export const PRIMARY_LIGHT_BLUE = "#a9e0ff";
-export const PRIMARY_BLUE_SATURATED = '#007AFF';
+export const PRIMARY_BLUE_SATURATED = '#148aff';
 export const PRIMARY_DARK_BLUE = "#073849";
 export const SECONDARY_BLUE_PURPLE = '#7e9bff';
 export const WHITE = '#FFFFFF';

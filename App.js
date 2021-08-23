@@ -9,7 +9,7 @@ import 'react-native-gesture-handler';
 import React, {useEffect, useState} from 'react';
 import type {Node} from 'react';
 import firestore from '@react-native-firebase/firestore';
-import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
+import {ScrollView, StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
 
 import {
     Colors,
@@ -22,6 +22,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import LoginPage from '@pages/LoginPage';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import SplashPage from '@pages/SplashPage';
 import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
 import {CustomColors} from '@styles';
@@ -94,16 +95,16 @@ const App: () => Node = () => {
                 icon: props => <Icon {...props} />,
             }}
             theme={theme}>
-            <NavigationContainer>
-                <SafeAreaProvider>
+            <SafeAreaProvider>
+                <NavigationContainer>
                     <RootStack isAuth={isAuth} isLoading={isLoading} loginBlock={loginBlock}></RootStack>
                     {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
                         <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
                         <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
                         <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
                     </Stack.Navigator> */}
-                </SafeAreaProvider>
-            </NavigationContainer>
+                </NavigationContainer>
+            </SafeAreaProvider>
         </PaperProvider>
     );
 };
