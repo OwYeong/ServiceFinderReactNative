@@ -1,5 +1,5 @@
 import UserService from '@services/UserService';
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {Button, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
@@ -15,6 +15,7 @@ import CharacterSvg from '@assets/images/character.svg';
 import Cloud1Svg from '@assets/images/cloud-1.svg';
 import Cloud2Svg from '@assets/images/cloud-2.svg';
 import ProviderService from '@services/ProviderService';
+import PopularServiceDisplay from '@organisms/PopularServiceDisplay';
 
 const moveCloud = {
     0: {
@@ -41,6 +42,48 @@ const moveCloudReverse = {
 };
 
 const CustomerHomepage = () => {
+    const [popularServiceList, setPopularServiceList] = useState({data: []});
+
+    const scrollViewCloseToRight = ({layoutMeasurement, contentOffset, contentSize}) => {
+        const RIGHT_TOLERANCE = 20; // How many pixel before end is consider closeToRight
+
+        return layoutMeasurement.width + contentOffset.x >= contentSize.width - RIGHT_TOLERANCE;
+    };
+
+    const fetchPopularServiceData = async () => {
+        try {
+            const popularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination();
+            console.log(popularServices);
+            setPopularServiceList({
+                lastDocumentInList: popularServices.lastVisibleDocument,
+                data: popularServices.data,
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const fetchMorePopularServiceData = async () => {
+        if (!!popularServiceList.lastDocumentInList) {
+            try {
+                const newPopularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination(
+                    popularServiceList.lastDocumentInList,
+                );
+                console.log(popularServices);
+                setPopularServiceiList({
+                    lastDocumentInList: newPopularServices.lastVisibleDocument,
+                    data: [...popularServiceList.data, newPopularServices.data],
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    };
+
+    useEffect(() => {
+        fetchPopularServiceData();
+    }, []);
+
     return (
         <LinearGradient
             colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
@@ -50,71 +93,93 @@ const CustomerHomepage = () => {
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
-                    <View style={styles.headerContainerGradient}>
-                        <LinearGradient
-                            colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
-                            start={{x: 0, y: 1}}
-                            end={{x: 1, y: 1}}
-                            style={styles.headerGradient}>
-                            <View style={styles.locationWrapper}>
-                                <Text style={styles.serviceAt}>
-                                    SERVICE AT{'\n'}
-                                    <Text style={styles.serviceLocation}>
-                                        Home asdas <Icon name="caret-down" width={36} height={36} />
-                                    </Text>
-                                </Text>
-                            </View>
-                            <Text style={styles.slogan}>Book Service{'\n'}to your doorstep</Text>
-                            <Searchbar
-                                style={styles.searchBar}
-                                icon={() => <FeatherIcon name="search" size={20} />}
-                                clearIcon={() => <MaterialIcon name="cancel" size={20} />}
-                                placeholder="Find your service"
-                            />
-                            <View style={styles.character}>
-                                <CharacterSvg fill="#000000" />
-                            </View>
-                            <Animatable.View
-                                style={styles.cloud1}
-                                animation={moveCloudReverse}
-                                duration={8000}
-                                easing="ease-in-out"
-                                iterationCount="infinite"
-                                useNativeDriver={true}
-                                direction="reverse">
-                                <Cloud1Svg fill={CustomColors.WHITE} />
-                            </Animatable.View>
-                            <Animatable.View
-                                style={styles.cloud2}
-                                animation={moveCloud}
-                                duration={6000}
-                                iterationDelay={500}
-                                useNativeDriver={true}
-                                easing="ease-in-out"
-                                iterationCount="infinite"
-                                direction="reverse">
-                                <Cloud2Svg fill={CustomColors.WHITE} />
-                            </Animatable.View>
-                        </LinearGradient>
-                    </View>
-                    <View style={styles.popularContainer}>
+                    <View style={styles.bigContainer}>
                         <View style={styles.headerContainerGradient}>
                             <LinearGradient
                                 colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
                                 start={{x: 0, y: 1}}
                                 end={{x: 1, y: 1}}
-                                style={styles.headerGradientBottomPortion}>
-                                <View style={styles.popularSectionHeader}>
-                                    <Text style={styles.sectionTitle}>Popular This month</Text>
-                                    <Text style={styles.viewAll}>View All</Text>
+                                style={styles.headerGradient}>
+                                <View style={styles.locationWrapper}>
+                                    <Text style={styles.serviceAt}>
+                                        SERVICE AT{'\n'}
+                                        <Text style={styles.serviceLocation}>
+                                            Home asdas <Icon name="caret-down" width={36} height={36} />
+                                        </Text>
+                                    </Text>
                                 </View>
+                                <Text style={styles.slogan}>Book Service{'\n'}to your doorstep</Text>
+                                <Searchbar
+                                    style={styles.searchBar}
+                                    icon={() => <FeatherIcon name="search" size={20} />}
+                                    clearIcon={() => <MaterialIcon name="cancel" size={20} />}
+                                    placeholder="Find your service"
+                                />
+                                <View style={styles.character}>
+                                    <CharacterSvg fill="#000000" />
+                                </View>
+                                <Animatable.View
+                                    style={styles.cloud1}
+                                    animation={moveCloudReverse}
+                                    duration={8000}
+                                    easing="ease-in-out"
+                                    iterationCount="infinite"
+                                    useNativeDriver={true}
+                                    direction="reverse">
+                                    <Cloud1Svg fill={CustomColors.WHITE} />
+                                </Animatable.View>
+                                <Animatable.View
+                                    style={styles.cloud2}
+                                    animation={moveCloud}
+                                    duration={6000}
+                                    iterationDelay={500}
+                                    useNativeDriver={true}
+                                    easing="ease-in-out"
+                                    iterationCount="infinite"
+                                    direction="reverse">
+                                    <Cloud2Svg fill={CustomColors.WHITE} />
+                                </Animatable.View>
                             </LinearGradient>
                         </View>
-                    </View>
-                    <View style={styles.bigContainer}>
+                        <View style={styles.popularContainer}>
+                            <View style={[styles.headerContainerGradient, {height: 'auto'}]}>
+                                <LinearGradient
+                                    colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
+                                    start={{x: 0, y: 1}}
+                                    end={{x: 1, y: 1}}
+                                    style={styles.headerGradientBottomPortion}>
+                                    <View style={styles.popularSectionHeader}>
+                                        <Text style={styles.sectionTitle}>Popular This month</Text>
+                                        <Text style={styles.viewAll}>View All</Text>
+                                    </View>
+                                </LinearGradient>
+                                <ScrollView
+                                    style={styles.popularServiceScrollView}
+                                    contentContainerStyle={{flexGrow: 1}}
+                                    horizontal={true}
+                                    onScroll={({nativeView}) => {
+                                        if (scrollViewCloseToRight(nativeView)) {
+                                        }
+                                    }}>
+                                    <View style={styles.popularServiceWrapper}>
+                                        {popularServiceList.data.map((popularService, i) => (
+                                            <PopularServiceDisplay
+                                                key={i}
+                                                style={{marginLeft: i > 0 ? 20 : 0}}
+                                                serviceType={popularService.serviceType}
+                                                appointmentInCurrentMonth={popularService.popularity.AUG_2021}
+                                                businessName={popularService.businessName}
+                                                profileImgUrl={popularService.businessLogoUrl}
+                                                coverImageUrl={popularService.coverImgUrl}
+                                            />
+                                        ))}
+                                    </View>
+                                </ScrollView>
+                            </View>
+                        </View>
+
                         <Button
-                            onPress={() => {
-                                ProviderService.getPopularServiceOfTheMonth();
+                            onPress={async () => {
                                 // UserService.logOut();
                             }}
                             title="LogOut"></Button>
@@ -166,7 +231,7 @@ const styles = StyleSheet.create({
     },
     popularContainer: {
         width: '100%',
-        height: 200,
+        overflow: 'hidden',
     },
     sectionTitle: {
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
@@ -223,5 +288,11 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         right: 100,
+    },
+    popularServiceScrollView: {},
+    popularServiceWrapper: {
+        width: '100%',
+        padding: 20,
+        flexDirection: 'row',
     },
 });
