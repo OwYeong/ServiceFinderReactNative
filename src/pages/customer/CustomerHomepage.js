@@ -1,6 +1,6 @@
 import UserService from '@services/UserService';
-import React, {useState, useEffect} from 'react';
-import {Button, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
+import {Animated, Button, Easing, FlatList, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import LinearGradient from 'react-native-linear-gradient';
@@ -10,6 +10,7 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {Searchbar} from 'react-native-paper';
 import * as Animatable from 'react-native-animatable';
+import LottieView from 'lottie-react-native';
 
 import CharacterSvg from '@assets/images/character.svg';
 import Cloud1Svg from '@assets/images/cloud-1.svg';
@@ -42,11 +43,14 @@ const moveCloudReverse = {
 };
 
 const CustomerHomepage = () => {
-    const [popularServiceList, setPopularServiceList] = useState({data: []});
+    const [popularServiceList, setPopularServiceList] = useState({isLoadingMoreData: false, data: []});
+    const [popularServiceFetchBlock, setPopularServiceFetchBlock] = useState(false);
+    const popularServiceSpinnerRef = useRef(null);
+    const popularServiceFlatlistRef = useRef(null);
 
     const scrollViewCloseToRight = ({layoutMeasurement, contentOffset, contentSize}) => {
         const RIGHT_TOLERANCE = 20; // How many pixel before end is consider closeToRight
-
+        console.log(layoutMeasurement.width + contentOffset.x >= contentSize.width - RIGHT_TOLERANCE);
         return layoutMeasurement.width + contentOffset.x >= contentSize.width - RIGHT_TOLERANCE;
     };
 
@@ -55,6 +59,7 @@ const CustomerHomepage = () => {
             const popularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination();
             console.log(popularServices);
             setPopularServiceList({
+                ...popularServiceList,
                 lastDocumentInList: popularServices.lastVisibleDocument,
                 data: popularServices.data,
             });
@@ -69,11 +74,13 @@ const CustomerHomepage = () => {
                 const newPopularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination(
                     popularServiceList.lastDocumentInList,
                 );
-                console.log(popularServices);
-                setPopularServiceiList({
-                    lastDocumentInList: newPopularServices.lastVisibleDocument,
-                    data: [...popularServiceList.data, newPopularServices.data],
-                });
+                console.log('im called');
+                setTimeout(() => {
+                    setPopularServiceList({
+                        lastDocumentInList: newPopularServices.lastVisibleDocument,
+                        data: [...popularServiceList.data, ...newPopularServices.data],
+                    });
+                }, 2000);
             } catch (error) {
                 console.log(error);
             }
@@ -84,6 +91,13 @@ const CustomerHomepage = () => {
         fetchPopularServiceData();
     }, []);
 
+    useEffect(() => {
+        console.log(popularServiceList);
+        if (popularServiceList.isLoadingMoreData) {
+            console.log('triggered');
+            fetchMorePopularServiceData();
+        }
+    }, [popularServiceList]);
     return (
         <LinearGradient
             colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
@@ -153,28 +167,73 @@ const CustomerHomepage = () => {
                                         <Text style={styles.viewAll}>View All</Text>
                                     </View>
                                 </LinearGradient>
-                                <ScrollView
-                                    style={styles.popularServiceScrollView}
-                                    contentContainerStyle={{flexGrow: 1}}
-                                    horizontal={true}
-                                    onScroll={({nativeView}) => {
-                                        if (scrollViewCloseToRight(nativeView)) {
-                                        }
-                                    }}>
-                                    <View style={styles.popularServiceWrapper}>
-                                        {popularServiceList.data.map((popularService, i) => (
-                                            <PopularServiceDisplay
-                                                key={i}
-                                                style={{marginLeft: i > 0 ? 20 : 0}}
-                                                serviceType={popularService.serviceType}
-                                                appointmentInCurrentMonth={popularService.popularity.AUG_2021}
-                                                businessName={popularService.businessName}
-                                                profileImgUrl={popularService.businessLogoUrl}
-                                                coverImageUrl={popularService.coverImgUrl}
-                                            />
-                                        ))}
-                                    </View>
-                                </ScrollView>
+                                <View style={{flex: 1}}>
+                                    <FlatList
+                                        ref={popularServiceFlatlistRef}
+                                        style={styles.popularServiceScrollView}
+                                        horizontal={true}
+                                        contentContainerStyle={{
+                                            flexDirection: 'row',
+                                        }}
+                                        removeClippedSubviews={true}
+                                        enableEmptySections={true}
+                                        data={popularServiceList.data}
+                                        renderItem={({index, item}) => {
+                                            return (
+                                                <Animatable.View
+                                                    animation="fadeIn"
+                                                    style={styles.popularServiceWrapper}>
+                                                    <PopularServiceDisplay
+                                                        serviceType={item.serviceType}
+                                                        appointmentInCurrentMonth={item.popularity.AUG_2021}
+                                                        businessName={item.businessName}
+                                                        profileImgUrl={item.businessLogoUrl}
+                                                        coverImageUrl={item.coverImgUrl}
+                                                    />
+                                                </Animatable.View>
+                                            );
+                                        }}
+                                        keyExtractor={(item) => item.id}
+                                        ListFooterComponent={() => {
+                                            if (popularServiceList.isLoadingMoreData) {
+                                                return (
+                                                    <Animatable.View
+                                                        ref={popularServiceSpinnerRef}
+                                                        style={{
+                                                            width: 64,
+                                                            flex: 1,
+                                                            alignItems: 'flex-end',
+                                                            justifyContent: 'flex-end',
+                                                            backgroundColor: 'red',
+                                                        }}>
+                                                        <View style={{width: 64, height: 64}}>
+                                                            <LottieView
+                                                                source={require('@assets/animations/loadingSpinner.json')}
+                                                                autoPlay
+                                                                loop={true}
+                                                            />
+                                                        </View>
+                                                    </Animatable.View>
+                                                );
+                                            } else {
+                                                return null;
+                                            }
+                                        }}
+                                        onScrollBeginDrag={() => {
+                                            setPopularServiceFetchBlock(false);
+                                        }}
+                                        overScrollMode="always"
+                                        onEndReached={() => {
+                                            console.log('end reach');
+                                            if (!popularServiceFetchBlock) {
+                                                setPopularServiceList({...popularServiceList, isLoadingMoreData: true});
+
+                                                setPopularServiceFetchBlock(true);
+                                            }
+                                        }}
+                                        onEndReachedThreshold={0.5}
+                                    />
+                                </View>
                             </View>
                         </View>
 
@@ -291,7 +350,7 @@ const styles = StyleSheet.create({
     },
     popularServiceScrollView: {},
     popularServiceWrapper: {
-        width: '100%',
+        flex: 1,
         padding: 20,
         flexDirection: 'row',
     },

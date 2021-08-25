@@ -3,14 +3,21 @@ import firestore from '@react-native-firebase/firestore';
 const ProviderService = {
     getPopularServiceOfTheMonthWithPagination: (lastVisibleDocument = null) => {
         return new Promise((resolve, reject) => {
-            const popularService = firestore()
-                .collection('serviceProviders')
-                // Filter results
-                .orderBy('popularity.AUG_2021', 'desc')
-                .limit(25);
+            let popularService = null;
 
             if (!!lastVisibleDocument) {
-                popularService.startAfter(lastVisibleDocument);
+                popularService = firestore()
+                    .collection('serviceProviders')
+                    .limit(2)
+                    // Filter results
+                    .orderBy('popularity.AUG_2021', 'desc')
+                    .startAfter(lastVisibleDocument);
+            } else {
+                popularService = firestore()
+                    .collection('serviceProviders')
+                    .limit(2)
+                    // Filter results
+                    .orderBy('popularity.AUG_2021', 'desc');
             }
 
             popularService
@@ -18,6 +25,8 @@ const ProviderService = {
                 .then(querySnapshot => {
                     if (querySnapshot.size > 0) {
                         const newLastVisibleDocument = querySnapshot.docs[querySnapshot.docs.length - 1];
+                        console.log('last visible document');
+                        console.log(newLastVisibleDocument.data());
                         const popularServices = [];
 
                         querySnapshot.forEach(docSnapshot => {
@@ -39,7 +48,7 @@ const ProviderService = {
                             lastVisibleDocument: lastVisibleDocument,
                             data: [],
                         };
-                        
+
                         resolve(result);
                     }
                 })
