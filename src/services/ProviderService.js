@@ -8,14 +8,14 @@ const ProviderService = {
             if (!!lastVisibleDocument) {
                 popularService = firestore()
                     .collection('serviceProviders')
-                    .limit(2)
+                    .limit(10)
                     // Filter results
                     .orderBy('popularity.AUG_2021', 'desc')
                     .startAfter(lastVisibleDocument);
             } else {
                 popularService = firestore()
                     .collection('serviceProviders')
-                    .limit(2)
+                    .limit(10)
                     // Filter results
                     .orderBy('popularity.AUG_2021', 'desc');
             }

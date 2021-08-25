@@ -71,15 +71,32 @@ const CustomerHomepage = () => {
     const fetchMorePopularServiceData = async () => {
         if (!!popularServiceList.lastDocumentInList) {
             try {
+                setTimeout(()=>{
+                    popularServiceFlatlistRef.current.scrollToEnd();
+                },20)
+
                 const newPopularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination(
                     popularServiceList.lastDocumentInList,
                 );
+
                 console.log('im called');
+
+                
                 setTimeout(() => {
                     setPopularServiceList({
+                        isLoadingMoreData: false,
                         lastDocumentInList: newPopularServices.lastVisibleDocument,
                         data: [...popularServiceList.data, ...newPopularServices.data],
                     });
+
+                    if(newPopularServices.data.length == 0){
+                        setTimeout(()=>{
+                            popularServiceFlatlistRef.current.scrollToEnd();                            
+                            setPopularServiceFetchBlock(false);
+                        }, 100 )
+                    } else {
+                        setPopularServiceFetchBlock(false);
+                    }
                 }, 2000);
             } catch (error) {
                 console.log(error);
@@ -94,10 +111,9 @@ const CustomerHomepage = () => {
     useEffect(() => {
         console.log(popularServiceList);
         if (popularServiceList.isLoadingMoreData) {
-            console.log('triggered');
             fetchMorePopularServiceData();
         }
-    }, [popularServiceList]);
+    }, [popularServiceList.isLoadingMoreData]);
     return (
         <LinearGradient
             colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
@@ -172,17 +188,13 @@ const CustomerHomepage = () => {
                                         ref={popularServiceFlatlistRef}
                                         style={styles.popularServiceScrollView}
                                         horizontal={true}
-                                        contentContainerStyle={{
-                                            flexDirection: 'row',
-                                        }}
-                                        removeClippedSubviews={true}
-                                        enableEmptySections={true}
                                         data={popularServiceList.data}
                                         renderItem={({index, item}) => {
                                             return (
                                                 <Animatable.View
                                                     animation="fadeIn"
-                                                    style={styles.popularServiceWrapper}>
+                                                    useNativeDriver={true}
+                                                    style={[styles.popularServiceWrapper,{paddingLeft: index > 0 ? 0: 20}]}>
                                                     <PopularServiceDisplay
                                                         serviceType={item.serviceType}
                                                         appointmentInCurrentMonth={item.popularity.AUG_2021}
@@ -200,11 +212,11 @@ const CustomerHomepage = () => {
                                                     <Animatable.View
                                                         ref={popularServiceSpinnerRef}
                                                         style={{
-                                                            width: 64,
+                                                            width: 48,
                                                             flex: 1,
-                                                            alignItems: 'flex-end',
+                                                            alignItems: 'center',
                                                             justifyContent: 'flex-end',
-                                                            backgroundColor: 'red',
+                                                            marginRight: 8
                                                         }}>
                                                         <View style={{width: 64, height: 64}}>
                                                             <LottieView
@@ -219,19 +231,15 @@ const CustomerHomepage = () => {
                                                 return null;
                                             }
                                         }}
-                                        onScrollBeginDrag={() => {
-                                            setPopularServiceFetchBlock(false);
-                                        }}
-                                        overScrollMode="always"
+                                        overScrollMode="never"
                                         onEndReached={() => {
                                             console.log('end reach');
                                             if (!popularServiceFetchBlock) {
                                                 setPopularServiceList({...popularServiceList, isLoadingMoreData: true});
-
                                                 setPopularServiceFetchBlock(true);
                                             }
                                         }}
-                                        onEndReachedThreshold={0.5}
+                                        onEndReachedThreshold={0}
                                     />
                                 </View>
                             </View>
@@ -348,7 +356,9 @@ const styles = StyleSheet.create({
         bottom: 30,
         right: 100,
     },
-    popularServiceScrollView: {},
+    popularServiceScrollView: {
+        
+    },
     popularServiceWrapper: {
         flex: 1,
         padding: 20,
