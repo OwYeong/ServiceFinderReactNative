@@ -19,6 +19,8 @@ import ProviderService from '@services/ProviderService';
 import PopularServiceDisplay from '@organisms/PopularServiceDisplay';
 import SearchService from '@services/SearchService';
 import {SvgCssUri} from 'react-native-svg';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import PopularServiceDisplaySkeleton from '@organisms/PopularServiceDisplaySkeleton';
 
 const moveCloud = {
     0: {
@@ -123,7 +125,7 @@ const CustomerHomepage = () => {
     };
     useEffect(() => {
         fetchPopularServiceData();
-        fetchAllServiceCategories();
+        //fetchAllServiceCategories();
     }, []);
 
     useEffect(() => {
@@ -221,6 +223,7 @@ const CustomerHomepage = () => {
                                     <FlatList
                                         ref={popularServiceFlatlistRef}
                                         style={styles.popularServiceScrollView}
+                                        scrollEnabled={popularServiceList.data.length > 0}
                                         horizontal={true}
                                         data={popularServiceList.data}
                                         renderItem={({index, item}) => {
@@ -243,6 +246,17 @@ const CustomerHomepage = () => {
                                             );
                                         }}
                                         keyExtractor={item => item.id}
+                                        ListHeaderComponent={() => {
+                                            return popularServiceList.data.length > 0 ? null : (
+                                                <>
+                                                    <View style={styles.popularServiceWrapper}>
+                                                        <PopularServiceDisplaySkeleton style={{}} />
+                                                        <View style={{width: 20, height: '100%'}}></View>
+                                                        <PopularServiceDisplaySkeleton style={{}} />
+                                                    </View>
+                                                </>
+                                            );
+                                        }}
                                         ListFooterComponent={() => {
                                             if (popularServiceList.isLoadingMoreData) {
                                                 return (
@@ -321,8 +335,58 @@ const CustomerHomepage = () => {
                                         </Surface>
                                     </Animatable.View>
                                 ))}
+                                {serviceCategories.length <= 0 ? (
+                                    <>
+                                        <View
+                                            style={{
+                                                width: '50%',
+                                                height: 78,
+                                                marginTop: 8,
+                                                marginRight: 10,
+                                            }}>
+                                            <SkeletonPlaceholder>
+                                                <View
+                                                    style={{
+                                                        width: '100%',
+                                                        height: 78,
+                                                        marginTop: 8,
+                                                        marginRight: 10,
+                                                    }}></View>
+                                            </SkeletonPlaceholder>
+                                        </View>
+                                        <SkeletonPlaceholder>
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    height: 78,
+                                                    marginTop: 8,
+                                                    marginRight: 10,
+                                                }}></View>
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    height: 78,
+                                                    marginTop: 8,
+                                                }}></View>
+                                            <View
+                                                style={{
+                                                    width: '50%',
+                                                    height: 78,
+                                                    marginTop: 8,
+                                                    marginRight: 10,
+                                                }}></View>
+                                            <View
+                                                style={{
+                                                    width: '50%',
+                                                    height: 78,
+                                                    marginTop: 8,
+                                                }}></View>
+                                        </SkeletonPlaceholder>
+                                    </>
+                                ) : null}
                             </View>
                         </View>
+
                         <Button
                             onPress={async () => {
                                 // UserService.logOut();
