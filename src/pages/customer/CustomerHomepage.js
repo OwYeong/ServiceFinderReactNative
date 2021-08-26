@@ -48,7 +48,10 @@ const CustomerHomepage = () => {
     const [popularServiceList, setPopularServiceList] = useState({isLoadingMoreData: false, data: []});
     const [popularServiceFetchBlock, setPopularServiceFetchBlock] = useState(false);
     const [serviceCategories, setServiceCategories] = useState([]);
+    const [statusBarColor, setStatusBarColor] = useState('transparent');
+
     const [categoryWrapperWidth, setCategoryWrapperWidth] = useState(0);
+    const [popularContainerOffsetY, setPopularContainerOffsetY] = useState(0);
     const popularServiceSpinnerRef = useRef(null);
     const popularServiceFlatlistRef = useRef(null);
 
@@ -135,9 +138,18 @@ const CustomerHomepage = () => {
             start={{x: 0, y: 1}}
             end={{x: 1, y: 1}}
             style={styles.bigContainer}>
-            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
+            <StatusBar animated barStyle={'dark-content'} backgroundColor={statusBarColor} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
+                <ScrollView
+                    contentContainerStyle={{flexGrow: 1}}
+                    keyboardShouldPersistTaps="handled"
+                    onScroll={event => {
+                        if (event.nativeEvent.contentOffset.y > popularContainerOffsetY) {
+                            setStatusBarColor('white');
+                        } else {
+                            setStatusBarColor('transparent');
+                        }
+                    }}>
                     <View style={styles.bigContainer}>
                         <View style={styles.headerContainerGradient}>
                             <LinearGradient
@@ -186,7 +198,14 @@ const CustomerHomepage = () => {
                                 </Animatable.View>
                             </LinearGradient>
                         </View>
-                        <View style={styles.popularContainer}>
+                        <View
+                            style={styles.popularContainer}
+                            onLayout={event => {
+                                var {x, y, width, height} = event.nativeEvent.layout;
+
+                                console.log('the y is' + y);
+                                setPopularContainerOffsetY(y);
+                            }}>
                             <View style={[styles.headerContainerGradient, {height: 'auto'}]}>
                                 <LinearGradient
                                     colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
