@@ -8,7 +8,7 @@ import {CustomColors, CustomMixins, CustomTypography} from '@styles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
-import {Searchbar} from 'react-native-paper';
+import {Searchbar, Surface, TouchableRipple} from 'react-native-paper';
 import * as Animatable from 'react-native-animatable';
 import LottieView from 'lottie-react-native';
 
@@ -17,6 +17,8 @@ import Cloud1Svg from '@assets/images/cloud-1.svg';
 import Cloud2Svg from '@assets/images/cloud-2.svg';
 import ProviderService from '@services/ProviderService';
 import PopularServiceDisplay from '@organisms/PopularServiceDisplay';
+import SearchService from '@services/SearchService';
+import {SvgCssUri} from 'react-native-svg';
 
 const moveCloud = {
     0: {
@@ -45,6 +47,8 @@ const moveCloudReverse = {
 const CustomerHomepage = () => {
     const [popularServiceList, setPopularServiceList] = useState({isLoadingMoreData: false, data: []});
     const [popularServiceFetchBlock, setPopularServiceFetchBlock] = useState(false);
+    const [serviceCategories, setServiceCategories] = useState([]);
+    const [categoryWrapperWidth, setCategoryWrapperWidth] = useState(0);
     const popularServiceSpinnerRef = useRef(null);
     const popularServiceFlatlistRef = useRef(null);
 
@@ -71,9 +75,9 @@ const CustomerHomepage = () => {
     const fetchMorePopularServiceData = async () => {
         if (!!popularServiceList.lastDocumentInList) {
             try {
-                setTimeout(()=>{
+                setTimeout(() => {
                     popularServiceFlatlistRef.current.scrollToEnd();
-                },20)
+                }, 20);
 
                 const newPopularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination(
                     popularServiceList.lastDocumentInList,
@@ -81,7 +85,6 @@ const CustomerHomepage = () => {
 
                 console.log('im called');
 
-                
                 setTimeout(() => {
                     setPopularServiceList({
                         isLoadingMoreData: false,
@@ -89,11 +92,11 @@ const CustomerHomepage = () => {
                         data: [...popularServiceList.data, ...newPopularServices.data],
                     });
 
-                    if(newPopularServices.data.length == 0){
-                        setTimeout(()=>{
-                            popularServiceFlatlistRef.current.scrollToEnd();                            
+                    if (newPopularServices.data.length == 0) {
+                        setTimeout(() => {
+                            popularServiceFlatlistRef.current.scrollToEnd();
                             setPopularServiceFetchBlock(false);
-                        }, 100 )
+                        }, 100);
                     } else {
                         setPopularServiceFetchBlock(false);
                     }
@@ -104,8 +107,20 @@ const CustomerHomepage = () => {
         }
     };
 
+    const fetchAllServiceCategories = async () => {
+        try {
+            const categories = await SearchService.getAllServiceCategory();
+
+            console.log('setted');
+            console.log(categories);
+            setServiceCategories(categories);
+        } catch (error) {
+            console.log(error);
+        }
+    };
     useEffect(() => {
         fetchPopularServiceData();
+        fetchAllServiceCategories();
     }, []);
 
     useEffect(() => {
@@ -178,7 +193,7 @@ const CustomerHomepage = () => {
                                     start={{x: 0, y: 1}}
                                     end={{x: 1, y: 1}}
                                     style={styles.headerGradientBottomPortion}>
-                                    <View style={styles.popularSectionHeader}>
+                                    <View style={styles.sectionHeader}>
                                         <Text style={styles.sectionTitle}>Popular This month</Text>
                                         <Text style={styles.viewAll}>View All</Text>
                                     </View>
@@ -194,7 +209,10 @@ const CustomerHomepage = () => {
                                                 <Animatable.View
                                                     animation="fadeIn"
                                                     useNativeDriver={true}
-                                                    style={[styles.popularServiceWrapper,{paddingLeft: index > 0 ? 0: 20}]}>
+                                                    style={[
+                                                        styles.popularServiceWrapper,
+                                                        {paddingLeft: index > 0 ? 0 : 20},
+                                                    ]}>
                                                     <PopularServiceDisplay
                                                         serviceType={item.serviceType}
                                                         appointmentInCurrentMonth={item.popularity.AUG_2021}
@@ -205,7 +223,7 @@ const CustomerHomepage = () => {
                                                 </Animatable.View>
                                             );
                                         }}
-                                        keyExtractor={(item) => item.id}
+                                        keyExtractor={item => item.id}
                                         ListFooterComponent={() => {
                                             if (popularServiceList.isLoadingMoreData) {
                                                 return (
@@ -216,7 +234,7 @@ const CustomerHomepage = () => {
                                                             flex: 1,
                                                             alignItems: 'center',
                                                             justifyContent: 'flex-end',
-                                                            marginRight: 8
+                                                            marginRight: 8,
                                                         }}>
                                                         <View style={{width: 64, height: 64}}>
                                                             <LottieView
@@ -244,7 +262,48 @@ const CustomerHomepage = () => {
                                 </View>
                             </View>
                         </View>
-
+                        <View style={styles.browseByCategoryContainer}>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>Browse by category</Text>
+                                <Text style={styles.viewAll}></Text>
+                            </View>
+                            <View
+                                style={styles.categoryWrapper}
+                                onLayout={event => {
+                                    var {x, y, width, height} = event.nativeEvent.layout;
+                                    setCategoryWrapperWidth(width);
+                                }}>
+                                {serviceCategories.map((item, index) => (
+                                    <Animatable.View
+                                        key={index}
+                                        style={{
+                                            width: (categoryWrapperWidth - 50) / 2,
+                                            marginRight: (index + 1) % 2 > 0 ? 10 : 0,
+                                            marginTop: 8,
+                                        }}
+                                        animation="fadeIn"
+                                        useNativeDriver={true}>
+                                        <Surface style={{elevation: 1, borderRadius: 8}}>
+                                            <TouchableRipple
+                                                style={{
+                                                    flex: 1,
+                                                    borderRadius: 8,
+                                                }}
+                                                borderless
+                                                onPress={() => {}}
+                                                rippleColor="rgba(0, 0, 0, .2)">
+                                                <View style={styles.categoryButton}>
+                                                    <View style={{width: 64, height: 64}}>
+                                                        <SvgCssUri width="100%" height="100%" uri={item.iconUrl} />
+                                                    </View>
+                                                    <Text style={styles.categoryButtonLabel}>{item.displayName}</Text>
+                                                </View>
+                                            </TouchableRipple>
+                                        </Surface>
+                                    </Animatable.View>
+                                ))}
+                            </View>
+                        </View>
                         <Button
                             onPress={async () => {
                                 // UserService.logOut();
@@ -285,7 +344,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 40,
     },
-    popularSectionHeader: {
+    sectionHeader: {
         width: '100%',
         height: 40,
         paddingTop: 15,
@@ -356,12 +415,32 @@ const styles = StyleSheet.create({
         bottom: 30,
         right: 100,
     },
-    popularServiceScrollView: {
-        
-    },
+    popularServiceScrollView: {},
     popularServiceWrapper: {
         flex: 1,
         padding: 20,
         flexDirection: 'row',
+    },
+    browseByCategoryContainer: {
+        width: '100%',
+    },
+    categoryButton: {
+        padding: 12,
+        backgroundColor: 'transparent',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderRadius: 8,
+        backgroundColor: CustomColors.WHITE_BLUE,
+    },
+    categoryWrapper: {
+        width: '100%',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        padding: 20,
+    },
+    categoryButtonLabel: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_14,
+        color: CustomColors.GRAY_DARK,
     },
 });
