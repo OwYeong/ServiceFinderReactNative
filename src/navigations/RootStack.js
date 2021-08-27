@@ -36,7 +36,7 @@ const RootStack = ({isAuth, isLoading, loginBlock}) => {
                         name="SearchService"
                         component={SearchServicePage}
                         options={{
-                            animationEnabled: true,
+                            animationEnabled: false,
                             headerShown: false,
                         }}
                     />
