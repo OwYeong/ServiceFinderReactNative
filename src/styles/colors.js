@@ -5,6 +5,7 @@ export const PRIMARY_BLUE_SATURATED = '#148aff';
 export const PRIMARY_DARK_BLUE = "#073849";
 export const SECONDARY_BLUE_PURPLE = '#7e9bff';
 export const WHITE = '#FFFFFF';
+export const WHITE_BLUE = '#f3faff';
 export const BLACK = '#000000';
 
 // Color set for actions
