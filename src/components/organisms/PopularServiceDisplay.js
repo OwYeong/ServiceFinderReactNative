@@ -14,7 +14,7 @@ const PopularServiceDisplay = ({
 }) => {
     console.log(coverImageUrl);
     return (
-        <Surface style={[styles.container, style]} >
+        <Surface style={[styles.container, style]} needsOffscreenAlphaCompositing={true} >
             <ImageBackground style={styles.businessCoverImg} source={{uri: coverImageUrl}}></ImageBackground>
             <View style={styles.contentWrapper}>
                 <Text style={styles.serviceType}>{CommonFunction.getDisplayNameForServiceType(serviceType)}</Text>

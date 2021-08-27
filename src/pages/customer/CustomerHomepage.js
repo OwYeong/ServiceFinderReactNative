@@ -1,6 +1,17 @@
 import UserService from '@services/UserService';
 import React, {useState, useEffect, useRef} from 'react';
-import {Animated, Button, Easing, FlatList, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {
+    Animated,
+    Button,
+    Dimensions,
+    Easing,
+    FlatList,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import LinearGradient from 'react-native-linear-gradient';
@@ -56,12 +67,6 @@ const CustomerHomepage = () => {
     const [popularContainerOffsetY, setPopularContainerOffsetY] = useState(0);
     const popularServiceSpinnerRef = useRef(null);
     const popularServiceFlatlistRef = useRef(null);
-
-    const scrollViewCloseToRight = ({layoutMeasurement, contentOffset, contentSize}) => {
-        const RIGHT_TOLERANCE = 20; // How many pixel before end is consider closeToRight
-        console.log(layoutMeasurement.width + contentOffset.x >= contentSize.width - RIGHT_TOLERANCE);
-        return layoutMeasurement.width + contentOffset.x >= contentSize.width - RIGHT_TOLERANCE;
-    };
 
     const fetchPopularServiceData = async () => {
         try {
@@ -124,8 +129,13 @@ const CustomerHomepage = () => {
         }
     };
     useEffect(() => {
-        fetchPopularServiceData();
-        //fetchAllServiceCategories();
+        setTimeout(() => {
+            //TEMPORARY: Show skeleton effect
+
+            fetchPopularServiceData();
+            fetchAllServiceCategories();
+
+        }, 1000);
     }, []);
 
     useEffect(() => {
@@ -231,6 +241,7 @@ const CustomerHomepage = () => {
                                                 <Animatable.View
                                                     animation="fadeIn"
                                                     useNativeDriver={true}
+                                                    needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
                                                     style={[
                                                         styles.popularServiceWrapper,
                                                         {paddingLeft: index > 0 ? 0 : 20},
@@ -314,6 +325,7 @@ const CustomerHomepage = () => {
                                             marginRight: (index + 1) % 2 > 0 ? 10 : 0,
                                             marginTop: 8,
                                         }}
+                                        needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
                                         animation="fadeIn"
                                         useNativeDriver={true}>
                                         <Surface style={{elevation: 1, borderRadius: 8}}>
@@ -339,60 +351,35 @@ const CustomerHomepage = () => {
                                     <>
                                         <View
                                             style={{
-                                                width: '50%',
-                                                height: 78,
+                                                width: Math.floor((Dimensions.get('window').width - 50) / 2),
+                                                height: 102,
                                                 marginTop: 8,
                                                 marginRight: 10,
+                                                borderRadius: 8,
+                                                overflow: 'hidden',
                                             }}>
                                             <SkeletonPlaceholder>
-                                                <View
-                                                    style={{
-                                                        width: '100%',
-                                                        height: 78,
-                                                        marginTop: 8,
-                                                        marginRight: 10,
-                                                    }}></View>
+                                                <View style={{height: 102}}></View>
                                             </SkeletonPlaceholder>
                                         </View>
-                                        <SkeletonPlaceholder>
-                                            <View
-                                                style={{
-                                                    width: '100%',
-                                                    height: 78,
-                                                    marginTop: 8,
-                                                    marginRight: 10,
-                                                }}></View>
-                                            <View
-                                                style={{
-                                                    width: '100%',
-                                                    height: 78,
-                                                    marginTop: 8,
-                                                }}></View>
-                                            <View
-                                                style={{
-                                                    width: '50%',
-                                                    height: 78,
-                                                    marginTop: 8,
-                                                    marginRight: 10,
-                                                }}></View>
-                                            <View
-                                                style={{
-                                                    width: '50%',
-                                                    height: 78,
-                                                    marginTop: 8,
-                                                }}></View>
-                                        </SkeletonPlaceholder>
+                                        <View
+                                            style={{
+                                                width: Math.floor((Dimensions.get('window').width - 50) / 2),
+                                                height: 102,
+                                                marginTop: 8,
+                                                marginRight: 0,
+                                                borderRadius: 8,
+                                                overflow: 'hidden',
+                                            }}>
+                                            <SkeletonPlaceholder>
+                                                <View style={{height: 102}}></View>
+                                            </SkeletonPlaceholder>
+                                        </View>
                                     </>
                                 ) : null}
                             </View>
                         </View>
 
-                        <Button
-                            onPress={async () => {
-                                // UserService.logOut();
-                            }}
-                            title="LogOut"></Button>
-                        <Text>I am the customer Home page</Text>
                     </View>
                 </ScrollView>
             </SafeAreaView>
@@ -520,6 +507,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         padding: 20,
+        paddingTop: 12
     },
     categoryButtonLabel: {
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
