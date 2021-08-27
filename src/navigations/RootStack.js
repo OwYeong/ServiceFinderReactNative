@@ -3,6 +3,7 @@ import SplashPage from '@pages/SplashPage';
 import {createStackNavigator} from '@react-navigation/stack';
 import AuthStack from './AuthStack';
 import CustomerStack from './CustomerStack';
+import SearchServicePage from '@pages/customer/SearchServicePage';
 
 const Stack = createStackNavigator();
 
@@ -22,14 +23,24 @@ const RootStack = ({isAuth, isLoading, loginBlock}) => {
             /> */}
 
             {isAuth && !loginBlock ? (
-                <Stack.Screen
-                    name="Customer"
-                    component={CustomerStack}
-                    options={{
-                        animationEnabled: true,
-                        headerShown: false,
-                    }}
-                />
+                <>
+                    <Stack.Screen
+                        name="Customer"
+                        component={CustomerStack}
+                        options={{
+                            animationEnabled: true,
+                            headerShown: false,
+                        }}
+                    />
+                    <Stack.Screen
+                        name="SearchService"
+                        component={SearchServicePage}
+                        options={{
+                            animationEnabled: true,
+                            headerShown: false,
+                        }}
+                    />
+                </>
             ) : (
                 <Stack.Screen
                     name="Auth"

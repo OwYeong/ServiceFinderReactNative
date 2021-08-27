@@ -32,6 +32,7 @@ import SearchService from '@services/SearchService';
 import {SvgCssUri} from 'react-native-svg';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import PopularServiceDisplaySkeleton from '@organisms/PopularServiceDisplaySkeleton';
+import { useNavigation } from '@react-navigation/native';
 
 const moveCloud = {
     0: {
@@ -63,6 +64,7 @@ const CustomerHomepage = () => {
     const [serviceCategories, setServiceCategories] = useState([]);
     const [statusBarColor, setStatusBarColor] = useState('transparent');
 
+    const navigation = useNavigation();
     const [categoryWrapperWidth, setCategoryWrapperWidth] = useState(0);
     const [popularContainerOffsetY, setPopularContainerOffsetY] = useState(0);
     const popularServiceSpinnerRef = useRef(null);
@@ -180,6 +182,10 @@ const CustomerHomepage = () => {
                                 <Text style={styles.slogan}>Book Service{'\n'}to your doorstep</Text>
                                 <Searchbar
                                     style={styles.searchBar}
+                                    onFocus={()=>{
+                                        console.log('focused')
+                                        navigation.navigate('SearchService')
+                                    }}
                                     icon={() => <FeatherIcon name="search" size={20} />}
                                     clearIcon={() => <MaterialIcon name="cancel" size={20} />}
                                     placeholder="Find your service"
