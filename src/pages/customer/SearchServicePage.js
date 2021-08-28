@@ -11,21 +11,24 @@ import {
     Animated,
     Easing,
     TouchableWithoutFeedback,
+    Platform,
+    UIManager,
+    LayoutAnimation,
+    ScrollView,
 } from 'react-native';
-import {IconButton, Searchbar} from 'react-native-paper';
+import {IconButton, List, Searchbar} from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import IoniIcon from 'react-native-vector-icons/Ionicons';
+import SearchService from '@services/SearchService';
 
 const SearchServicePage = ({route}) => {
     const searchBarRef = useRef(null);
     const navigation = useNavigation();
     const {searchBarX, searchBarY} = route.params;
     const [serviceCategories, setServiceCategories] = useState([]);
-
-    console.log('the search bar x is' + searchBarX);
-    console.log('the search bar x is' + searchBarY);
+    const [showClearIcon, setShowClearIcon] = useState(false);
 
     const searchBarAnimatedValue = useRef(new Animated.Value(0)).current;
 
@@ -53,9 +56,13 @@ const SearchServicePage = ({route}) => {
         try {
             const categories = await SearchService.getAllServiceCategory();
 
+            const categoriesWithExpandedAttr = categories.map(category => {
+                return {...category, isExpanded: false};
+            });
+
             console.log('setted');
-            console.log(categories);
-            setServiceCategories(categories);
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setServiceCategories(categoriesWithExpandedAttr);
         } catch (error) {
             console.log(error);
         }
@@ -71,6 +78,12 @@ const SearchServicePage = ({route}) => {
         });
 
         fetchAllServiceCategories();
+
+        if (Platform.OS === 'android') {
+            if (UIManager.setLayoutAnimationEnabledExperimental) {
+                UIManager.setLayoutAnimationEnabledExperimental(true);
+            }
+        }
     }, []);
 
     return (
@@ -100,17 +113,53 @@ const SearchServicePage = ({route}) => {
                                 transform: [{translateX: searchBarTransformX}, {translateY: searchBarTransformY}],
                             },
                         ]}
+                        onChangeText={text => {
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                            setShowClearIcon(text.length > 0);
+                        }}
                         inputStyle={{padding: 0, margin: 0, fontSize: 14}}
                         onFocus={() => {}}
                         icon={() => <FeatherIcon name="search" size={20} />}
-                        clearIcon={() => <MaterialIcon name="cancel" size={20} />}
+                        clearIcon={() => (showClearIcon ? <MaterialIcon name="cancel" size={20} /> : null)}
                         placeholder="Find your service"
                     />
                 </View>
-                <View style={styles.allServiceContainer}>
-                        <Text style={styles.title}>All Service</Text>
-                </View>
-                <Text>I am the Search Page</Text>
+                <ScrollView style={{marginTop: 16, flex: 1}} contentContainerStyle={{flexGrow: 1}}>
+                    <View style={{flex: 1}}>
+                        <View style={styles.allServiceContainer}>
+                            {serviceCategories.length > 0 ? <Text style={styles.title}>All Service</Text> : null}
+                            {serviceCategories.map((serviceCategory, index) => (
+                                <List.Accordion
+                                    key={index}
+                                    title={serviceCategory.displayName}
+                                    titleStyle={styles.serviceCategoryTitle}
+                                    style={{padding: 0, margin: 0}}
+                                    expanded={serviceCategory.isExpanded}
+                                    onPress={() => {
+                                        const newServiceCategories = [...serviceCategories];
+
+                                        newServiceCategories[index] = {
+                                            ...newServiceCategories[index],
+                                            isExpanded: !newServiceCategories[index].isExpanded,
+                                        };
+
+                                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                        setServiceCategories(newServiceCategories);
+                                    }}>
+                                    {serviceCategory.services.map((service, i) => (
+                                        <List.Item
+                                            title={service.displayName}
+                                            titleStyle={styles.serviceTitle}
+                                            key={i}
+                                            onPress={() => {
+                                                console.log('haha');
+                                            }}></List.Item>
+                                    ))}
+                                </List.Accordion>
+                            ))}
+                        </View>
+                    </View>
+                </ScrollView>
             </SafeAreaView>
         </View>
     );
@@ -122,10 +171,11 @@ const styles = StyleSheet.create({
     bigContainer: {
         width: '100%',
         height: '100%',
-        flex: 1,
-        backgroundColor: 'white',
         paddingVertical: 8,
         paddingHorizontal: 16,
+        paddingBottom: 0,
+        flex: 1,
+        backgroundColor: 'white',
     },
     searchBar: {
         alignItems: 'center',
@@ -147,11 +197,23 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     allServiceContainer: {
-        marginTop: 16
+        marginTop: 16,
     },
     title: {
         fontSize: CustomTypography.FONT_SIZE_20,
         color: CustomColors.GRAY_DARK,
-        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM
-    }
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+    },
+    serviceCategoryTitle: {
+        marginTop: 12,
+        marginLeft: -8,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        color: CustomColors.GRAY_DARK,
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+    },
+    serviceTitle: {
+        fontSize: CustomTypography.FONT_SIZE_16,
+        color: CustomColors.GRAY_DARK,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+    },
 });
