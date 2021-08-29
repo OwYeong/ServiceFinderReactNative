@@ -10,6 +10,7 @@ import {
     StatusBar,
     StyleSheet,
     Text,
+    TouchableWithoutFeedback,
     View,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -32,6 +33,7 @@ import SearchService from '@services/SearchService';
 import {SvgCssUri} from 'react-native-svg';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import PopularServiceDisplaySkeleton from '@organisms/PopularServiceDisplaySkeleton';
+import {useNavigation} from '@react-navigation/native';
 
 const moveCloud = {
     0: {
@@ -58,6 +60,8 @@ const moveCloudReverse = {
 };
 
 const CustomerHomepage = () => {
+    const navigation = useNavigation();
+
     const [popularServiceList, setPopularServiceList] = useState({isLoadingMoreData: false, data: []});
     const [popularServiceFetchBlock, setPopularServiceFetchBlock] = useState(false);
     const [serviceCategories, setServiceCategories] = useState([]);
@@ -67,6 +71,7 @@ const CustomerHomepage = () => {
     const [popularContainerOffsetY, setPopularContainerOffsetY] = useState(0);
     const popularServiceSpinnerRef = useRef(null);
     const popularServiceFlatlistRef = useRef(null);
+    const [searchBarxy, setSearchBarxy] = useState({x: 0, y: 0});
 
     const fetchPopularServiceData = async () => {
         try {
@@ -134,7 +139,6 @@ const CustomerHomepage = () => {
 
             fetchPopularServiceData();
             fetchAllServiceCategories();
-
         }, 1000);
     }, []);
 
@@ -178,12 +182,30 @@ const CustomerHomepage = () => {
                                     </Text>
                                 </View>
                                 <Text style={styles.slogan}>Book Service{'\n'}to your doorstep</Text>
-                                <Searchbar
-                                    style={styles.searchBar}
-                                    icon={() => <FeatherIcon name="search" size={20} />}
-                                    clearIcon={() => <MaterialIcon name="cancel" size={20} />}
-                                    placeholder="Find your service"
-                                />
+                                <TouchableWithoutFeedback
+                                    onPress={() => {
+                                        navigation.navigate('SearchService', {
+                                            searchBarX: searchBarxy.x,
+                                            searchBarY: searchBarxy.y,
+                                        });
+                                    }}>
+                                    <View
+                                        onLayout={event => {
+                                            var {x, y, width, height} = event.nativeEvent.layout;
+
+                                            console.log('gagaga' + y);
+
+                                            setSearchBarxy({x: x, y: y});
+                                        }}>
+                                        <Searchbar
+                                            style={styles.searchBar}
+                                            editable={false}
+                                            icon={() => <FeatherIcon name="search" size={20} />}
+                                            clearIcon={() => <MaterialIcon name="cancel" size={20} />}
+                                            placeholder="Find your service"
+                                        />
+                                    </View>
+                                </TouchableWithoutFeedback>
                                 <View style={styles.character}>
                                     <CharacterSvg fill="#000000" />
                                 </View>
@@ -215,7 +237,6 @@ const CustomerHomepage = () => {
                             onLayout={event => {
                                 var {x, y, width, height} = event.nativeEvent.layout;
 
-                                console.log('the y is' + y);
                                 setPopularContainerOffsetY(y);
                             }}>
                             <View style={[styles.headerContainerGradient, {height: 'auto'}]}>
@@ -379,7 +400,6 @@ const CustomerHomepage = () => {
                                 ) : null}
                             </View>
                         </View>
-
                     </View>
                 </ScrollView>
             </SafeAreaView>
@@ -507,7 +527,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         padding: 20,
-        paddingTop: 12
+        paddingTop: 12,
     },
     categoryButtonLabel: {
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
