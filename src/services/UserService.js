@@ -27,6 +27,7 @@ const UserService = {
                         .set({
                             firstName: firstName,
                             lastName: lastName,
+                            accType: Constants.ACCOUNT_TYPE.CONSUMER,
                             loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                         })
                         .then(() => {});

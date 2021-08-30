@@ -13,15 +13,12 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {TextInput, TouchableRipple, Button, Menu, Divider} from 'react-native-paper';
+import {TextInput, TouchableRipple, Button, IconButton} from 'react-native-paper';
 import {CustomColors, CustomMixins, CustomTypography} from '@styles';
 
 import LogoSvg from '@assets/images/logo.svg';
-import GoogleSvg from '@assets/images/google-icon.svg';
-import FacebookSvg from '@assets/images/fb-icon.svg';
 import Ripple from 'react-native-material-ripple';
 
-import HorizontalLineWithText from '@atoms/HorizontalLineWithText';
 import * as Animatable from 'react-native-animatable';
 import {useNavigation} from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
@@ -30,7 +27,6 @@ import UserService from '@services/UserService';
 import CustomModal from '@organisms/CustomModal';
 import {Field, Formik} from 'formik';
 import * as yup from 'yup';
-import {Constants} from '~constants';
 import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import LoadingModal from '@organisms/LoadingModal';
 import {debounce} from 'lodash';
@@ -40,14 +36,13 @@ const loginValidationSchema = yup.object().shape({
     password: yup.string().required('Password is required'),
 });
 
-const LoginPage = () => {
+const ProviderLoginPage = () => {
     const navigation = useNavigation();
     const [isPasswordHide, setIsPasswordHide] = useState(true);
     const [isForgotPasswordClicked, setIsForgotPasswordClicked] = useState(false);
     const [isRegisterClicked, setIsRegisterClicked] = useState(false);
     const [bigLogoAnimatedValue, setBigLogoAnimatedValue] = useState(new Animated.Value(1)); // 1 is small logo
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-    const [isAdditionalMenuOpened, setIsAdditionalMenuOpened] = useState(true);
     const [modal, setModal] = useState({
         isVisible: false,
         modalTitle: '',
@@ -64,8 +59,6 @@ const LoginPage = () => {
         email: '',
         password: '',
     });
-
-    const smallLogoRef = useRef(null);
 
     const bigLogoHeight = bigLogoAnimatedValue.interpolate({
         inputRange: [0, 1],
@@ -86,9 +79,6 @@ const LoginPage = () => {
                 easing: Easing.bezier(0.42, 0, 1, 1), // easing function
                 useNativeDriver: false,
             }).start();
-
-            // Show Small Logo
-            smallLogoRef.current.fadeInLeftBig(200);
         } else {
             //Show the BigLogo component in UI
             Animated.timing(bigLogoAnimatedValue, {
@@ -97,48 +87,7 @@ const LoginPage = () => {
                 easing: Easing.bezier(0.42, 0, 1, 1), // easing function
                 useNativeDriver: false,
             }).start();
-
-            // hide Small Logo
-            smallLogoRef.current.fadeOutLeftBig(200);
         }
-    };
-
-    const signInWithFacebook = () => {
-        setLoadingModal({isVisible: true, modalTitle: 'Logging in...'});
-        UserService.signInWithFacebook()
-            .then(result => {
-                UserService.fetchLoggedInUserDataToRedux();
-            })
-            .catch(error => {
-                setModal({
-                    isVisible: true,
-                    modalType: 'error',
-                    modalTitle: 'Login failed !',
-                    modalDesc: error,
-                    onDismiss: () => {
-                        setModal({...modal, isVisible: false});
-                    },
-                });
-            });
-    };
-
-    const signInWithGmail = async () => {
-        setLoadingModal({isVisible: true, modalTitle: 'Logging in...'});
-        UserService.signInWithGmail()
-            .then(result => {
-                UserService.fetchLoggedInUserDataToRedux();
-            })
-            .catch(error => {
-                setModal({
-                    isVisible: true,
-                    modalType: 'error',
-                    modalTitle: 'Login failed !',
-                    modalDesc: error,
-                    onDismiss: () => {
-                        setModal({...modal, isVisible: false});
-                    },
-                });
-            });
     };
 
     const signInWithEmail = (values, {setSubmitting}) => {
@@ -194,50 +143,17 @@ const LoginPage = () => {
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
                     <View style={styles.bigContainer}>
                         <View style={styles.moreOptionContainer}>
-                            <Animatable.View ref={smallLogoRef} style={styles.smallLogo}>
-                                <LogoSvg width={30} height={30} fill={CustomColors.PRIMARY_BLUE} />
-                            </Animatable.View>
-
-                            <View
-                                style={{
-                                    width: CustomTypography.ICON_MEDIUM,
-                                    height: CustomTypography.ICON_MEDIUM,
-                                    borderRadius: 50,
-                                    justifyContent: 'flex-end',
-                                    alignItems: 'flex-end',
-                                }}>
-                                <Menu
-                                    statusBarHeight={36}
-                                    visible={isAdditionalMenuOpened}
-                                    onDismiss={() => {
-                                        setIsAdditionalMenuOpened(!isAdditionalMenuOpened);
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <IconButton
+                                    icon="arrow-back"
+                                    color={CustomColors.GRAY_DARK}
+                                    size={CustomTypography.ICON_SMALL}
+                                    style={styles.backIcon}
+                                    onPress={() => {
+                                        navigation.goBack();
                                     }}
-                                    anchor={
-                                        <TouchableRipple
-                                            style={styles.moreOptionIcon}
-                                            borderless={true}
-                                            onPress={() => {
-                                                setIsAdditionalMenuOpened(!isAdditionalMenuOpened);
-                                            }}
-                                            rippleColor="rgba(0, 0, 0, .32)">
-                                            <Icon
-                                                name="more-vert"
-                                                size={CustomTypography.ICON_SMALL}
-                                                color={CustomColors.GRAY_DARK}></Icon>
-                                        </TouchableRipple>
-                                    }>
-                                    <Menu.Item
-                                        titleStyle={{
-                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                            fontSize: CustomTypography.FONT_SIZE_14,
-                                            color: CustomColors.GRAY_DARK,
-                                        }}
-                                        onPress={() => {
-                                            setIsAdditionalMenuOpened(false);
-                                            navigation.navigate('ProviderLoginPage');
-                                        }}
-                                        title="Login as vendor"></Menu.Item>
-                                </Menu>
+                                />
+                                <Text style={styles.vendorPortalTitle}>Vendor Portal</Text>
                             </View>
                         </View>
                         <Animated.View
@@ -250,8 +166,8 @@ const LoginPage = () => {
                             ]}>
                             <LogoSvg width={96} height={96} fill={CustomColors.PRIMARY_BLUE} />
                         </Animated.View>
-                        <View style={styles.loginPromptContainer}>
-                            <Text style={styles.loginTitle}>Login to your account</Text>
+                        <View style={[styles.loginPromptContainer, {marginTop: bigLogoAnimatedValue.__getValue() == 0 ? 24 : 0}]}>
+                            <Text style={styles.loginTitle}>Welcome to vendor portal</Text>
                             <Formik
                                 initialValues={initialFormValue}
                                 validationSchema={loginValidationSchema}
@@ -356,46 +272,6 @@ const LoginPage = () => {
                                 }}
                             </Formik>
 
-                            <HorizontalLineWithText textName="Or sign in with"></HorizontalLineWithText>
-
-                            <View style={styles.additionalSignInOptionContainer}>
-                                <Button
-                                    style={styles.googleSignInBtn}
-                                    mode="contained"
-                                    dark={true}
-                                    labelStyle={{
-                                        color: CustomColors.GRAY_DARK,
-                                        minWidth: 90,
-                                    }}
-                                    color={CustomColors.GRAY_EXTRA_LIGHT}
-                                    contentStyle={{height: 48}}
-                                    icon={({size, color}) => (
-                                        <View style={{width: size, height: size}}>
-                                            <GoogleSvg />
-                                        </View>
-                                    )}
-                                    onPress={signInWithGmail}>
-                                    Gmail
-                                </Button>
-                                <Button
-                                    style={styles.googleSignInBtn}
-                                    mode="contained"
-                                    dark={true}
-                                    labelStyle={{
-                                        color: CustomColors.GRAY_DARK,
-                                        minWidth: 90,
-                                    }}
-                                    color={CustomColors.GRAY_EXTRA_LIGHT}
-                                    contentStyle={{height: 48}}
-                                    icon={({size, color}) => (
-                                        <View style={{width: size, height: size}}>
-                                            <FacebookSvg fill="white" />
-                                        </View>
-                                    )}
-                                    onPress={signInWithFacebook}>
-                                    Facebook
-                                </Button>
-                            </View>
                             <View style={styles.spaceReservedForRegisterInfo}>
                                 <View style={styles.registerInfoContainer}>
                                     <Text style={[styles.registerLabel, {color: CustomColors.GRAY_DARK}]}>
@@ -404,7 +280,7 @@ const LoginPage = () => {
                                     <Ripple
                                         onPress={() => {
                                             setIsRegisterClicked(true);
-                                            navigation.navigate('RegisterPage');
+                                            navigation.navigate('ProviderRegisterPage');
                                         }}>
                                         <Text
                                             style={[
@@ -413,7 +289,7 @@ const LoginPage = () => {
                                                     textDecorationLine: isRegisterClicked ? 'underline' : 'none',
                                                 },
                                             ]}>
-                                            Register Now
+                                            Register as a vendor Now
                                         </Text>
                                     </Ripple>
                                 </View>
@@ -445,7 +321,7 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;
+export default ProviderLoginPage;
 
 const styles = StyleSheet.create({
     bigContainer: {
@@ -476,6 +352,12 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    vendorPortalTitle: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        color: CustomColors.GRAY_DARK,
+        marginTop: 4,
     },
     logoContainer: {
         width: '100%',
@@ -548,5 +430,8 @@ const styles = StyleSheet.create({
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_14,
         letterSpacing: 1.2,
+    },
+    backIcon: {
+        marginLeft: -8,
     },
 });
