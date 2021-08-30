@@ -95,7 +95,7 @@ const registerValidationSchema = yup.object().shape({
         .required('Password is required'),
 });
 
-const RegisterPage = () => {
+const ProviderRegisterPage = () => {
     const navigation = useNavigation();
     const [isPasswordHide, setIsPasswordHide] = useState(true);
     const [modal, setModal] = useState({
@@ -123,7 +123,7 @@ const RegisterPage = () => {
 
         console.log('gagagaga');
 
-        UserService.customer.registerAccount(firstName, lastName, email, password)
+        UserService.vendor.registerAccount(firstName, lastName, email, password)
             .then(msg => {
                 setLoadingModal({isVisible: false, modalTitle: 'Creating account...'});
                 setModal({
@@ -243,7 +243,7 @@ const RegisterPage = () => {
                                 </Animatable.View>
                             </View>
 
-                            <Text style={styles.registerTitleText}>Sign up and{'\n'}purchase services now.</Text>
+                            <Text style={styles.registerTitleText}>Sign up and{'\n'}Sell your services now.</Text>
                         </View>
                         <Formik
                             initialValues={initialFormValue}
@@ -354,7 +354,7 @@ const RegisterPage = () => {
     );
 };
 
-export default RegisterPage;
+export default ProviderRegisterPage;
 
 const styles = StyleSheet.create({
     bigContainer: {
