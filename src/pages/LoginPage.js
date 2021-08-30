@@ -105,7 +105,7 @@ const LoginPage = () => {
 
     const signInWithFacebook = () => {
         setLoadingModal({isVisible: true, modalTitle: 'Logging in...'});
-        UserService.signInWithFacebook()
+        UserService.customer.signInWithFacebook()
             .then(result => {
                 UserService.fetchLoggedInUserDataToRedux();
             })
@@ -124,7 +124,7 @@ const LoginPage = () => {
 
     const signInWithGmail = async () => {
         setLoadingModal({isVisible: true, modalTitle: 'Logging in...'});
-        UserService.signInWithGmail()
+        UserService.customer.signInWithGmail()
             .then(result => {
                 UserService.fetchLoggedInUserDataToRedux();
             })
@@ -145,7 +145,7 @@ const LoginPage = () => {
         setSubmitting(true);
         const {email, password} = values;
 
-        UserService.signInWithEmail(email, password)
+        UserService.customer.signInWithEmail(email, password)
             .then(result => {
                 setLoadingModal({isVisible: false, modalTitle: ''});
                 UserService.fetchLoggedInUserDataToRedux();

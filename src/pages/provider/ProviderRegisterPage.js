@@ -123,7 +123,7 @@ const ProviderRegisterPage = () => {
 
         console.log('gagagaga');
 
-        UserService.registerAccount(firstName, lastName, email, password)
+        UserService.vendor.registerAccount(firstName, lastName, email, password)
             .then(msg => {
                 setLoadingModal({isVisible: false, modalTitle: 'Creating account...'});
                 setModal({

@@ -123,7 +123,7 @@ const RegisterPage = () => {
 
         console.log('gagagaga');
 
-        UserService.registerAccount(firstName, lastName, email, password)
+        UserService.customer.registerAccount(firstName, lastName, email, password)
             .then(msg => {
                 setLoadingModal({isVisible: false, modalTitle: 'Creating account...'});
                 setModal({

@@ -94,7 +94,7 @@ const ProviderLoginPage = () => {
         setSubmitting(true);
         const {email, password} = values;
 
-        UserService.signInWithEmail(email, password)
+        UserService.vendor.signInWithEmail(email, password)
             .then(result => {
                 setLoadingModal({isVisible: false, modalTitle: ''});
                 UserService.fetchLoggedInUserDataToRedux();
