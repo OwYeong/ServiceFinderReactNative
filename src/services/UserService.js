@@ -19,7 +19,7 @@ const UserService = {
                     .then(async authUser => {
                         console.log(authUser);
                         var userInfo = await firestore().collection('users').doc(authUser.user.uid).get();
-                        console.log(userInfo)
+                        console.log(userInfo);
                         if (userInfo.data().accType != Constants.ACCOUNT_TYPE.VENDOR) {
                             auth()
                                 .signOut()
@@ -49,6 +49,8 @@ const UserService = {
 
                             return;
                         }
+
+                        await UserService.fetchLoggedInUserDataToRedux();
 
                         store.dispatch(setLoginBlock(false));
                         resolve('Success');
@@ -236,6 +238,8 @@ const UserService = {
                             return;
                         }
 
+                        await UserService.fetchLoggedInUserDataToRedux();
+
                         store.dispatch(setLoginBlock(false));
                         resolve('Success');
                     })
@@ -273,7 +277,8 @@ const UserService = {
                                 },
                                 authUser.user.uid,
                             )
-                                .then(data => {
+                                .then(async data => {
+                                    await UserService.fetchLoggedInUserDataToRedux();
                                     resolve('Success');
                                 })
                                 .catch(err => {
@@ -332,7 +337,9 @@ const UserService = {
                                 },
                                 authUser.user.uid,
                             )
-                                .then(data => {
+                                .then(async data => {
+                                    await UserService.fetchLoggedInUserDataToRedux();
+
                                     resolve('success');
                                 })
                                 .catch(err => {
@@ -435,6 +442,7 @@ const UserService = {
     fetchLoggedInUserDataToRedux: () => {
         return new Promise(async (resolve, reject) => {
             try {
+                console.log('fetching logged in user data into redux ...');
                 if (auth().currentUser == null) {
                     reject('User not logged in');
                 }
@@ -449,7 +457,10 @@ const UserService = {
                 };
 
                 store.dispatch(setUserInfo(loggedInUserData));
+
+                resolve('Finish fetching');
             } catch (error) {
+                console.log(error);
                 reject('Some Error occurs');
             }
         });

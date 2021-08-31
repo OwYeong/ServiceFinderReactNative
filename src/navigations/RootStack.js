@@ -4,10 +4,13 @@ import {createStackNavigator} from '@react-navigation/stack';
 import AuthStack from './AuthStack';
 import CustomerStack from './CustomerStack';
 import SearchServicePage from '@pages/customer/SearchServicePage';
+import {useSelector} from 'react-redux';
+import {Constants} from '~constants';
+import ProviderStack from './ProviderStack';
 
 const Stack = createStackNavigator();
 
-const RootStack = ({isAuth, isLoading, loginBlock}) => {
+const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
     return (
         <Stack.Navigator>
             {isLoading ? (
@@ -24,22 +27,38 @@ const RootStack = ({isAuth, isLoading, loginBlock}) => {
 
             {isAuth && !loginBlock ? (
                 <>
-                    <Stack.Screen
-                        name="Customer"
-                        component={CustomerStack}
-                        options={{
-                            animationEnabled: true,
-                            headerShown: false,
-                        }}
-                    />
-                    <Stack.Screen
-                        name="SearchService"
-                        component={SearchServicePage}
-                        options={{
-                            animationEnabled: false,
-                            headerShown: false,
-                        }}
-                    />
+                    {loggedInAcctype == Constants.ACCOUNT_TYPE.CONSUMER ? (
+                        <>
+                            <Stack.Screen
+                                name="Customer"
+                                component={CustomerStack}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="SearchService"
+                                component={SearchServicePage}
+                                options={{
+                                    animationEnabled: false,
+                                    headerShown: false,
+                                }}
+                            />
+                        </>
+                    ) : null}
+                    {loggedInAcctype == Constants.ACCOUNT_TYPE.VENDOR ? (
+                        <>
+                            <Stack.Screen
+                                name="Provider"
+                                component={ProviderStack}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                        </>
+                    ) : null}
                 </>
             ) : (
                 <Stack.Screen
