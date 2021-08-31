@@ -33,6 +33,7 @@ import {useSelector, useDispatch} from 'react-redux';
 import auth from '@react-native-firebase/auth';
 import RootStack from '@navigations/RootStack';
 import {setLoginBlock} from '@slices/appSlice';
+import UserService from '@services/UserService';
 
 const Stack = createStackNavigator();
 const theme = {
@@ -52,6 +53,7 @@ const theme = {
 const App: () => Node = () => {
     const isDarkMode = useColorScheme() === 'dark';
     const isLoading = useSelector(state => state.appState.isLoading);
+    const loggedInAcctype = useSelector(state => state.loginState.userInfo?.accType);
     const [isAuth, setIsAuth] = useState(false);
     const dispatch = useDispatch();
     const loginBlock = useSelector(state => state.appState.loginBlock);
@@ -73,8 +75,10 @@ const App: () => Node = () => {
             console.log('yoyo, authenticated');
 
             if (!!auth().currentUser) {
-                //LoggedIn
-                setIsAuth(true);
+                UserService.fetchLoggedInUserDataToRedux().then(() => {
+                    //LoggedIn'
+                    
+                });
             } else {
                 setIsAuth(false);
                 dispatch(setLoginBlock(false));
@@ -87,6 +91,9 @@ const App: () => Node = () => {
     useEffect(() => {
         console.log('logged in use');
         console.log(userInfo);
+        if(!!userInfo){
+            setIsAuth(true);
+        }
     }, [userInfo]);
 
     return (
@@ -97,7 +104,11 @@ const App: () => Node = () => {
             theme={theme}>
             <SafeAreaProvider>
                 <NavigationContainer>
-                    <RootStack isAuth={isAuth} isLoading={isLoading} loginBlock={loginBlock}></RootStack>
+                    <RootStack
+                        isAuth={isAuth}
+                        isLoading={isLoading}
+                        loginBlock={loginBlock}
+                        loggedInAcctype={loggedInAcctype}></RootStack>
                     {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
                         <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
                         <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
