@@ -40,6 +40,7 @@ const CustomerStack = () => {
     return (
         <>
             <Tab.Navigator
+                backBehavior="history"
                 screenOptions={({route}) => ({
                     tabBarShowLabel: true,
                     tabBarStyle: {
@@ -76,12 +77,19 @@ const CustomerStack = () => {
                     component={CustomerHomepage}
                     options={{
                         headerShown: false,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: 0,
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+                            return focused ? (
                                 <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Home
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24, margin: 0, padding: 0}}>
                                 {focused ? (
@@ -92,26 +100,25 @@ const CustomerStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: 0,
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="CustomerBookingPage"
                     component={CustomerBookingPage}
                     options={{
                         headerShown: true,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 1),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+                            return focused ? (
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Bookings
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -122,26 +129,25 @@ const CustomerStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 1),
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="ChatPage"
                     component={ChatPage}
                     options={{
                         headerShown: true,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 2),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+                            return focused ? (
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Chats
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -152,26 +158,25 @@ const CustomerStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 2),
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="NotificationPage"
                     component={NotificationPage}
                     options={{
                         headerShown: true,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 3),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+                            return focused ? (
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Notification
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -182,26 +187,25 @@ const CustomerStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 3),
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="CustomerProfilePage"
                     component={CustomerProfilePage}
                     options={{
                         headerShown: false,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 4),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+                            return focused ? (
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Profile
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -211,14 +215,6 @@ const CustomerStack = () => {
                                 )}
                             </View>
                         ),
-                    }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 4),
-                                useNativeDriver: true,
-                            }).start();
-                        },
                     }}
                 />
             </Tab.Navigator>
