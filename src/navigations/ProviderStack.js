@@ -14,13 +14,13 @@ import Ripple from 'react-native-material-ripple';
 import * as Animatable from 'react-native-animatable';
 
 import HomeIconSvg from '@assets/images/home-icon.svg';
-import BookingIconSvg from '@assets/images/booking-icon.svg';
+import ScheduleIconSvg from '@assets/images/schedule-icon.svg';
 import ChatIconSvg from '@assets/images/chat-icon.svg';
 import NotificationIconSvg from '@assets/images/notification-icon.svg';
 import ProfileIconSvg from '@assets/images/profile-icon.svg';
 
 import HomeIconFilledSvg from '@assets/images/home-icon-filled.svg';
-import BookingIconFilledSvg from '@assets/images/booking-icon-filled.svg';
+import ScheduleIconFilledSvg from '@assets/images/schedule-icon-filled.svg';
 import ChatIconFilledSvg from '@assets/images/chat-icon-filled.svg';
 import NotificationIconFilledSvg from '@assets/images/notification-icon-filled.svg';
 import ProfileIconFilledSvg from '@assets/images/profile-icon-filled.svg';
@@ -76,8 +76,6 @@ const ProviderStack = () => {
                     tabBarButton: props => <TouchableRipple {...props} />,
                 })}
                 renderTouchable={props => <Touchable {...props} />}
-                // style={{height: 100}}
-                // barStyle={styles.bottomTabNavigator}
             >
                 <Tab.Screen
                     name="ProviderHomepage"
@@ -130,9 +128,9 @@ const ProviderStack = () => {
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
-                                    <BookingIconFilledSvg fill={color} />
+                                    <ScheduleIconFilledSvg fill={color} />
                                 ) : (
-                                    <BookingIconSvg fill={CustomColors.GRAY_MEDIUM} />
+                                    <ScheduleIconSvg fill={CustomColors.GRAY_MEDIUM} />
                                 )}
                             </View>
                         ),
