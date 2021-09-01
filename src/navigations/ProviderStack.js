@@ -27,6 +27,7 @@ import ProfileIconFilledSvg from '@assets/images/profile-icon-filled.svg';
 import ProviderHomePage from '@pages/provider/ProviderHomePage';
 import ProviderProfilePage from '@pages/provider/ProviderProfilePage';
 import ProviderSchedulePage from '@pages/provider/ProviderSchedulePage';
+import {useNavigation} from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 
@@ -39,10 +40,14 @@ const getItemWidth = () => {
 
 const ProviderStack = () => {
     const tabIndicatorLeftPos = useRef(new Animated.Value(0)).current;
+    const navigation = useNavigation();
+
+    console.log(navigation);
 
     return (
         <>
             <Tab.Navigator
+                backBehavior="history"
                 screenOptions={({route}) => ({
                     tabBarShowLabel: true,
                     tabBarStyle: {
@@ -79,12 +84,20 @@ const ProviderStack = () => {
                     component={ProviderHomePage}
                     options={{
                         headerShown: false,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: 0,
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+
+                            return focused ? (
                                 <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Home
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24, margin: 0, padding: 0}}>
                                 {focused ? (
@@ -95,26 +108,25 @@ const ProviderStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: 0,
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="ProviderSchedulePage"
                     component={ProviderSchedulePage}
                     options={{
                         headerShown: true,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 1),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+                            return focused ? (
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Bookings
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -125,26 +137,26 @@ const ProviderStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 1),
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="ChatPage"
                     component={ChatPage}
                     options={{
                         headerShown: true,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 2),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+
+                            return focused ? (
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Chats
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -155,26 +167,25 @@ const ProviderStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 2),
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="NotificationPage"
                     component={NotificationPage}
                     options={{
                         headerShown: true,
-                        tabBarLabel: ({focused, color}) =>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 3),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
                             focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Notification
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -185,26 +196,25 @@ const ProviderStack = () => {
                             </View>
                         ),
                     }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 3),
-                                useNativeDriver: true,
-                            }).start();
-                        },
-                    }}
                 />
                 <Tab.Screen
                     name="ProviderProfilePage"
                     component={ProviderProfilePage}
                     options={{
                         headerShown: false,
-                        tabBarLabel: ({focused, color}) =>
-                            focused ? (
-                                <Animatable.Text animation="bounceIn"  style={[styles.labelStyle, {color: color}]}>
+                        tabBarLabel: ({focused, color}) => {
+                            if (focused) {
+                                Animated.spring(tabIndicatorLeftPos, {
+                                    toValue: parseInt(getItemWidth() * 4),
+                                    useNativeDriver: true,
+                                }).start();
+                            }
+                            return focused ? (
+                                <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Profile
                                 </Animatable.Text>
-                            ) : null,
+                            ) : null;
+                        },
                         tabBarIcon: ({focused, color}) => (
                             <View style={{width: 24, height: 24}}>
                                 {focused ? (
@@ -214,14 +224,6 @@ const ProviderStack = () => {
                                 )}
                             </View>
                         ),
-                    }}
-                    listeners={{
-                        tabPress: e => {
-                            Animated.spring(tabIndicatorLeftPos, {
-                                toValue: parseInt(getItemWidth() * 4),
-                                useNativeDriver: true,
-                            }).start();
-                        },
                     }}
                 />
             </Tab.Navigator>
