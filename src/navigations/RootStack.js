@@ -7,6 +7,7 @@ import SearchServicePage from '@pages/customer/SearchServicePage';
 import {useSelector} from 'react-redux';
 import {Constants} from '~constants';
 import ProviderStack from './ProviderStack';
+import IntroductionSliderPage from '@pages/IntroductionSliderPage';
 
 const Stack = createStackNavigator();
 
@@ -27,6 +28,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
 
             {isAuth && !loginBlock ? (
                 <>
+                    <Stack.Screen
+                        name="IntroductionSliderPage"
+                        component={IntroductionSliderPage}
+                        options={{
+                            animationEnabled: true,
+                            headerShown: false,
+                        }}
+                    />
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.CONSUMER ? (
                         <>
                             <Stack.Screen
