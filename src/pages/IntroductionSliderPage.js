@@ -9,6 +9,7 @@ import IntroIllustration2 from '@assets/images/intro-customer-illustration-2';
 import IoniIcon from 'react-native-vector-icons/Ionicons';
 import {Surface} from 'react-native-paper';
 import * as Animatable from 'react-native-animatable';
+import PhoneVerification from '@organisms/PhoneVerification';
 const movingLeft = {
     0: {
         translateX: 0,
@@ -85,31 +86,7 @@ const IntroductionSliderPage = () => {
                 offers all kind of services.
             </Text>
         </View>,
-        <View style={styles.slide}>
-            <View
-                style={{
-                    width: 300,
-                    height: 300,
-                    borderRadius: 350 / 2,
-                    backgroundColor: '#d0f4fc',
-                    overflow: 'hidden',
-                    marginTop: 50,
-                }}>
-                <Animatable.View
-                    animation={movingLeft}
-                    iterationCount={'infinite'}
-                    easing={'linear'}
-                    duration={5000}
-                    useNativeDriver={true}>
-                    <IntroIllustration1 width="120%" height="100%" resizeMode="cover" fill="#ffffff" />
-                </Animatable.View>
-            </View>
-            <Text style={styles.title}>Book Doorstep Service {'\n'}Anywhere, Anytime</Text>
-            <Text style={styles.desc}>
-                With ServiceFinder, you could book service seemlessly at anywhere, anytime and enjoys the service from
-                the comfort of your doorstep.
-            </Text>
-        </View>,
+        <PhoneVerification></PhoneVerification>,
     ];
 
     const [showPrevButtonInIntroSlide, setShowPrevButtonInIntroSlide] = useState(false);
