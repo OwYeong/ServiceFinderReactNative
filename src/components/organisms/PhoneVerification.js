@@ -8,6 +8,7 @@ import PhoneInput from 'react-native-phone-input';
 import CountryPicker from 'react-native-country-picker-modal';
 import {useRef, useEffect} from 'react';
 import {useState} from 'react';
+import OTPInputView from '@twotalltotems/react-native-otp-input';
 
 const movingUpAndDown = {
     0: {
@@ -33,7 +34,8 @@ const PhoneVerification = () => {
     const [countryCode, setCountryCode] = useState('MY');
     const [showCountryPicker, setShowCountryPicker] = useState(false);
     const [showIllustration, setShowIllustration] = useState(true);
-
+    const [phoneNumInputted, setPhoneNumInputted] = useState('')
+    const [uiState, setUiState] = useState('promptUserInput');
     const selectCountry = country => {
         phoneInput.current.selectCountry(country.cca2.toLowerCase());
         setCountryCode(country.cca2);
@@ -93,51 +95,113 @@ const PhoneVerification = () => {
                     </Animatable.View>
                 </View>
             ) : null}
-            <Text style={styles.title}>One Last Step.{'\n'} Verify Your Mobile number.</Text>
-            <Text style={styles.desc}>We will send you a One Time Password on your mobile number.</Text>
-            <View style={{backgroundColor: CustomColors.GRAY_EXTRA_LIGHT, paddingHorizontal: 16, borderRadius: 10}}>
-                <PhoneInput
-                    style={{width: '100%'}}
-                    ref={phoneInput}
-                    textStyle={{
-                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                        height: 50,
-                        color: CustomColors.GRAY_DARK,
-                    }}
-                    initialCountry="my"
-                    textProps={{placeholder: 'Enter Your Phone Number'}}
-                    onPressFlag={onPressFlag}
-                    countriesList={require('@assets/allowedCountries.json')}
-                />
-                <CountryPicker
-                    visible={showCountryPicker}
-                    onSelect={value => selectCountry(value)}
-                    onClose={() => {
-                        setShowCountryPicker(false);
-                    }}
-                    translation="eng"
-                    withModal={true}
-                    withFilter
-                    withFlagButton={false}
-                    withCountryNameButton
-                    withAlphaFilter
-                    withCallingCode
-                    countryCode={countryCode}
-                    countryCodes={['MY', 'SG', 'TH', 'VN', 'US', 'UK', 'IN', 'ID']}>
-                    <View></View>
-                </CountryPicker>
-            </View>
-            <Button
-                style={styles.button}
-                mode="contained"
-                contentStyle={{height: 50}}
-                dark
-                color={CustomColors.PRIMARY_BLUE}
-                onPress={() => {
-                    console.log(phoneInput.current.setValue('haha'));
-                }}>
-                Verify
-            </Button>
+            <Text style={styles.title}>Verify Your Phone Number.</Text>
+
+            {uiState == 'promptUserInput' ? (
+                <>
+                    <Text style={styles.desc}>
+                        One last step, verify your phone number and book service now. This will ensure that service
+                        provider could contact you.
+                    </Text>
+                    <View
+                        style={{
+                            marginTop: 12,
+                            backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
+                            borderRadius: 10,
+                        }}>
+                        {/* <View
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        backgroundColor: 'white',
+                        opacity: 0.5,
+                        zIndex: 20,
+                    }}></View> */}
+                        <PhoneInput
+                            style={{width: '100%', paddingHorizontal: 16}}
+                            ref={phoneInput}
+                            textStyle={{
+                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                height: 50,
+                                color: CustomColors.GRAY_DARK,
+                            }}
+                            initialCountry="my"
+                            textProps={{placeholder: 'Enter Your Phone Number'}}
+                            onPressFlag={onPressFlag}
+                            countriesList={require('@assets/allowedCountries.json')}
+                        />
+
+                        <CountryPicker
+                            visible={showCountryPicker}
+                            onSelect={value => selectCountry(value)}
+                            onClose={() => {
+                                setShowCountryPicker(false);
+                            }}
+                            translation="eng"
+                            withModal={true}
+                            withFilter
+                            withFlagButton={false}
+                            withCountryNameButton
+                            withAlphaFilter
+                            withCallingCode
+                            countryCode={countryCode}
+                            countryCodes={['MY', 'SG', 'TH', 'VN', 'US', 'UK', 'IN', 'ID']}>
+                            <View></View>
+                        </CountryPicker>
+                    </View>
+                    <Button
+                        style={styles.button}
+                        mode="contained"
+                        contentStyle={{height: 50}}
+                        dark
+                        color={CustomColors.PRIMARY_BLUE}
+                        onPress={() => {
+                            console.log(phoneInput.current.setValue('haha'));
+                            
+                            setPhoneNumInputted(phoneInput.current.getValue())
+                            setUiState('pendingOTP');
+                        }}>
+                        Verify
+                    </Button>
+                </>
+            ) : null}
+
+            {uiState == 'pendingOTP' ? (
+                <>
+                    <Text style={styles.desc}>We will send you a One Time Password to <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>{phoneNumInputted}</Text>.<Text style={{fontFamily: CustomTypography.FONT_FAMILY_REGULAR, color: CustomColors.SECONDARY_BLUE_PURPLE}}> Not this number?</Text></Text>
+                    <OTPInputView
+                        style={{width: 300, height: 100}}
+                        codeInputFieldStyle={styles.underlineStyleBase}
+                        codeInputHighlightStyle={styles.underlineStyleHighLighted}
+                        pinCount={4}></OTPInputView>
+                    <Text style={styles.otpResend}>
+                        Didn't receive the OTP ?
+                        <Text
+                            style={{
+                                color: CustomColors.PRIMARY_BLUE_SATURATED,
+                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                            }}>
+                            {' '}
+                            RESEND OTP
+                        </Text>
+                    </Text>
+                    <Button
+                        style={styles.button}
+                        mode="contained"
+                        contentStyle={{height: 50}}
+                        dark
+                        color={CustomColors.PRIMARY_BLUE}
+                        onPress={() => {
+                            console.log(phoneInput.current.setValue('haha'));
+                            setUiState('pendingOTP');
+                        }}>
+                        Submit
+                    </Button>
+                </>
+            ) : null}
         </View>
     );
 };
@@ -167,12 +231,31 @@ const styles = StyleSheet.create({
         textAlign: 'justify',
     },
     button: {
-        marginTop: 12,
+        marginTop: 24,
         width: '100%',
         borderRadius: 8,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_16,
         justifyContent: 'center',
-        
+    },
+    underlineStyleBase: {
+        width: 60,
+        height: 60,
+        borderWidth: 0,
+        borderBottomWidth: 2,
+        borderRadius: 0,
+        color: CustomColors.GRAY_DARK,
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_16
+    },
+
+    underlineStyleHighLighted: {
+        borderColor: CustomColors.PRIMARY_BLUE,
+    },
+    otpResend: {
+        color: CustomColors.GRAY,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_14,
+        marginTop: 8,
     },
 });
