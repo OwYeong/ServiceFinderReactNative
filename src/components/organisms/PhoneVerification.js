@@ -1,12 +1,12 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-
+import {Animated, Keyboard, StyleSheet, Text, View, Platform, UIManager, LayoutAnimation} from 'react-native';
+import {Button} from 'react-native-paper';
 import PhoneVerificationIllustration from '@assets/images/phone-verification-illustration';
 import * as Animatable from 'react-native-animatable';
 import {CustomColors, CustomTypography} from '@styles';
 import PhoneInput from 'react-native-phone-input';
 import CountryPicker from 'react-native-country-picker-modal';
-import {useRef} from 'react';
+import {useRef, useEffect} from 'react';
 import {useState} from 'react';
 
 const movingUpAndDown = {
@@ -30,60 +30,114 @@ const movingUpAndDown = {
 const PhoneVerification = () => {
     const countryPicker = useRef(null);
     const phoneInput = useRef(null);
-    const [cca2, setCca2] = useState('US');
-    const [showCountryPicker, setShowCountryPicker] = useState(false)
+    const [countryCode, setCountryCode] = useState('MY');
+    const [showCountryPicker, setShowCountryPicker] = useState(false);
+    const [showIllustration, setShowIllustration] = useState(true);
 
     const selectCountry = country => {
-        console.log('shyttt')
-        phoneInput.current.selectCountry('ki');
-        setCca2(country.cca2);
+        phoneInput.current.selectCountry(country.cca2.toLowerCase());
+        setCountryCode(country.cca2);
     };
 
     const onPressFlag = () => {
-        setShowCountryPicker(true)
+        console.log('presss flag');
+        setShowCountryPicker(true);
     };
+
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setShowIllustration(false); // Update the keyboard state
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setShowIllustration(true); // Update the keyboard state
+        });
+
+        if (Platform.OS === 'android') {
+            if (UIManager.setLayoutAnimationEnabledExperimental) {
+                UIManager.setLayoutAnimationEnabledExperimental(true);
+            }
+        }
+        return () => {
+            // clean up
+            keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+        };
+    }, []);
 
     return (
         <View style={styles.bigContainer}>
-            <View
-                style={{
-                    width: 300,
-                    height: 300,
-                    borderRadius: 350 / 2,
-                    backgroundColor: '#d0f4fc',
-                    overflow: 'hidden',
-                    marginTop: 50,
-                }}>
-                <Animatable.View
-                    animation={movingUpAndDown}
-                    iterationCount={'infinite'}
-                    easing={'linear'}
-                    duration={5000}
-                    useNativeDriver={true}>
-                    <PhoneVerificationIllustration
-                        style={{transform: [{scale: 1.15}]}}
-                        width="100%"
-                        height="100%"
-                        fill="#ffffff"
-                    />
-                </Animatable.View>
-            </View>
+            {showIllustration ? (
+                <View
+                    style={{
+                        width: 300,
+                        height: 300,
+                        borderRadius: 350 / 2,
+                        backgroundColor: '#d0f4fc',
+                        overflow: 'hidden',
+                        marginTop: 50,
+                    }}>
+                    <Animatable.View
+                        animation={movingUpAndDown}
+                        iterationCount={'infinite'}
+                        easing={'linear'}
+                        duration={5000}
+                        useNativeDriver={true}>
+                        <PhoneVerificationIllustration
+                            style={{transform: [{scale: 1.15}]}}
+                            width="100%"
+                            height="100%"
+                            fill="#ffffff"
+                        />
+                    </Animatable.View>
+                </View>
+            ) : null}
             <Text style={styles.title}>One Last Step.{'\n'} Verify Your Mobile number.</Text>
-            <Text style={styles.desc}>
-                With ServiceFinder, you could always find your desired services. ServiceFinder is an platform that
-                offers all kind of services.
-            </Text>
-            <View style={{backgroundColor: 'red'}}>
-                <PhoneInput style={{width:300}} ref={phoneInput} onPressFlag={onPressFlag} />
+            <Text style={styles.desc}>We will send you a One Time Password on your mobile number.</Text>
+            <View style={{backgroundColor: CustomColors.GRAY_EXTRA_LIGHT, paddingHorizontal: 16, borderRadius: 10}}>
+                <PhoneInput
+                    style={{width: '100%'}}
+                    ref={phoneInput}
+                    textStyle={{
+                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                        height: 50,
+                        color: CustomColors.GRAY_DARK,
+                    }}
+                    initialCountry="my"
+                    textProps={{placeholder: 'Enter Your Phone Number'}}
+                    onPressFlag={onPressFlag}
+                    countriesList={require('@assets/allowedCountries.json')}
+                />
                 <CountryPicker
                     visible={showCountryPicker}
                     onSelect={value => selectCountry(value)}
+                    onClose={() => {
+                        setShowCountryPicker(false);
+                    }}
                     translation="eng"
                     withModal={true}
-                    cca2={cca2}>
-                        <Text>gaga</Text>
+                    withFilter
+                    withFlagButton={false}
+                    withCountryNameButton
+                    withAlphaFilter
+                    withCallingCode
+                    countryCode={countryCode}
+                    countryCodes={['MY', 'SG', 'TH', 'VN', 'US', 'UK', 'IN', 'ID']}>
+                    <View></View>
                 </CountryPicker>
             </View>
+            <Button
+                style={styles.button}
+                mode="contained"
+                contentStyle={{height: 50}}
+                dark
+                color={CustomColors.PRIMARY_BLUE}
+                onPress={() => {
+                    console.log(phoneInput.current.setValue('haha'));
+                }}>
+                Verify
+            </Button>
         </View>
     );
 };
@@ -111,5 +165,14 @@ const styles = StyleSheet.create({
         fontSize: CustomTypography.FONT_SIZE_16,
         color: CustomColors.GRAY_MEDIUM,
         textAlign: 'justify',
+    },
+    button: {
+        marginTop: 12,
+        width: '100%',
+        borderRadius: 8,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        justifyContent: 'center',
+        
     },
 });
