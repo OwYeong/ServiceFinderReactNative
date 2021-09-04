@@ -73,11 +73,11 @@ const App: () => Node = () => {
 
         const authenticationListener = auth().onAuthStateChanged(user => {
             console.log('yoyo, authenticated');
-
+            console.log(user)
             if (!!auth().currentUser) {
                 UserService.fetchLoggedInUserDataToRedux().then(() => {
                     //LoggedIn'
-                    
+                
                 });
             } else {
                 setIsAuth(false);

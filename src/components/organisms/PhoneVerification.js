@@ -9,6 +9,7 @@ import CountryPicker from 'react-native-country-picker-modal';
 import {useRef, useEffect} from 'react';
 import {useState} from 'react';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
+import firebase from '@react-native-firebase/app';
 
 const movingUpAndDown = {
     0: {
@@ -34,8 +35,9 @@ const PhoneVerification = () => {
     const [countryCode, setCountryCode] = useState('MY');
     const [showCountryPicker, setShowCountryPicker] = useState(false);
     const [showIllustration, setShowIllustration] = useState(true);
-    const [phoneNumInputted, setPhoneNumInputted] = useState('')
+    const [phoneNumInputted, setPhoneNumInputted] = useState('');
     const [uiState, setUiState] = useState('promptUserInput');
+    const [verificationId, setVerificationId] = useState(null);
     const selectCountry = country => {
         phoneInput.current.selectCountry(country.cca2.toLowerCase());
         setCountryCode(country.cca2);
@@ -44,6 +46,78 @@ const PhoneVerification = () => {
     const onPressFlag = () => {
         console.log('presss flag');
         setShowCountryPicker(true);
+    };
+
+    const sendOTPCode = phoneNum => {
+        firebase
+            .auth()
+            .verifyPhoneNumber(phoneNum)
+            .then(phoneAuthSnapshot => {
+                // OTP Code Successfully sent
+                console.log('OTP Successfully send');
+                setPhoneNumInputted(phoneNum);
+
+                setVerificationId(phoneAuthSnapshot.verificationId);
+                setUiState('pendingOTP');
+            })
+            .catch(error => {
+                // Error return from Firebase. No OTP Code sent.
+                console.log('PhoneVerification: Some Error Occured ' + JSON.stringify(error));
+            });
+    };
+
+    const verifyOTPCode = async inputtedCode => {
+        try {
+            const phoneAuthCredential = firebase.auth.PhoneAuthProvider.credential(verificationId, inputtedCode);
+
+            const config = {
+                name: 'AUTH_WORKER',
+            };
+            console.log(firebase.app().options);
+
+            // We use a seperate firebase object (worker) to avoid the signIn method to affect our current app who user already sign in with email
+            let firebaseAuthWorker = firebase.apps.find(app => app.name === 'AUTH_WORKER');
+            if (!firebaseAuthWorker) {
+                firebaseAuthWorker = await firebase.initializeApp({...firebase.app().options, databaseURL: ''}, config);
+            }
+
+            firebaseAuthWorker = firebaseAuthWorker.auth();
+
+            firebaseAuthWorker
+                .signInWithCredential(phoneAuthCredential)
+                .then(userCredential => {
+                    //Verification Success, OTP inputted is correct.
+                    setUiState('verificationSuccess');
+                    setVerificationId(null);
+
+                    console.log('verificationSuccess');
+
+                    return firebaseAuthWorker.signOut().catch(err => {});
+                })
+                .catch(error => {
+                    // Verification Failed. Check error code.
+                    var errorMsg = '';
+                    if (error.code === 'auth/invalid-verification-code') {
+                        errorMsg = 'Sorry, that code was incorrect.';
+                    } else if (error.code === 'auth/user-disabled') {
+                        errorMsg = 'Sorry, this phone number has been blocked.';
+                    } else if (error.code === 'auth/session-expired') {
+                        errorMsg = 'session expired';
+                    }else {
+                        // other internal error
+                        // see https://firebase.google.com/docs/reference/js/firebase.auth.Auth.html#sign-inwith-credential
+                        errorMsg =
+                            "Sorry, we couldn't verify that phone number at the moment. " +
+                            'Please try again later. ' +
+                            '\n\nIf the issue persists, please contact support.';
+                            console.log(error)
+                    }
+
+                    console.log(errorMsg);
+                });
+        } catch (err) {
+            console.log(err);
+        }
     };
 
     useEffect(() => {
@@ -159,10 +233,7 @@ const PhoneVerification = () => {
                         dark
                         color={CustomColors.PRIMARY_BLUE}
                         onPress={() => {
-                            console.log(phoneInput.current.setValue('haha'));
-                            
-                            setPhoneNumInputted(phoneInput.current.getValue())
-                            setUiState('pendingOTP');
+                            sendOTPCode(phoneInput.current.getValue());
                         }}>
                         Verify
                     </Button>
@@ -171,12 +242,27 @@ const PhoneVerification = () => {
 
             {uiState == 'pendingOTP' ? (
                 <>
-                    <Text style={styles.desc}>We will send you a One Time Password to <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>{phoneNumInputted}</Text>.<Text style={{fontFamily: CustomTypography.FONT_FAMILY_REGULAR, color: CustomColors.SECONDARY_BLUE_PURPLE}}> Not this number?</Text></Text>
+                    <Text style={styles.desc}>
+                        We will send you a One Time Password to{' '}
+                        <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>{phoneNumInputted}</Text>.
+                        <Text
+                            style={{
+                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                color: CustomColors.SECONDARY_BLUE_PURPLE,
+                            }}>
+                            {' '}
+                            Not this number?
+                        </Text>
+                    </Text>
                     <OTPInputView
                         style={{width: 300, height: 100}}
                         codeInputFieldStyle={styles.underlineStyleBase}
                         codeInputHighlightStyle={styles.underlineStyleHighLighted}
-                        pinCount={4}></OTPInputView>
+                        onCodeFilled={code => {
+                            console.log(`Code is ${code}, you are good to go!`);
+                            verifyOTPCode(code);
+                        }}
+                        pinCount={6}></OTPInputView>
                     <Text style={styles.otpResend}>
                         Didn't receive the OTP ?
                         <Text
@@ -246,7 +332,7 @@ const styles = StyleSheet.create({
         borderRadius: 0,
         color: CustomColors.GRAY_DARK,
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-        fontSize: CustomTypography.FONT_SIZE_16
+        fontSize: CustomTypography.FONT_SIZE_16,
     },
 
     underlineStyleHighLighted: {
