@@ -11,7 +11,7 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
 } from 'react-native';
-import {Button} from 'react-native-paper';
+import {Button, HelperText} from 'react-native-paper';
 import PhoneVerificationIllustration from '@assets/images/phone-verification-illustration';
 import * as Animatable from 'react-native-animatable';
 import {CustomColors, CustomTypography} from '@styles';
@@ -23,6 +23,7 @@ import OTPInputView from '@twotalltotems/react-native-otp-input';
 import firebase from '@react-native-firebase/app';
 import LottieView from 'lottie-react-native';
 import Ripple from 'react-native-material-ripple';
+import CustomModal from './CustomModal';
 
 const movingUpAndDown = {
     0: {
@@ -45,20 +46,107 @@ const movingUpAndDown = {
 const PhoneVerification = () => {
     const countryPicker = useRef(null);
     const phoneInput = useRef(null);
+    const otpAnimatable = useRef(null);
+    const otpInputRef = useRef(null);
     const [countryCode, setCountryCode] = useState('MY');
     const [showCountryPicker, setShowCountryPicker] = useState(false);
     const [showIllustration, setShowIllustration] = useState(true);
     const [phoneNumInputted, setPhoneNumInputted] = useState('');
     const [uiState, setUiState] = useState('promptUserInput');
     const [verificationId, setVerificationId] = useState(null);
+    const [otpError, setOtpError] = useState({isError: false, errorMsg: ''});
+
     const selectCountry = country => {
         phoneInput.current.selectCountry(country.cca2.toLowerCase());
         setCountryCode(country.cca2);
     };
+    const [modal, setModal] = useState({
+        isVisible: false,
+        modalTitle: '',
+        modalDesc: '',
+        modalType: '',
+        onDismiss: () => {},
+    });
 
     const onPressFlag = () => {
         console.log('presss flag');
         setShowCountryPicker(true);
+    };
+
+    const resendOTPCode = () => {
+        firebase
+            .auth()
+            .verifyPhoneNumber(phoneNumInputted)
+            .on(
+                'state_changed',
+                phoneAuthSnapshot => {
+                    switch (phoneAuthSnapshot.state) {
+                        // ------------------------
+                        //  IOS AND ANDROID EVENTS
+                        // ------------------------
+                        case firebase.auth.PhoneAuthState.CODE_SENT:
+                            // OTP Code Successfully sent
+                            console.log('OTP Successfully send');
+                            setModal({
+                                isVisible: true,
+                                modalType: 'success',
+                                modalTitle: 'OTP successfully resend !',
+                                modalDesc: `We have resend the OTP code to ${phoneNumInputted}`,
+                                onDismiss: () => {
+                                    setModal({...modal, isVisible: false});
+                                },
+                            });
+                            break;
+                        case firebase.auth.PhoneAuthState.ERROR: // or 'error'
+                            setModal({
+                                isVisible: true,
+                                modalType: 'error',
+                                modalTitle: 'OTP resend failed !',
+                                modalDesc: 'Unexpected error occur during OTP resend process. Please try again later.',
+                                onDismiss: () => {
+                                    setModal({...modal, isVisible: false});
+                                },
+                            });
+                            console.log(phoneAuthSnapshot.error);
+                            break;
+
+                        // ---------------------
+                        // ANDROID ONLY EVENTS
+                        // ---------------------
+                        case firebase.auth.PhoneAuthState.AUTO_VERIFY_TIMEOUT: // or 'timeout'
+                            console.log('auto verify on android timed out');
+                            // proceed with your manual code input flow, same as you would do in
+                            // CODE_SENT if you were on IOS
+                            break;
+                        case firebase.auth.PhoneAuthState.AUTO_VERIFIED: // or 'verified'
+                            // auto verified means the code has also been automatically confirmed as correct/received
+                            // phoneAuthSnapshot.code will contain the auto verified sms code - no need to ask the user for input.
+                            console.log('auto verified on android');
+                            console.log(phoneAuthSnapshot);
+                            // Example usage if handling here and not in optionalCompleteCb:
+                            // const { verificationId, code } = phoneAuthSnapshot;
+                            // const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+
+                            // Do something with your new credential, e.g.:
+                            // firebase.auth().signInWithCredential(credential);
+                            // firebase.auth().linkWithCredential(credential);
+                            // etc ...
+                            break;
+                    }
+                },
+                error => {
+                    // optionalErrorCb would be same logic as the ERROR case above,  if you've already handed
+                    // the ERROR case in the above observer then there's no need to handle it here
+                    console.log(error);
+                    // verificationId is attached to error if required
+                    console.log(error.verificationId);
+                },
+            )
+            .then(phoneAuthSnapshot => {})
+            .catch(error => {
+                // Error return from Firebase. No OTP Code sent.
+                console.log('PhoneVerification: Some Error Occured ' + JSON.stringify(error));
+            });
     };
 
     const sendOTPCode = phoneNum => {
@@ -82,6 +170,15 @@ const PhoneVerification = () => {
                             break;
                         case firebase.auth.PhoneAuthState.ERROR: // or 'error'
                             console.log('verification error');
+                            setModal({
+                                isVisible: true,
+                                modalType: 'error',
+                                modalTitle: 'Phone verification failed !',
+                                modalDesc: 'Unexpected error occur during phone verification. Please try again later.',
+                                onDismiss: () => {
+                                    setModal({...modal, isVisible: false});
+                                },
+                            });
                             console.log(phoneAuthSnapshot.error);
                             break;
 
@@ -156,6 +253,12 @@ const PhoneVerification = () => {
                     var errorMsg = '';
                     if (error.code === 'auth/invalid-verification-code') {
                         errorMsg = 'Sorry, that code was incorrect.';
+                        setOtpError({isError: true, errorMsg: 'Sorry, the OTP code is incorrect.'});
+                        otpAnimatable.current.shake(1000).then(() => {
+                            setOtpError({isError: false, errorMsg: 'Sorry, the OTP code is incorrect.'});
+                            console.log(otpInputRef.current)
+                            // otpInputRef.current.clearAllFields();
+                        });
                     } else if (error.code === 'auth/user-disabled') {
                         errorMsg = 'Sorry, this phone number has been blocked.';
                     } else if (error.code === 'auth/session-expired') {
@@ -167,7 +270,15 @@ const PhoneVerification = () => {
                             "Sorry, we couldn't verify that phone number at the moment. " +
                             'Please try again later. ' +
                             '\n\nIf the issue persists, please contact support.';
-                        console.log(error);
+                        setModal({
+                            isVisible: true,
+                            modalType: 'error',
+                            modalTitle: 'Phone verification failed !',
+                            modalDesc: 'Unexpected error occur during phone verification. Please try again later.',
+                            onDismiss: () => {
+                                setModal({...modal, isVisible: false});
+                            },
+                        });
                     }
 
                     console.log(errorMsg);
@@ -322,25 +433,45 @@ const PhoneVerification = () => {
                             </Text>
                         </TouchableWithoutFeedback>
                     </Text>
-                    <OTPInputView
-                        style={{width: '100%', height: 60, paddingHorizontal: 20}}
-                        codeInputFieldStyle={styles.underlineStyleBase}
-                        codeInputHighlightStyle={styles.underlineStyleHighLighted}
-                        onCodeFilled={code => {
-                            console.log(`Code is ${code}, you are good to go!`);
-                            verifyOTPCode(code);
-                        }}
-                        pinCount={6}></OTPInputView>
+                    <Animatable.View ref={otpAnimatable}>
+                        <OTPInputView
+                            ref={otpInputRef}
+                            code={'11112'}
+                            style={{width: '100%', height: 60, paddingHorizontal: 20}}
+                            codeInputFieldStyle={[
+                                styles.underlineStyleBase,
+                                {
+                                    borderColor: otpError.isError ? 'red' : CustomColors.GRAY_LIGHT,
+                                    color: otpError.isError ? 'red' : CustomColors.GRAY_DARK,
+                                },
+                            ]}
+                            codeInputHighlightStyle={styles.underlineStyleHighLighted}
+                            onCodeFilled={code => {
+                                console.log(`Code is ${code}, you are good to go!`);
+                                verifyOTPCode(code);
+                            }}
+                            clearInputs={false}
+                            pinCount={6}></OTPInputView>
+                    </Animatable.View>
+                    <HelperText type="error" style={styles.errorText} visible={otpError.isError}>
+                        {otpError.errorMsg}
+                    </HelperText>
+
                     <Text style={styles.otpResend}>
                         Didn't receive the OTP ?
-                        <Text
-                            style={{
-                                color: CustomColors.PRIMARY_BLUE_SATURATED,
-                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                        <TouchableWithoutFeedback
+                            onPress={() => {
+                                resendOTPCode();
                             }}>
-                            {' '}
-                            RESEND OTP
-                        </Text>
+                            <Text
+                                style={{
+                                    color: CustomColors.PRIMARY_BLUE_SATURATED,
+                                    fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                }}>
+                                {' '}
+                                RESEND OTP
+                            </Text>
+                        </TouchableWithoutFeedback>
                     </Text>
                     <Button
                         style={styles.button}
@@ -379,6 +510,17 @@ const PhoneVerification = () => {
                     </View>
                 </>
             ) : null}
+            <CustomModal
+                animationIn={'bounceIn'}
+                animationOut={'bounceOut'}
+                animationOutTiming={150}
+                isVisible={modal.isVisible}
+                modalType={modal.modalType}
+                modalTitle={modal.modalTitle}
+                modalDesc={modal.modalDesc}
+                buttonOnPressCallback={modal.onDismiss}
+                statusBarTranslucent={true}
+                useNativeDriver={true}></CustomModal>
         </View>
     );
 };
@@ -434,5 +576,12 @@ const styles = StyleSheet.create({
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_14,
         marginTop: 8,
+    },
+    errorText: {
+        fontSize: CustomTypography.FONT_SIZE_12,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        color: 'red',
+        margin: 0,
+        padding: 0,
     },
 });
