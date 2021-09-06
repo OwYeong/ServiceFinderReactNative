@@ -1,5 +1,16 @@
 import React from 'react';
-import {Animated, Keyboard, StyleSheet, Text, View, Platform, UIManager, LayoutAnimation} from 'react-native';
+import {
+    Animated,
+    Keyboard,
+    StyleSheet,
+    Text,
+    View,
+    Platform,
+    UIManager,
+    LayoutAnimation,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+} from 'react-native';
 import {Button} from 'react-native-paper';
 import PhoneVerificationIllustration from '@assets/images/phone-verification-illustration';
 import * as Animatable from 'react-native-animatable';
@@ -10,6 +21,8 @@ import {useRef, useEffect} from 'react';
 import {useState} from 'react';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import firebase from '@react-native-firebase/app';
+import LottieView from 'lottie-react-native';
+import Ripple from 'react-native-material-ripple';
 
 const movingUpAndDown = {
     0: {
@@ -52,14 +65,59 @@ const PhoneVerification = () => {
         firebase
             .auth()
             .verifyPhoneNumber(phoneNum)
-            .then(phoneAuthSnapshot => {
-                // OTP Code Successfully sent
-                console.log('OTP Successfully send');
-                setPhoneNumInputted(phoneNum);
+            .on(
+                'state_changed',
+                phoneAuthSnapshot => {
+                    switch (phoneAuthSnapshot.state) {
+                        // ------------------------
+                        //  IOS AND ANDROID EVENTS
+                        // ------------------------
+                        case firebase.auth.PhoneAuthState.CODE_SENT:
+                            // OTP Code Successfully sent
+                            console.log('OTP Successfully send');
+                            setPhoneNumInputted(phoneNum);
 
-                setVerificationId(phoneAuthSnapshot.verificationId);
-                setUiState('pendingOTP');
-            })
+                            setVerificationId(phoneAuthSnapshot.verificationId);
+                            setUiState('pendingOTP');
+                            break;
+                        case firebase.auth.PhoneAuthState.ERROR: // or 'error'
+                            console.log('verification error');
+                            console.log(phoneAuthSnapshot.error);
+                            break;
+
+                        // ---------------------
+                        // ANDROID ONLY EVENTS
+                        // ---------------------
+                        case firebase.auth.PhoneAuthState.AUTO_VERIFY_TIMEOUT: // or 'timeout'
+                            console.log('auto verify on android timed out');
+                            // proceed with your manual code input flow, same as you would do in
+                            // CODE_SENT if you were on IOS
+                            break;
+                        case firebase.auth.PhoneAuthState.AUTO_VERIFIED: // or 'verified'
+                            // auto verified means the code has also been automatically confirmed as correct/received
+                            // phoneAuthSnapshot.code will contain the auto verified sms code - no need to ask the user for input.
+                            console.log('auto verified on android');
+                            console.log(phoneAuthSnapshot);
+                            // Example usage if handling here and not in optionalCompleteCb:
+                            // const { verificationId, code } = phoneAuthSnapshot;
+                            // const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+
+                            // Do something with your new credential, e.g.:
+                            // firebase.auth().signInWithCredential(credential);
+                            // firebase.auth().linkWithCredential(credential);
+                            // etc ...
+                            break;
+                    }
+                },
+                error => {
+                    // optionalErrorCb would be same logic as the ERROR case above,  if you've already handed
+                    // the ERROR case in the above observer then there's no need to handle it here
+                    console.log(error);
+                    // verificationId is attached to error if required
+                    console.log(error.verificationId);
+                },
+            )
+            .then(phoneAuthSnapshot => {})
             .catch(error => {
                 // Error return from Firebase. No OTP Code sent.
                 console.log('PhoneVerification: Some Error Occured ' + JSON.stringify(error));
@@ -73,7 +131,6 @@ const PhoneVerification = () => {
             const config = {
                 name: 'AUTH_WORKER',
             };
-            console.log(firebase.app().options);
 
             // We use a seperate firebase object (worker) to avoid the signIn method to affect our current app who user already sign in with email
             let firebaseAuthWorker = firebase.apps.find(app => app.name === 'AUTH_WORKER');
@@ -103,14 +160,14 @@ const PhoneVerification = () => {
                         errorMsg = 'Sorry, this phone number has been blocked.';
                     } else if (error.code === 'auth/session-expired') {
                         errorMsg = 'session expired';
-                    }else {
+                    } else {
                         // other internal error
                         // see https://firebase.google.com/docs/reference/js/firebase.auth.Auth.html#sign-inwith-credential
                         errorMsg =
                             "Sorry, we couldn't verify that phone number at the moment. " +
                             'Please try again later. ' +
                             '\n\nIf the issue persists, please contact support.';
-                            console.log(error)
+                        console.log(error);
                     }
 
                     console.log(errorMsg);
@@ -169,7 +226,9 @@ const PhoneVerification = () => {
                     </Animatable.View>
                 </View>
             ) : null}
-            <Text style={styles.title}>Verify Your Phone Number.</Text>
+            <Text style={styles.title}>
+                {uiState == 'verificationSuccess' ? 'Verification Success' : 'Verify Your Phone Number'}
+            </Text>
 
             {uiState == 'promptUserInput' ? (
                 <>
@@ -242,20 +301,29 @@ const PhoneVerification = () => {
 
             {uiState == 'pendingOTP' ? (
                 <>
-                    <Text style={styles.desc}>
+                    <Text
+                        style={[
+                            styles.desc,
+                            {flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center'},
+                        ]}>
                         We will send you a One Time Password to{' '}
-                        <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>{phoneNumInputted}</Text>.
-                        <Text
-                            style={{
-                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                color: CustomColors.SECONDARY_BLUE_PURPLE,
+                        <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>{phoneNumInputted}</Text>.{' '}
+                        <TouchableWithoutFeedback
+                            onPress={() => {
+                                setPhoneNumInputted('');
+                                setUiState('promptUserInput');
                             }}>
-                            {' '}
-                            Not this number?
-                        </Text>
+                            <Text
+                                style={{
+                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                    color: CustomColors.SECONDARY_BLUE_PURPLE,
+                                }}>
+                                Not this number?
+                            </Text>
+                        </TouchableWithoutFeedback>
                     </Text>
                     <OTPInputView
-                        style={{width: 300, height: 100}}
+                        style={{width: '100%', height: 60, paddingHorizontal: 20}}
                         codeInputFieldStyle={styles.underlineStyleBase}
                         codeInputHighlightStyle={styles.underlineStyleHighLighted}
                         onCodeFilled={code => {
@@ -286,6 +354,29 @@ const PhoneVerification = () => {
                         }}>
                         Submit
                     </Button>
+                </>
+            ) : null}
+
+            {uiState == 'verificationSuccess' ? (
+                <>
+                    <Text style={styles.desc}>
+                        Cheers! You have successfully verify your phone number and you may start booking service with
+                        ServiceFinder now.
+                    </Text>
+                    <View style={{width: '100%', flex: 1, marginBottom: 48}}>
+                        <Button
+                            style={[styles.button, {position: 'absolute', bottom: 0, left: 0}]}
+                            mode="contained"
+                            contentStyle={{height: 50}}
+                            dark
+                            color={CustomColors.PRIMARY_BLUE}
+                            onPress={() => {
+                                console.log(phoneInput.current.setValue('haha'));
+                                setUiState('pendingOTP');
+                            }}>
+                            Get Started
+                        </Button>
+                    </View>
                 </>
             ) : null}
         </View>
@@ -325,7 +416,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     underlineStyleBase: {
-        width: 60,
+        flex: 1,
         height: 60,
         borderWidth: 0,
         borderBottomWidth: 2,
