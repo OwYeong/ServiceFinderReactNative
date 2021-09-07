@@ -83,6 +83,7 @@ const UserService = {
                                 lastName: lastName,
                                 accType: Constants.ACCOUNT_TYPE.VENDOR,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
+                                isFirstTimeUser: true,
                             })
                             .then(() => {});
 
@@ -153,6 +154,7 @@ const UserService = {
                                 lastName: lastName,
                                 accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
+                                isFirstTimeUser: true,
                             })
                             .then(() => {});
 
@@ -274,6 +276,7 @@ const UserService = {
                                     email: authUser.additionalUserInfo.profile.email,
                                     accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                     loginProvider: Constants.LOGIN_PROVIDER_GOOGLE,
+                                    isFirstTimeUser: true,
                                 },
                                 authUser.user.uid,
                             )
@@ -334,6 +337,7 @@ const UserService = {
                                     email: authUser.additionalUserInfo.profile.email,
                                     accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                     loginProvider: Constants.LOGIN_PROVIDER_FACEBOOK,
+                                    isFirstTimeUser: true,
                                 },
                                 authUser.user.uid,
                             )
@@ -396,6 +400,42 @@ const UserService = {
                 });
         });
     },
+    updateIsFirstTime:(documentId, isFirstTimeUser) => {
+        return new Promise(async (resolve, reject) => {
+            const usersCollection = firestore().collection('users');
+
+            usersCollection
+                .doc(documentId)
+                .update({
+                    isFirstTimeUser: isFirstTimeUser,
+                })
+                .then(() => {
+                    resolve('Successfully updated');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
+    updatePhoneNumber: (documentId, phoneNumber) => {
+        return new Promise(async (resolve, reject) => {
+            const usersCollection = firestore().collection('users');
+
+            usersCollection
+                .doc(documentId)
+                .update({
+                    phoneNumber: phoneNumber,
+                })
+                .then(() => {
+                    resolve('Successfully updated');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
     isEmailAlreadyRegistered: email => {
         return new Promise((resolve, reject) => {
             auth()
@@ -422,10 +462,9 @@ const UserService = {
                 if (auth().currentUser == null) {
                     return; //already sign out
                 }
-                console.log('my uid is ' + auth().currentUser.uid);
-                const currentUser = await firestore().collection('users').doc(auth().currentUser.uid).get();
-
-                if (currentUser.data().loginProvider == Constants.LOGIN_PROVIDER_GOOGLE) {
+                
+                if (auth().currentUser.providerData[0].providerId == Constants.LOGIN_PROVIDER_GOOGLE) {
+                    console.log('google logout')
                     await GoogleSignin.revokeAccess();
                     await GoogleSignin.signOut();
                 }
@@ -448,8 +487,13 @@ const UserService = {
                 }
 
                 const currentUserEmail = auth().currentUser.email;
-
+                
+                console.log(auth().currentUser.uid)
                 const currentUser = await firestore().collection('users').doc(auth().currentUser.uid).get();
+
+                if (!currentUser.exists) {
+                    throw 'user document does not exist';
+                }
 
                 const loggedInUserData = {
                     email: currentUserEmail,
@@ -461,7 +505,9 @@ const UserService = {
                 resolve('Finish fetching');
             } catch (error) {
                 console.log(error);
+                UserService.logOut();
                 reject('Some Error occurs');
+                
             }
         });
     },

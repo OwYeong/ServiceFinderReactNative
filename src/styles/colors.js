@@ -19,3 +19,4 @@ export const GRAY_EXTRA_LIGHT = "#f7f7f7";
 export const GRAY_LIGHT = '#efefef';
 export const GRAY_MEDIUM = '#343434';
 export const GRAY_DARK = '#101010';
+export const GRAY = '#808080';
