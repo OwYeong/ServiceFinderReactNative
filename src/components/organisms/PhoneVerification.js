@@ -432,17 +432,7 @@ const PhoneVerification = () => {
                             backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
                             borderRadius: 10,
                         }}>
-                        {/* <View
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        backgroundColor: 'white',
-                        opacity: 0.5,
-                        zIndex: 20,
-                    }}></View> */}
+                            
                         <PhoneInput
                             style={{width: '100%', paddingHorizontal: 16}}
                             ref={phoneInput}

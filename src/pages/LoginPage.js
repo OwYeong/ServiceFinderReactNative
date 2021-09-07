@@ -43,7 +43,6 @@ const loginValidationSchema = yup.object().shape({
 const LoginPage = () => {
     const navigation = useNavigation();
     const [isPasswordHide, setIsPasswordHide] = useState(true);
-    const [isForgotPasswordClicked, setIsForgotPasswordClicked] = useState(false);
     const [isRegisterClicked, setIsRegisterClicked] = useState(false);
     const [bigLogoAnimatedValue, setBigLogoAnimatedValue] = useState(new Animated.Value(1)); // 1 is small logo
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -306,26 +305,6 @@ const LoginPage = () => {
                                                         />
                                                     )
                                                 }></Field>
-                                            <Ripple
-                                                style={styles.forgotPasswordLabelContainer}
-                                                onPress={() => {
-                                                    setIsForgotPasswordClicked(true);
-                                                }}>
-                                                <Text
-                                                    style={[
-                                                        styles.forgotPasswordLabel,
-                                                        {
-                                                            color: isForgotPasswordClicked
-                                                                ? CustomColors.PRIMARY_BLUE
-                                                                : CustomColors.PRIMARY_DARK_BLUE,
-                                                            textDecorationLine: isForgotPasswordClicked
-                                                                ? 'underline'
-                                                                : 'none',
-                                                        },
-                                                    ]}>
-                                                    Forgot password?
-                                                </Text>
-                                            </Ripple>
                                             <Button
                                                 style={styles.loginBtn}
                                                 contentStyle={{height: 50}}
@@ -494,23 +473,14 @@ const styles = StyleSheet.create({
     input: {
         marginTop: 12,
     },
-    forgotPasswordLabelContainer: {
-        marginLeft: 2,
-        marginTop: 8,
-        width: 140,
-    },
-    forgotPasswordLabel: {
-        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-        fontSize: CustomTypography.FONT_SIZE_12,
-    },
     loginBtn: {
-        marginTop: 12,
         width: '100%',
         borderRadius: 8,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_16,
         justifyContent: 'center',
         ...CustomMixins.margin(24, 0),
+        marginTop: 36,
     },
     googleSignInBtn: {
         flex: 1,
