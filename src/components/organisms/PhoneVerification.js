@@ -24,6 +24,11 @@ import firebase from '@react-native-firebase/app';
 import LottieView from 'lottie-react-native';
 import Ripple from 'react-native-material-ripple';
 import CustomModal from './CustomModal';
+import LoadingModal from './LoadingModal';
+import UserService from '@services/UserService';
+import auth from '@react-native-firebase/auth';
+import {useSelector} from 'react-redux';
+import {Constants} from '~constants';
 
 const movingUpAndDown = {
     0: {
@@ -44,7 +49,6 @@ const movingUpAndDown = {
 };
 
 const PhoneVerification = () => {
-    const countryPicker = useRef(null);
     const phoneInput = useRef(null);
     const otpAnimatable = useRef(null);
     const otpInputRef = useRef(null);
@@ -54,8 +58,20 @@ const PhoneVerification = () => {
     const [phoneNumInputted, setPhoneNumInputted] = useState('');
     const [uiState, setUiState] = useState('promptUserInput');
     const [verificationId, setVerificationId] = useState(null);
+    const [otpInputted, setOtpInputted] = useState('');
     const [otpError, setOtpError] = useState({isError: false, errorMsg: ''});
+    const [otpClear, setOtpClear] = useState(false);
+    const [loadingModal, setLoadingModal] = useState({
+        isVisible: false,
+        modalTitle: '',
+    });
+    const userInfo = useSelector(state => state.loginState.userInfo);
 
+    useEffect(() => {
+        if (!!userInfo.phoneNumber) {
+            setUiState('verificationSuccess');
+        }
+    }, []);
     const selectCountry = country => {
         phoneInput.current.selectCountry(country.cca2.toLowerCase());
         setCountryCode(country.cca2);
@@ -98,15 +114,28 @@ const PhoneVerification = () => {
                             });
                             break;
                         case firebase.auth.PhoneAuthState.ERROR: // or 'error'
-                            setModal({
-                                isVisible: true,
-                                modalType: 'error',
-                                modalTitle: 'OTP resend failed !',
-                                modalDesc: 'Unexpected error occur during OTP resend process. Please try again later.',
-                                onDismiss: () => {
-                                    setModal({...modal, isVisible: false});
-                                },
-                            });
+                            
+                            if (phoneAuthSnapshot.error.code === 'auth/too-many-requests') {
+                                setModal({
+                                    isVisible: true,
+                                    modalType: 'error',
+                                    modalTitle: 'Phone verification failed !',
+                                    modalDesc: `Too many request to this phone number ${phoneNumInputted}. Please try again later.`,
+                                    onDismiss: () => {
+                                        setModal({...modal, isVisible: false});
+                                    },
+                                });
+                            } else {
+                                setModal({
+                                    isVisible: true,
+                                    modalType: 'error',
+                                    modalTitle: 'OTP resend failed !',
+                                    modalDesc: 'Unexpected error occur during OTP resend process. Please try again later.',
+                                    onDismiss: () => {
+                                        setModal({...modal, isVisible: false});
+                                    },
+                                });
+                            }
                             console.log(phoneAuthSnapshot.error);
                             break;
 
@@ -170,15 +199,27 @@ const PhoneVerification = () => {
                             break;
                         case firebase.auth.PhoneAuthState.ERROR: // or 'error'
                             console.log('verification error');
-                            setModal({
-                                isVisible: true,
-                                modalType: 'error',
-                                modalTitle: 'Phone verification failed !',
-                                modalDesc: 'Unexpected error occur during phone verification. Please try again later.',
-                                onDismiss: () => {
-                                    setModal({...modal, isVisible: false});
-                                },
-                            });
+                            if (phoneAuthSnapshot.error.code === 'auth/too-many-requests') {
+                                setModal({
+                                    isVisible: true,
+                                    modalType: 'error',
+                                    modalTitle: 'Phone verification failed !',
+                                    modalDesc: `Too many request to this phone number ${phoneNum}. Please try again later.`,
+                                    onDismiss: () => {
+                                        setModal({...modal, isVisible: false});
+                                    },
+                                });
+                            } else {
+                                setModal({
+                                    isVisible: true,
+                                    modalType: 'error',
+                                    modalTitle: 'OTP resend failed !',
+                                    modalDesc: 'Unexpected error occur during OTP resend process. Please try again later.',
+                                    onDismiss: () => {
+                                        setModal({...modal, isVisible: false});
+                                    },
+                                });
+                            }
                             console.log(phoneAuthSnapshot.error);
                             break;
 
@@ -241,8 +282,14 @@ const PhoneVerification = () => {
                 .signInWithCredential(phoneAuthCredential)
                 .then(userCredential => {
                     //Verification Success, OTP inputted is correct.
+                    setLoadingModal({isVisible: false, modalTitle: ''});
                     setUiState('verificationSuccess');
+
                     setVerificationId(null);
+
+                    UserService.updatePhoneNumber(auth().currentUser.uid, phoneNumInputted)
+                        .then(data => {})
+                        .catch(err => {});
 
                     console.log('verificationSuccess');
 
@@ -250,19 +297,49 @@ const PhoneVerification = () => {
                 })
                 .catch(error => {
                     // Verification Failed. Check error code.
+                    setLoadingModal({isVisible: false, modalTitle: ''});
                     var errorMsg = '';
                     if (error.code === 'auth/invalid-verification-code') {
                         errorMsg = 'Sorry, that code was incorrect.';
-                        setOtpError({isError: true, errorMsg: 'Sorry, the OTP code is incorrect.'});
-                        otpAnimatable.current.shake(1000).then(() => {
-                            setOtpError({isError: false, errorMsg: 'Sorry, the OTP code is incorrect.'});
-                            console.log(otpInputRef.current)
-                            // otpInputRef.current.clearAllFields();
+                        setOtpError({isError: true, errorMsg: 'Sorry, the OTP code is incorrect. Please Try again'});
+                        otpAnimatable.current.shake(500).then(() => {
+                            setOtpError({
+                                ...otpError,
+                                isError: false,
+                            });
+                            setOtpInputted('');
+                            setOtpClear(true);
                         });
                     } else if (error.code === 'auth/user-disabled') {
                         errorMsg = 'Sorry, this phone number has been blocked.';
                     } else if (error.code === 'auth/session-expired') {
                         errorMsg = 'session expired';
+                        setOtpError({
+                            isError: true,
+                            errorMsg: 'Sorry, the OTP code has expired. Please resend the OTP.',
+                        });
+                        otpAnimatable.current.shake(500).then(() => {
+                            setOtpError({
+                                ...otpError,
+                                isError: false,
+                            });
+                            setOtpInputted('');
+                            setOtpClear(true);
+                        });
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorMsg =
+                            "Sorry, we couldn't verify that phone number at the moment. " +
+                            'Please try again later. ' +
+                            '\n\nIf the issue persists, please contact support.';
+                        setModal({
+                            isVisible: true,
+                            modalType: 'error',
+                            modalTitle: 'Phone verification failed !',
+                            modalDesc: `Too many request to this phone number ${phoneNumInputted}. Please try again later.`,
+                            onDismiss: () => {
+                                setModal({...modal, isVisible: false});
+                            },
+                        });
                     } else {
                         // other internal error
                         // see https://firebase.google.com/docs/reference/js/firebase.auth.Auth.html#sign-inwith-credential
@@ -284,6 +361,7 @@ const PhoneVerification = () => {
                     console.log(errorMsg);
                 });
         } catch (err) {
+            setLoadingModal({isVisible: false, modalTitle: ''});
             console.log(err);
         }
     };
@@ -344,8 +422,9 @@ const PhoneVerification = () => {
             {uiState == 'promptUserInput' ? (
                 <>
                     <Text style={styles.desc}>
-                        One last step, verify your phone number and book service now. This will ensure that service
-                        provider could contact you.
+                        {userInfo.accType == Constants.ACCOUNT_TYPE.CONSUMER
+                            ? 'One last step, verify your phone number and book service now. This will ensure that service provider could contact you.'
+                            : 'One last step, verify your phone number and sell service now. This will ensure that your customer could contact you.'}
                     </Text>
                     <View
                         style={{
@@ -422,6 +501,8 @@ const PhoneVerification = () => {
                         <TouchableWithoutFeedback
                             onPress={() => {
                                 setPhoneNumInputted('');
+                                setOtpError({isError: false, errorMsg: ''});
+                                setOtpInputted('');
                                 setUiState('promptUserInput');
                             }}>
                             <Text
@@ -436,7 +517,18 @@ const PhoneVerification = () => {
                     <Animatable.View ref={otpAnimatable}>
                         <OTPInputView
                             ref={otpInputRef}
-                            code={'11112'}
+                            code={otpInputted}
+                            onCodeChanged={code => {
+                                setOtpError({...otpError, errorMsg: ''});
+
+                                setOtpInputted(code);
+                                setOtpClear(false);
+                                if (code.length == 6) {
+                                    console.log('Submitting OTP code ' + code);
+                                    setLoadingModal({isVisible: true, modalTitle: 'Verifying otp...'});
+                                    verifyOTPCode(code);
+                                }
+                            }}
                             style={{width: '100%', height: 60, paddingHorizontal: 20}}
                             codeInputFieldStyle={[
                                 styles.underlineStyleBase,
@@ -445,15 +537,11 @@ const PhoneVerification = () => {
                                     color: otpError.isError ? 'red' : CustomColors.GRAY_DARK,
                                 },
                             ]}
+                            clearInputs={otpClear}
                             codeInputHighlightStyle={styles.underlineStyleHighLighted}
-                            onCodeFilled={code => {
-                                console.log(`Code is ${code}, you are good to go!`);
-                                verifyOTPCode(code);
-                            }}
-                            clearInputs={false}
                             pinCount={6}></OTPInputView>
                     </Animatable.View>
-                    <HelperText type="error" style={styles.errorText} visible={otpError.isError}>
+                    <HelperText type="error" style={styles.errorText} visible={!!otpError.errorMsg}>
                         {otpError.errorMsg}
                     </HelperText>
 
@@ -502,8 +590,13 @@ const PhoneVerification = () => {
                             dark
                             color={CustomColors.PRIMARY_BLUE}
                             onPress={() => {
-                                console.log(phoneInput.current.setValue('haha'));
-                                setUiState('pendingOTP');
+                                UserService.updateIsFirstTime(auth().currentUser.uid, false)
+                                    .then(data => {
+                                        UserService.fetchLoggedInUserDataToRedux();
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
                             }}>
                             Get Started
                         </Button>
@@ -521,6 +614,14 @@ const PhoneVerification = () => {
                 buttonOnPressCallback={modal.onDismiss}
                 statusBarTranslucent={true}
                 useNativeDriver={true}></CustomModal>
+            <LoadingModal
+                animationIn={'bounceIn'}
+                animationOut={'bounceOut'}
+                animationOutTiming={150}
+                isVisible={loadingModal.isVisible}
+                modalTitle={loadingModal.modalTitle}
+                statusBarTranslucent={true}
+                useNativeDriver={true}></LoadingModal>
         </View>
     );
 };
@@ -575,13 +676,14 @@ const styles = StyleSheet.create({
         color: CustomColors.GRAY,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_14,
-        marginTop: 8,
+        marginTop: 16,
     },
     errorText: {
         fontSize: CustomTypography.FONT_SIZE_12,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         color: 'red',
         margin: 0,
+        marginTop: 8,
         padding: 0,
     },
 });

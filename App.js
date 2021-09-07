@@ -61,6 +61,7 @@ const App: () => Node = () => {
     const backgroundStyle = {
         backgroundColor: 'blue',
     };
+    var autoFetchLocked = false;
 
     console.log('hahaha');
 
@@ -73,12 +74,22 @@ const App: () => Node = () => {
 
         const authenticationListener = auth().onAuthStateChanged(user => {
             console.log('yoyo, authenticated');
-            console.log(user)
+            console.log(user);
+            console.log(user?.providerData);
+            if (!user) {
+                autoFetchLocked = true;
+            }
+
             if (!!auth().currentUser) {
-                UserService.fetchLoggedInUserDataToRedux().then(() => {
-                    //LoggedIn'
-                
-                });
+                if (!autoFetchLocked) {
+                    UserService.fetchLoggedInUserDataToRedux()
+                        .then(() => {
+                            //LoggedIn'
+                        })
+                        .catch(err => {});
+                } else {
+                    autoFetchLocked = false;
+                }
             } else {
                 setIsAuth(false);
                 dispatch(setLoginBlock(false));
@@ -91,7 +102,7 @@ const App: () => Node = () => {
     useEffect(() => {
         console.log('logged in use');
         console.log(userInfo);
-        if(!!userInfo){
+        if (!!userInfo) {
             setIsAuth(true);
         }
     }, [userInfo]);

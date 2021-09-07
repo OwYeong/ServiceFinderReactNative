@@ -12,6 +12,8 @@ import IntroductionSliderPage from '@pages/IntroductionSliderPage';
 const Stack = createStackNavigator();
 
 const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
+    const userInfo = useSelector(state => state.loginState.userInfo);
+
     return (
         <Stack.Navigator>
             {isLoading ? (
@@ -28,14 +30,18 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
 
             {isAuth && !loginBlock ? (
                 <>
-                    <Stack.Screen
-                        name="IntroductionSliderPage"
-                        component={IntroductionSliderPage}
-                        options={{
-                            animationEnabled: true,
-                            headerShown: false,
-                        }}
-                    />
+                    {userInfo.isFirstTimeUser ? (
+                        <Stack.Screen
+                            name="IntroductionSliderPage"
+                            options={{
+                                animationEnabled: true,
+                                headerShown: false,
+                            }}
+                        >
+                            {(props) => <IntroductionSliderPage {...props} accType={userInfo.accType} />}
+                        </Stack.Screen>
+                    ) : null}
+
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.CONSUMER ? (
                         <>
                             <Stack.Screen
