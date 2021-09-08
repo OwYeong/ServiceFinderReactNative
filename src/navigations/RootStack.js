@@ -8,6 +8,7 @@ import {useSelector} from 'react-redux';
 import {Constants} from '~constants';
 import ProviderStack from './ProviderStack';
 import IntroductionSliderPage from '@pages/IntroductionSliderPage';
+import SetupBusinessProfileWalkThrough from '@pages/provider/SetupBusinessProfileWalkthrough';
 
 const Stack = createStackNavigator();
 
@@ -64,6 +65,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                     ) : null}
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.VENDOR ? (
                         <>
+                            <Stack.Screen
+                                name="ProviderBusinessSetup"
+                                component={SetupBusinessProfileWalkThrough}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
                             <Stack.Screen
                                 name="Provider"
                                 component={ProviderStack}
