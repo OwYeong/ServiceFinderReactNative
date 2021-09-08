@@ -5,49 +5,62 @@ import CompleteYourProfileIllustration from '@assets/images/vendor-complete-prof
 import {CustomColors, CustomTypography} from '@styles';
 import {Button} from 'react-native-paper';
 import {createStackNavigator} from '@react-navigation/stack';
+import SetupBusinessProfileStepper from '@organisms/SetupBusinessProfileStepper';
+import { useNavigation } from '@react-navigation/core';
 
 const Stack = createStackNavigator();
 
 const SetupBusinessProfileWalkthrough = () => {
+    const navigation = useNavigation();
+
     const promptForBusinessProfileSetupComponent = () => (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
-                    <View style={styles.bigContainer}>
-                        <View
-                            style={{
-                                height: 300,
-                                justifyContent: 'center',
-                                marginTop: 100,
-                                paddingHorizontal: 24,
-                            }}>
-                            <CompleteYourProfileIllustration width="100%" height="100%" fill="#ffffff" />
-                        </View>
-                        <Text style={styles.title}>Setup Your Business Profile</Text>
-                        <Text style={styles.desc}>
-                            Welcome to ServiceFinder's Vendor Portal, as this is your first-login, please complete your
-                            business profile. You may start selling service after completing the business profile.
-                        </Text>
-                        <View style={{flex: 1, alignItems: 'flex-end', justifyContent: 'flex-end', padding: 24}}>
-                            <Button
-                                style={styles.button}
-                                mode="contained"
-                                contentStyle={{height: 50}}
-                                dark
-                                color={CustomColors.PRIMARY_BLUE}
-                                onPress={() => {}}>
-                                Setup Business Profile
-                            </Button>
-                        </View>
+                <View style={styles.bigContainer}>
+                    <View
+                        style={{
+                            height: 300,
+                            justifyContent: 'center',
+                            marginTop: 100,
+                            paddingHorizontal: 24,
+                        }}>
+                        <CompleteYourProfileIllustration width="100%" height="100%" fill="#ffffff" />
                     </View>
-                </ScrollView>
+                    <Text style={styles.title}>Setup Your Business Profile</Text>
+                    <Text style={styles.desc}>
+                        Welcome to ServiceFinder's Vendor Portal, as this is your first-login, please complete your
+                        business profile. You may start selling service after completing the business profile.
+                    </Text>
+                    <View style={{flex: 1, alignItems: 'flex-end', justifyContent: 'flex-end', padding: 24}}>
+                        <Button
+                            style={styles.button}
+                            mode="contained"
+                            contentStyle={{height: 50}}
+                            dark
+                            color={CustomColors.PRIMARY_BLUE}
+                            onPress={() => {
+                                navigation.navigate('BusinessProfileSetupStepper');
+                            }}>
+                            Setup Business Profile
+                        </Button>
+                    </View>
+                </View>
             </SafeAreaView>
         </View>
     );
     return (
         <Stack.Navigator>
-            <Stack.Screen name="PromptForBusinessProfileSetup" component={promptForBusinessProfileSetupComponent} options={{headerShown: false}} />
+            <Stack.Screen
+                name="PromptForBusinessProfileSetup"
+                component={promptForBusinessProfileSetupComponent}
+                options={{headerShown: false}}
+            />
+            <Stack.Screen
+                name="BusinessProfileSetupStepper"
+                component={SetupBusinessProfileStepper}
+                options={{headerShown: false}}
+            />
         </Stack.Navigator>
     );
 };
