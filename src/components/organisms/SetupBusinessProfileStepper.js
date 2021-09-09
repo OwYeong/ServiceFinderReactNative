@@ -3,7 +3,7 @@ import {CustomColors, CustomTypography} from '@styles';
 import {Field, Formik} from 'formik';
 import React, {useEffect, useState} from 'react';
 import {StatusBar, StyleSheet, Text, View} from 'react-native';
-import {Button} from 'react-native-paper';
+import {Button, Surface, TouchableRipple} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StepIndicator from 'react-native-step-indicator';
@@ -11,13 +11,10 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as yup from 'yup';
 import LoadingModal from './LoadingModal';
+import { SvgCss } from 'react-native-svg';
 
 const registerValidationSchema = yup.object().shape({
-    firstName: yup
-        .string()
-        .max(40)
-        .matches(/^[A-Za-z ]*$/, 'Please enter valid name. Numbers is not allowed')
-        .required('First Name is required.'),
+    businessName: yup.string().max(40).required('Business name is required.'),
     lastName: yup
         .string()
         .max(40)
@@ -151,92 +148,144 @@ const SetupBusinessProfileStepper = () => {
         <View style={{backgroundColor: CustomColors.PRIMARY_BLUE}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
-                    <View style={styles.bigContainer}>
-                        <View style={styles.headerContainer}>
-                            <Text style={styles.headerTitle}>Setup Your Business Profile</Text>
-                            <StepIndicator
-                                style={{marginTop: 10}}
-                                renderStepIndicator={renderStepIndicator}
-                                customStyles={stepIndicatorCustomStyles}
-                                currentPosition={1}
-                                stepCount={3}
-                                labels={stepIndicatorList.map(e => e.label)}
-                            />
-                        </View>
-                        <View style={styles.contentContainer}>
-                            <Formik
-                                initialValues={initialFormValue}
-                                validationSchema={registerValidationSchema}
-                                onSubmit={(values, settings) => {}}>
-                                {({handleSubmit, isValid, errors, resetForm, isSubmitting}) => {
-                                    return (
-                                        <>
-                                            <Field
-                                                component={CustomFormikTextInput}
-                                                style={styles.inputPrompt}
-                                                label="First Name"
-                                                name="firstName"
-                                                placeholder="Your first name"
-                                                keyboardType="email-address"></Field>
-                                            <Field
-                                                component={CustomFormikTextInput}
-                                                style={styles.inputPrompt}
-                                                label="Last Name"
-                                                name="lastName"
-                                                placeholder="Your last name"></Field>
-                                            <Field
-                                                component={CustomFormikTextInput}
-                                                style={styles.inputPrompt}
-                                                label="Email"
-                                                name="email"
-                                                placeholder="Your email address"
-                                                keyboardType="email-address"></Field>
-                                            <Field
-                                                component={CustomFormikTextInput}
-                                                style={styles.inputPrompt}
-                                                label="Password"
-                                                name="password"
-                                                placeholder="Your password"></Field>
-                                            <View style={styles.registerBtnContainer}>
-                                                <Button
-                                                    style={styles.registerBtn}
-                                                    mode="contained"
-                                                    disabled={isSubmitting}
-                                                    contentStyle={{height: 50}}
-                                                    color={CustomColors.PRIMARY_BLUE}
-                                                    dark
-                                                    onPress={() => {
-                                                        Object.keys(errors).length > 0
-                                                            ? setModal({
-                                                                  isVisible: true,
-                                                                  modalType: 'error',
-                                                                  modalTitle: 'Error !',
-                                                                  modalDesc: 'Please ensure all input are correct.',
-                                                                  onDismiss: () => {
-                                                                      setModal({...modal, isVisible: false});
-                                                                  },
-                                                              })
-                                                            : handleSubmit();
-                                                    }}>
-                                                    SIGN UP
-                                                </Button>
-                                            </View>
-                                        </>
-                                    );
-                                }}
-                            </Formik>
-                        </View>
-                        <LoadingModal
-                            animationIn={'bounceIn'}
-                            animationOut={'bounceOut'}
-                            animationOutTiming={150}
-                            isVisible={loadingModal.isVisible}
-                            modalTitle={loadingModal.modalTitle}
-                            statusBarTranslucent={true}
-                            useNativeDriver={true}></LoadingModal>
+                <View style={styles.bigContainer}>
+                    <View style={styles.headerContainer}>
+                        <Text style={styles.headerTitle}>Setup Your Business Profile</Text>
+                        <StepIndicator
+                            style={{marginTop: 10}}
+                            renderStepIndicator={renderStepIndicator}
+                            customStyles={stepIndicatorCustomStyles}
+                            currentPosition={1}
+                            stepCount={3}
+                            labels={stepIndicatorList.map(e => e.label)}
+                        />
                     </View>
-                </ScrollView>
+                    <View style={styles.contentContainer}>
+                        <ScrollView contentContainerStyle={{flexGrow: 1}} persistentScrollbar={true}>
+                            <View style={{flex: 1, padding: 20}}>
+                                <Text style={styles.sectionTitle}>Business Profile</Text>
+                                <Text style={styles.sectionDesc}>Complete the details about your business.</Text>
+                                <Formik
+                                    initialValues={initialFormValue}
+                                    validationSchema={registerValidationSchema}
+                                    onSubmit={(values, settings) => {}}>
+                                    {({handleSubmit, isValid, errors, resetForm, isSubmitting}) => {
+                                        return (
+                                            <>
+                                                <View style={styles.categorySelectWrapper}>
+                                                    <Surface style={{elevation: 1, borderRadius: 8}}>
+                                                        <TouchableRipple
+                                                            style={{
+                                                                flex: 1,
+                                                                borderRadius: 8,
+                                                            }}
+                                                            borderless
+                                                            onPress={() => {}}
+                                                            rippleColor="rgba(0, 0, 0, .2)">
+                                                            <View style={styles.categoryButton}>
+                                                                <View style={{width: 64, height: 64}}>
+                                                                    <SvgCss
+                                                                        width="100%"
+                                                                        height="100%"
+                                                                        uri={item.iconUrl}
+                                                                    />
+                                                                </View>
+                                                                <Text style={styles.categoryButtonLabel}>
+                                                                    Service
+                                                                </Text>
+                                                            </View>
+                                                        </TouchableRipple>
+                                                    </Surface>
+                                                </View>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label="Business Name"
+                                                    name="businessName"
+                                                    placeholder="Your business name"></Field>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label=""
+                                                    name="lastName"
+                                                    placeholder="Your last name"></Field>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label="Email"
+                                                    name="email"
+                                                    placeholder="Your email address"
+                                                    keyboardType="email-address"></Field>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label="Password"
+                                                    name="password"
+                                                    placeholder="Your password"></Field>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label="Password"
+                                                    name="password"
+                                                    placeholder="Your password"></Field>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label="Password"
+                                                    name="password"
+                                                    placeholder="Your password"></Field>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label="Password"
+                                                    name="password"
+                                                    placeholder="Your password"></Field>
+                                                <Field
+                                                    component={CustomFormikTextInput}
+                                                    style={styles.inputPrompt}
+                                                    label="Password"
+                                                    name="password"
+                                                    placeholder="Your password"></Field>
+                                                <View style={styles.registerBtnContainer}>
+                                                    <Button
+                                                        style={styles.registerBtn}
+                                                        mode="contained"
+                                                        disabled={isSubmitting}
+                                                        contentStyle={{height: 50}}
+                                                        color={CustomColors.PRIMARY_BLUE}
+                                                        dark
+                                                        onPress={() => {
+                                                            Object.keys(errors).length > 0
+                                                                ? setModal({
+                                                                      isVisible: true,
+                                                                      modalType: 'error',
+                                                                      modalTitle: 'Error !',
+                                                                      modalDesc: 'Please ensure all input are correct.',
+                                                                      onDismiss: () => {
+                                                                          setModal({...modal, isVisible: false});
+                                                                      },
+                                                                  })
+                                                                : handleSubmit();
+                                                        }}>
+                                                        SIGN UP
+                                                    </Button>
+                                                </View>
+                                            </>
+                                        );
+                                    }}
+                                </Formik>
+                            </View>
+                        </ScrollView>
+                    </View>
+                    <LoadingModal
+                        animationIn={'bounceIn'}
+                        animationOut={'bounceOut'}
+                        animationOutTiming={150}
+                        isVisible={loadingModal.isVisible}
+                        modalTitle={loadingModal.modalTitle}
+                        statusBarTranslucent={true}
+                        useNativeDriver={true}></LoadingModal>
+                </View>
             </SafeAreaView>
         </View>
     );
@@ -257,11 +306,10 @@ const styles = StyleSheet.create({
         padding: 24,
     },
     contentContainer: {
-        flex:1,
+        flex: 1,
         backgroundColor: CustomColors.WHITE,
-        borderTopRightRadius:16,
-        borderTopLeftRadius: 16,
-        padding: 20
+        borderTopRightRadius: 24,
+        borderTopLeftRadius: 24,
     },
     headerTitle: {
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
@@ -271,7 +319,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     inputPrompt: {
-        backgroundColor: 'white',
+        backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        paddingVertical: 2,
         marginTop: 8,
     },
     registerBtnContainer: {
@@ -286,5 +337,22 @@ const styles = StyleSheet.create({
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_16,
         justifyContent: 'center',
+    },
+    sectionTitle: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_24,
+        color: CustomColors.GRAY_MEDIUM,
+    },
+    sectionDesc: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_18,
+        color: CustomColors.GRAY_MEDIUM,
+    },
+    categorySelectWrapper: {
+        width: '100%',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        padding: 20,
+        paddingTop: 12,
     },
 });
