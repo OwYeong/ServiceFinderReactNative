@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CompleteYourProfileIllustration from '@assets/images/vendor-complete-profile-illustration';
@@ -6,17 +6,20 @@ import {CustomColors, CustomTypography} from '@styles';
 import {Button} from 'react-native-paper';
 import {createStackNavigator} from '@react-navigation/stack';
 import SetupBusinessProfileStepper from '@organisms/SetupBusinessProfileStepper';
-import { useNavigation } from '@react-navigation/core';
+import {useNavigation} from '@react-navigation/core';
 
 const Stack = createStackNavigator();
 
-const SetupBusinessProfileWalkthrough = () => {
+const promptForBusinessProfileSetupComponent = () => {
     const navigation = useNavigation();
 
-    const promptForBusinessProfileSetupComponent = () => (
+    useEffect(() => {
+    }, []);
+
+    return (
         <View style={{backgroundColor: 'white'}}>
-            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
-            <SafeAreaView style={{width: '100%', height: '100%'}}>
+            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent/>
+            <SafeAreaView style={{width: '100%', height: '100%'}} forceInset={{ top: 'always' }}>
                 <View style={styles.bigContainer}>
                     <View
                         style={{
@@ -49,8 +52,12 @@ const SetupBusinessProfileWalkthrough = () => {
             </SafeAreaView>
         </View>
     );
+};
+
+const SetupBusinessProfileWalkthrough = () => {
+
     return (
-        <Stack.Navigator>
+        <Stack.Navigator screenOptions={{presentation: 'modal', headerMode: 'float'}}>
             <Stack.Screen
                 name="PromptForBusinessProfileSetup"
                 component={promptForBusinessProfileSetupComponent}

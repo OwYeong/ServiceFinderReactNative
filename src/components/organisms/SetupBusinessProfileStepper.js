@@ -1,5 +1,5 @@
 import {CustomColors, CustomTypography} from '@styles';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {StatusBar, StyleSheet, Text, View} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -85,6 +85,9 @@ const SetupBusinessProfileStepper = () => {
     const renderStepIndicator = ({position, stepStatus}) => {
         return stepIndicatorList[position].icon(position, stepStatus);
     };
+
+    useEffect(() => {
+    }, []);
 
     return (
         <View style={{backgroundColor: CustomColors.PRIMARY_BLUE}}>
