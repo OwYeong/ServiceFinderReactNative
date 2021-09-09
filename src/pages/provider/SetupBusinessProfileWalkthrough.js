@@ -13,6 +13,7 @@ const Stack = createStackNavigator();
 const promptForBusinessProfileSetupComponent = () => {
     const navigation = useNavigation();
 
+    
     useEffect(() => {
     }, []);
 
