@@ -2,8 +2,8 @@ import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import {CustomColors, CustomTypography} from '@styles';
 import {Field, Formik} from 'formik';
 import React, {useEffect, useState} from 'react';
-import {StatusBar, StyleSheet, Text, View} from 'react-native';
-import {Button, Surface, TouchableRipple} from 'react-native-paper';
+import {LayoutAnimation, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {Button, HelperText, Surface, TouchableRipple} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StepIndicator from 'react-native-step-indicator';
@@ -11,7 +11,16 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as yup from 'yup';
 import LoadingModal from './LoadingModal';
-import { SvgCss } from 'react-native-svg';
+import RNPickerSelect from 'react-native-picker-select';
+import {SvgCss} from 'react-native-svg';
+import CategoryCarIcon from '@assets/images/serviceCategory/category-car';
+import CategoryDeviceIcon from '@assets/images/serviceCategory/category-deviceRepair';
+import CategoryEducationIcon from '@assets/images/serviceCategory/category-educationLesson';
+import CategoryEventIcon from '@assets/images/serviceCategory/category-event';
+import CategoryHealthIcon from '@assets/images/serviceCategory/category-healthCare';
+import CategoryMaintenanceIcon from '@assets/images/serviceCategory/category-maintenance';
+import CategoryPersonalIcon from '@assets/images/serviceCategory/category-personalCare';
+import CategoryPetIcon from '@assets/images/serviceCategory/category-petCare';
 
 const registerValidationSchema = yup.object().shape({
     businessName: yup.string().max(40).required('Business name is required.'),
@@ -49,6 +58,7 @@ const registerValidationSchema = yup.object().shape({
         .string()
         .min(8, 'Password is too short - should be 8 chars minimum.')
         .required('Password is required'),
+    serviceType: yup.string().required('Service type is mandatory'),
 });
 
 const SetupBusinessProfileStepper = () => {
@@ -127,11 +137,208 @@ const SetupBusinessProfileStepper = () => {
     };
 
     const [initialFormValue, setInitialFormValue] = useState({
+        businessCategory: 'car',
+        serviceType: '',
         firstName: '',
         lastName: '',
         email: '',
         password: '',
     });
+
+    const businessCategory = {
+        car: {
+            displayName: 'Car Maintenance',
+            icon: (values, key) => {
+                return (
+                    <CategoryCarIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+        deviceRepair: {
+            displayName: 'Device Maintenance',
+            icon: (values, key) => {
+                return (
+                    <CategoryDeviceIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+        educationLesson: {
+            displayName: 'Education Lesson',
+            icon: (values, key) => {
+                return (
+                    <CategoryEducationIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+        event: {
+            displayName: 'Events',
+            icon: (values, key) => {
+                return (
+                    <CategoryEventIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+        healthCare: {
+            displayName: 'Health Care',
+            icon: (values, key) => {
+                return (
+                    <CategoryHealthIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+        home: {
+            displayName: 'Home Maintenance',
+            icon: (values, key) => {
+                return (
+                    <CategoryMaintenanceIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+        personalCare: {
+            displayName: 'Personal Care',
+            icon: (values, key) => {
+                return (
+                    <CategoryPersonalIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+        petCare: {
+            displayName: 'Pet Care',
+            icon: (values, key) => {
+                return (
+                    <CategoryPetIcon
+                        fill={values.businessCategory == key ? CustomColors.WHITE : CustomColors.PRIMARY_BLUE}
+                    />
+                );
+            },
+        },
+    };
+
+    const serviceTypes = {
+        home: [
+            {
+                displayName: 'Cleaning',
+                serviceId: 'cleaning',
+            },
+            {
+                displayName: 'Plumber',
+                serviceId: 'plumber',
+            },
+            {
+                displayName: 'Electrical / Wiring',
+                serviceId: 'electricalWiring',
+            },
+            {
+                displayName: 'Air Conditioner Maintenance',
+                serviceId: 'airCond',
+            },
+            {
+                displayName: 'Landscape / Gardening',
+                serviceId: 'landscapeGarden',
+            },
+            {
+                displayName: 'Interior Design',
+                serviceId: 'interiorDesign',
+            },
+            {
+                displayName: 'Pest Control',
+                serviceId: 'pestControl',
+            },
+        ],
+
+        personalCare: [
+            {
+                displayName: 'Saloon',
+                serviceId: 'saloon',
+            },
+            {
+                displayName: 'Massage Service',
+                serviceId: 'massage',
+            },
+        ],
+        car: [
+            {
+                displayName: 'Car Maintenance',
+                serviceId: 'carWash',
+            },
+            {
+                displayName: 'Wind Screen Replacement',
+                serviceId: 'windScreenReplacement',
+            },
+        ],
+        deviceRepair: [
+            {
+                displayName: 'Computer Repair',
+                serviceId: 'computerRepair',
+            },
+            {
+                displayName: 'Phone Repair',
+                serviceId: 'phoneRepair',
+            },
+        ],
+        educationLesson: [
+            {
+                displayName: 'Fitness Course',
+                serviceId: 'fitness',
+            },
+            {
+                displayName: 'Language Course',
+                serviceId: 'language',
+            },
+        ],
+        event: [
+            {
+                displayName: 'Catering Organize',
+                serviceId: 'catering',
+            },
+            {
+                displayName: 'Photographer / Videographer',
+                serviceId: 'photographerVideographer',
+            },
+            {
+                displayName: 'WeddingOrganize',
+                serviceId: 'wedding',
+            },
+        ],
+        healthCare: [
+            {
+                displayName: 'Medical Care',
+                serviceId: 'medical',
+            },
+            {
+                displayName: 'Psychologist',
+                serviceId: 'psychologist',
+            },
+            {
+                displayName: 'Physical Therapy',
+                serviceId: 'physicalTherapy',
+            },
+        ],
+        petCare: [
+            {
+                displayName: 'Pet Saloon',
+                serviceId: 'petSaloon',
+            },
+            {
+                displayName: 'Pet Medical',
+                serviceId: 'petMedical',
+            },
+        ],
+    };
 
     const [loadingModal, setLoadingModal] = useState({
         isVisible: false,
@@ -165,38 +372,112 @@ const SetupBusinessProfileStepper = () => {
                             <View style={{flex: 1, padding: 20}}>
                                 <Text style={styles.sectionTitle}>Business Profile</Text>
                                 <Text style={styles.sectionDesc}>Complete the details about your business.</Text>
+                                <Text style={styles.subSectionTitle}>Business Type</Text>
                                 <Formik
                                     initialValues={initialFormValue}
                                     validationSchema={registerValidationSchema}
                                     onSubmit={(values, settings) => {}}>
-                                    {({handleSubmit, isValid, errors, resetForm, isSubmitting}) => {
+                                    {({
+                                        handleSubmit,
+                                        values,
+                                        handleChange,
+                                        isValid,
+                                        errors,
+                                        resetForm,
+                                        isSubmitting,
+                                    }) => {
                                         return (
                                             <>
                                                 <View style={styles.categorySelectWrapper}>
-                                                    <Surface style={{elevation: 1, borderRadius: 8}}>
+                                                    <Text style={[styles.inputTitle, {marginBottom: 8}]}>
+                                                        Please specify your business type:
+                                                    </Text>
+                                                    {Object.keys(businessCategory).map((key, index) => (
                                                         <TouchableRipple
-                                                            style={{
-                                                                flex: 1,
-                                                                borderRadius: 8,
-                                                            }}
+                                                            key={key}
+                                                            style={styles.categoryButtonWrapper}
                                                             borderless
-                                                            onPress={() => {}}
-                                                            rippleColor="rgba(0, 0, 0, .2)">
-                                                            <View style={styles.categoryButton}>
-                                                                <View style={{width: 64, height: 64}}>
-                                                                    <SvgCss
-                                                                        width="100%"
-                                                                        height="100%"
-                                                                        uri={item.iconUrl}
-                                                                    />
+                                                            onPress={() => {
+                                                                LayoutAnimation.configureNext(
+                                                                    LayoutAnimation.Presets.easeInEaseOut,
+                                                                );
+                                                                handleChange('businessCategory')(key);
+                                                                handleChange('serviceType')('');
+                                                            }}
+                                                            rippleColor="rgba(0, 0, 0, .1)">
+                                                            <View
+                                                                style={[
+                                                                    styles.categoryButton,
+                                                                    {
+                                                                        backgroundColor:
+                                                                            values.businessCategory == key
+                                                                                ? CustomColors.PRIMARY_BLUE
+                                                                                : CustomColors.WHITE,
+                                                                        borderColor:
+                                                                            values.businessCategory == key
+                                                                                ? CustomColors.PRIMARY_BLUE
+                                                                                : CustomColors.PRIMARY_BLUE_SATURATED,
+                                                                    },
+                                                                ]}>
+                                                                <View style={{width: 36, height: 36}}>
+                                                                    {businessCategory[key].icon(values, key)}
+                                                                    <CategoryCarIcon />
                                                                 </View>
-                                                                <Text style={styles.categoryButtonLabel}>
-                                                                    Service
+                                                                <Text
+                                                                    style={[
+                                                                        styles.categoryButtonLabel,
+                                                                        {
+                                                                            color:
+                                                                                values.businessCategory == key
+                                                                                    ? CustomColors.WHITE
+                                                                                    : CustomColors.PRIMARY_BLUE,
+                                                                        },
+                                                                    ]}>
+                                                                    {businessCategory[key].displayName}
                                                                 </Text>
                                                             </View>
                                                         </TouchableRipple>
-                                                    </Surface>
+                                                    ))}
                                                 </View>
+                                                <View>
+                                                    <Text style={[styles.inputTitle, {marginTop: 16}]}>
+                                                        What type of service you provide:
+                                                    </Text>
+                                                    <RNPickerSelect
+                                                        placeholder={{label: 'Select your service type', value: null}}
+                                                        items={serviceTypes[values.businessCategory].map(
+                                                            serviceType => ({
+                                                                label: serviceType.displayName,
+                                                                value: serviceType.serviceId,
+                                                            }),
+                                                        )}
+                                                        onValueChange={value => {
+                                                            handleChange('serviceType')(value || '');
+                                                        }}
+                                                        style={{
+                                                            ...pickerSelectStyles,
+                                                            iconContainer: {
+                                                                top: 10,
+                                                                right: 12,
+                                                            },
+                                                        }}
+                                                        useNativeAndroidPickerStyle={false}
+                                                        Icon={() => (
+                                                            <Ionicons
+                                                                name="md-chevron-down"
+                                                                size={20}
+                                                                fill={CustomColors.GRAY_DARK}
+                                                            />
+                                                        )}
+                                                        value={values.serviceType}
+                                                    />
+                                                    <HelperText type="error" style={styles.errorText}>
+                                                        {errors['serviceType']}
+                                                    </HelperText>
+                                                </View>
+
+                                                <Text style={styles.subSectionTitle}>Business Details</Text>
+
                                                 <Field
                                                     component={CustomFormikTextInput}
                                                     style={styles.inputPrompt}
@@ -343,6 +624,12 @@ const styles = StyleSheet.create({
         fontSize: CustomTypography.FONT_SIZE_24,
         color: CustomColors.GRAY_MEDIUM,
     },
+    subSectionTitle: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_20,
+        color: CustomColors.GRAY_MEDIUM,
+        marginTop: 16
+    },
     sectionDesc: {
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_18,
@@ -352,7 +639,66 @@ const styles = StyleSheet.create({
         width: '100%',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        padding: 20,
-        paddingTop: 12,
+        justifyContent: 'space-between',
+        padding: 0,
+    },
+    categoryButtonWrapper: {
+        width: '49%',
+        borderRadius: 8,
+        marginTop: 8,
+    },
+    categoryButton: {
+        padding: 12,
+        backgroundColor: 'transparent',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderRadius: 8,
+        backgroundColor: CustomColors.WHITE,
+        borderWidth: 1,
+        borderColor: CustomColors.PRIMARY_BLUE_SATURATED,
+    },
+    categoryButtonLabel: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_12,
+        color: CustomColors.GRAY_DARK,
+    },
+    inputTitle: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_14,
+        color: CustomColors.GRAY_DARK,
+    },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+    inputIOS: {
+        fontSize: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 4,
+        color: 'black',
+        paddingRight: 30, // to ensure the text is never behind the icon
+    },
+    inputAndroid: {
+        fontSize: 16,
+        paddingHorizontal: 10,
+        paddingVertical: 10,
+        borderColor: CustomColors.GRAY,
+        color: CustomColors.GRAY_DARK,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        borderBottomWidth: 1,
+        paddingRight: 30, // to ensure the text is never behind the icon
+        fontSize: CustomTypography.FONT_SIZE_14,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        color: CustomColors.GRAY_DARK,
+    },
+    errorText: {
+        fontSize: CustomTypography.FONT_SIZE_12,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        color: 'red',
+        margin: 0,
+        padding: 0,
     },
 });

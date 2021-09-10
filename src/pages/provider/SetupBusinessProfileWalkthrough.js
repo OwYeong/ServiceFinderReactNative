@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {Platform, ScrollView, StatusBar, StyleSheet, Text, UIManager, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CompleteYourProfileIllustration from '@assets/images/vendor-complete-profile-illustration';
 import {CustomColors, CustomTypography} from '@styles';
@@ -15,6 +15,11 @@ const promptForBusinessProfileSetupComponent = () => {
 
     
     useEffect(() => {
+        if (Platform.OS === 'android') {
+            if (UIManager.setLayoutAnimationEnabledExperimental) {
+                UIManager.setLayoutAnimationEnabledExperimental(true);
+            }
+        }
     }, []);
 
     return (
