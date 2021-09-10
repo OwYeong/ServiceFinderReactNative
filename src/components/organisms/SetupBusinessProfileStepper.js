@@ -1,9 +1,9 @@
 import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import {CustomColors, CustomTypography} from '@styles';
-import {Field, Formik} from 'formik';
+import {FastField, Field, Formik} from 'formik';
 import React, {useEffect, useState} from 'react';
 import {LayoutAnimation, StatusBar, StyleSheet, Text, View} from 'react-native';
-import {Button, HelperText, Surface, TouchableRipple} from 'react-native-paper';
+import {Button, HelperText, Surface, TextInput, TouchableRipple} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StepIndicator from 'react-native-step-indicator';
@@ -22,42 +22,9 @@ import CategoryMaintenanceIcon from '@assets/images/serviceCategory/category-mai
 import CategoryPersonalIcon from '@assets/images/serviceCategory/category-personalCare';
 import CategoryPetIcon from '@assets/images/serviceCategory/category-petCare';
 
-const registerValidationSchema = yup.object().shape({
+const validationSchema = yup.object().shape({
     businessName: yup.string().max(40).required('Business name is required.'),
-    lastName: yup
-        .string()
-        .max(40)
-        .matches(/^[A-Za-z ]*$/, 'Please enter valid name. Numbers is not allowed')
-        .required('Last Name is required.'),
-    email: yup
-        .string()
-        .max(80)
-        .email('Please enter valid email address')
-        .required('Email Address is required.')
-        .test('Unique email', 'Email address already registered', value => {
-            return true;
-            if (!value) {
-                //If value is empty
-                return true;
-            }
-
-            return new Promise((resolve, reject) => {
-                UserService.isEmailAlreadyRegistered(value)
-                    .then(isEmailAlreadyRegistered => {
-                        const isUnique = !isEmailAlreadyRegistered;
-                        // false to show error.
-
-                        resolve(isUnique);
-                    })
-                    .catch(isEmailAlreadyRegistered => {
-                        resolve(!isEmailAlreadyRegistered);
-                    });
-            });
-        }),
-    password: yup
-        .string()
-        .min(8, 'Password is too short - should be 8 chars minimum.')
-        .required('Password is required'),
+    businessDesc: yup.string().max(1000).required('Business name is required.'),
     serviceType: yup.string().required('Service type is mandatory'),
 });
 
@@ -139,10 +106,7 @@ const SetupBusinessProfileStepper = () => {
     const [initialFormValue, setInitialFormValue] = useState({
         businessCategory: 'car',
         serviceType: '',
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
+        businessName: '',
     });
 
     const businessCategory = {
@@ -368,14 +332,14 @@ const SetupBusinessProfileStepper = () => {
                         />
                     </View>
                     <View style={styles.contentContainer}>
-                        <ScrollView contentContainerStyle={{flexGrow: 1}} persistentScrollbar={true}>
+                        <ScrollView contentContainerStyle={{flexGrow: 1}} >
                             <View style={{flex: 1, padding: 20}}>
                                 <Text style={styles.sectionTitle}>Business Profile</Text>
                                 <Text style={styles.sectionDesc}>Complete the details about your business.</Text>
                                 <Text style={styles.subSectionTitle}>Business Type</Text>
                                 <Formik
                                     initialValues={initialFormValue}
-                                    validationSchema={registerValidationSchema}
+                                    validationSchema={validationSchema}
                                     onSubmit={(values, settings) => {}}>
                                     {({
                                         handleSubmit,
@@ -392,52 +356,68 @@ const SetupBusinessProfileStepper = () => {
                                                     <Text style={[styles.inputTitle, {marginBottom: 8}]}>
                                                         Please specify your business type:
                                                     </Text>
-                                                    {Object.keys(businessCategory).map((key, index) => (
-                                                        <TouchableRipple
-                                                            key={key}
-                                                            style={styles.categoryButtonWrapper}
-                                                            borderless
-                                                            onPress={() => {
-                                                                LayoutAnimation.configureNext(
-                                                                    LayoutAnimation.Presets.easeInEaseOut,
-                                                                );
-                                                                handleChange('businessCategory')(key);
-                                                                handleChange('serviceType')('');
-                                                            }}
-                                                            rippleColor="rgba(0, 0, 0, .1)">
-                                                            <View
-                                                                style={[
-                                                                    styles.categoryButton,
-                                                                    {
-                                                                        backgroundColor:
-                                                                            values.businessCategory == key
-                                                                                ? CustomColors.PRIMARY_BLUE
-                                                                                : CustomColors.WHITE,
-                                                                        borderColor:
-                                                                            values.businessCategory == key
-                                                                                ? CustomColors.PRIMARY_BLUE
-                                                                                : CustomColors.PRIMARY_BLUE_SATURATED,
-                                                                    },
-                                                                ]}>
-                                                                <View style={{width: 36, height: 36}}>
-                                                                    {businessCategory[key].icon(values, key)}
-                                                                    <CategoryCarIcon />
-                                                                </View>
-                                                                <Text
-                                                                    style={[
-                                                                        styles.categoryButtonLabel,
-                                                                        {
-                                                                            color:
-                                                                                values.businessCategory == key
-                                                                                    ? CustomColors.WHITE
-                                                                                    : CustomColors.PRIMARY_BLUE,
-                                                                        },
-                                                                    ]}>
-                                                                    {businessCategory[key].displayName}
-                                                                </Text>
-                                                            </View>
-                                                        </TouchableRipple>
-                                                    ))}
+                                                    <FastField name="businessCategory">
+                                                        {props => {
+                                                            const {
+                                                                field: {name, onBlur, onChange, value},
+                                                                form: {errors, touched, setFieldTouched},
+                                                                ...inputProps
+                                                            } = props;
+
+                                                            return (
+                                                                <>
+                                                                    {Object.keys(businessCategory).map((key, index) => (
+                                                                        <TouchableRipple
+                                                                            key={key}
+                                                                            style={styles.categoryButtonWrapper}
+                                                                            borderless
+                                                                            onPress={() => {
+                                                                                console.log('prfesseed');
+                                                                                onChange(name)(key);
+                                                                                // handleChange('serviceType')('');
+                                                                            }}
+                                                                            rippleColor="rgba(0, 0, 0, .1)">
+                                                                            <View
+                                                                                style={[
+                                                                                    styles.categoryButton,
+                                                                                    {
+                                                                                        backgroundColor:
+                                                                                            value == key
+                                                                                                ? CustomColors.PRIMARY_BLUE
+                                                                                                : CustomColors.WHITE,
+                                                                                        borderColor:
+                                                                                            value == key
+                                                                                                ? CustomColors.PRIMARY_BLUE
+                                                                                                : CustomColors.PRIMARY_BLUE_SATURATED,
+                                                                                    },
+                                                                                ]}>
+                                                                                <View style={{width: 36, height: 36}}>
+                                                                                    {businessCategory[key].icon(
+                                                                                        values,
+                                                                                        key,
+                                                                                    )}
+                                                                                    <CategoryCarIcon />
+                                                                                </View>
+                                                                                <Text
+                                                                                    style={[
+                                                                                        styles.categoryButtonLabel,
+                                                                                        {
+                                                                                            color:
+                                                                                                values.businessCategory ==
+                                                                                                key
+                                                                                                    ? CustomColors.WHITE
+                                                                                                    : CustomColors.PRIMARY_BLUE,
+                                                                                        },
+                                                                                    ]}>
+                                                                                    {businessCategory[key].displayName}
+                                                                                </Text>
+                                                                            </View>
+                                                                        </TouchableRipple>
+                                                                    ))}
+                                                                </>
+                                                            );
+                                                        }}
+                                                    </FastField>
                                                 </View>
                                                 <View>
                                                     <Text style={[styles.inputTitle, {marginTop: 16}]}>
@@ -480,16 +460,20 @@ const SetupBusinessProfileStepper = () => {
 
                                                 <Field
                                                     component={CustomFormikTextInput}
+                                                    mode="outlined"
                                                     style={styles.inputPrompt}
                                                     label="Business Name"
                                                     name="businessName"
                                                     placeholder="Your business name"></Field>
                                                 <Field
                                                     component={CustomFormikTextInput}
-                                                    style={styles.inputPrompt}
-                                                    label=""
-                                                    name="lastName"
-                                                    placeholder="Your last name"></Field>
+                                                    mode="outlined"
+                                                    style={[styles.inputPrompt]}
+                                                    label="Business Desc"
+                                                    name="businessDesc"
+                                                    placeholder="Your last name"
+                                                    numberOfLines={5}
+                                                    multiline></Field>
                                                 <Field
                                                     component={CustomFormikTextInput}
                                                     style={styles.inputPrompt}
@@ -628,7 +612,7 @@ const styles = StyleSheet.create({
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
         fontSize: CustomTypography.FONT_SIZE_20,
         color: CustomColors.GRAY_MEDIUM,
-        marginTop: 16
+        marginTop: 16,
     },
     sectionDesc: {
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
