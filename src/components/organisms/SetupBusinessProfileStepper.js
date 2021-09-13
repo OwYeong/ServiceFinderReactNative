@@ -2,7 +2,7 @@ import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import {CustomColors, CustomTypography} from '@styles';
 import {FastField, Field, Formik} from 'formik';
 import React, {useEffect, useState} from 'react';
-import {LayoutAnimation, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {LayoutAnimation, StatusBar, StyleSheet, Text, View, Image, TouchableHighlight, Dimensions} from 'react-native';
 import {Button, HelperText, Surface, TextInput, TouchableRipple} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -23,9 +23,17 @@ import CategoryPersonalIcon from '@assets/images/serviceCategory/category-person
 import CategoryPetIcon from '@assets/images/serviceCategory/category-petCare';
 
 const validationSchema = yup.object().shape({
-    businessName: yup.string().max(40).required('Business name is required.'),
-    businessDesc: yup.string().max(1000).required('Business name is required.'),
-    serviceType: yup.string().required('Service type is mandatory'),
+    businessCategory: yup.string().required('Business category is mandatory.'),
+    serviceType: yup.string().required('Service type is mandatory.'),
+    businessName: yup.string().required('Business name is mandatory.'),
+    businessDesc: yup.string().required('Business desc is mandatory.'),
+    businessServiceDesc: yup.string().max(1000).required('Business Service Description is mandatory.'),
+    priceStart: yup
+        .string()
+        .max(20)
+        .required('Starting price is mandatory.')
+        .matches(/^\d*\.?\d*$/, 'Only numbers is allowed'),
+    priceEnd: '',
 });
 
 const SetupBusinessProfileStepper = () => {
@@ -107,6 +115,10 @@ const SetupBusinessProfileStepper = () => {
         businessCategory: 'car',
         serviceType: '',
         businessName: '',
+        businessDesc: '',
+        businessServiceDesc: '',
+        priceStart: '',
+        priceEnd: '',
     });
 
     const businessCategory = {
@@ -332,7 +344,7 @@ const SetupBusinessProfileStepper = () => {
                         />
                     </View>
                     <View style={styles.contentContainer}>
-                        <ScrollView contentContainerStyle={{flexGrow: 1}} >
+                        <ScrollView contentContainerStyle={{flexGrow: 1}}>
                             <View style={{flex: 1, padding: 20}}>
                                 <Text style={styles.sectionTitle}>Business Profile</Text>
                                 <Text style={styles.sectionDesc}>Complete the details about your business.</Text>
@@ -457,7 +469,31 @@ const SetupBusinessProfileStepper = () => {
                                                 </View>
 
                                                 <Text style={styles.subSectionTitle}>Business Details</Text>
-
+                                                <Text style={[styles.inputTitle, {marginTop: 8}]}>
+                                                    Tell us about your service business.
+                                                </Text>
+                                                <View style={styles.imageSetupContainer}>
+                                                    <TouchableHighlight
+                                                        onPress={() => alert('box tapped!')}
+                                                        activeOpacity={0.6}
+                                                        underlayColor="#FFFFFF">
+                                                        <Image
+                                                            style={styles.coverImage}
+                                                            source={require('@assets/images/default-coverImage.png')}
+                                                            resizeMode="cover"
+                                                        />
+                                                    </TouchableHighlight>
+                                                    <TouchableHighlight
+                                                        style={styles.businessProfileImageWrapper}
+                                                        onPress={() => alert('box tapped!')}
+                                                        activeOpacity={0.6}
+                                                        underlayColor="#FFFFFF">
+                                                        <Image
+                                                            style={styles.businessProfileImage}
+                                                            source={require('@assets/images/default-profileImage.png')}
+                                                        />
+                                                    </TouchableHighlight>
+                                                </View>
                                                 <Field
                                                     component={CustomFormikTextInput}
                                                     mode="outlined"
@@ -471,49 +507,61 @@ const SetupBusinessProfileStepper = () => {
                                                     style={[styles.inputPrompt]}
                                                     label="Business Desc"
                                                     name="businessDesc"
-                                                    placeholder="Your last name"
+                                                    placeholder="Your business description"
                                                     numberOfLines={5}
                                                     multiline></Field>
                                                 <Field
                                                     component={CustomFormikTextInput}
-                                                    style={styles.inputPrompt}
-                                                    label="Email"
-                                                    name="email"
-                                                    placeholder="Your email address"
-                                                    keyboardType="email-address"></Field>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    style={styles.inputPrompt}
-                                                    label="Password"
-                                                    name="password"
-                                                    placeholder="Your password"></Field>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    style={styles.inputPrompt}
-                                                    label="Password"
-                                                    name="password"
-                                                    placeholder="Your password"></Field>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    style={styles.inputPrompt}
-                                                    label="Password"
-                                                    name="password"
-                                                    placeholder="Your password"></Field>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    style={styles.inputPrompt}
-                                                    label="Password"
-                                                    name="password"
-                                                    placeholder="Your password"></Field>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    style={styles.inputPrompt}
-                                                    label="Password"
-                                                    name="password"
-                                                    placeholder="Your password"></Field>
-                                                <View style={styles.registerBtnContainer}>
+                                                    mode="outlined"
+                                                    style={[styles.inputPrompt]}
+                                                    label="What service that your business provide?"
+                                                    name="businessServiceDesc"
+                                                    placeholder={
+                                                        'Ex: We provide a wide range of services which includes: \n1) ...\n2) ...\n3) ...'
+                                                    }
+                                                    numberOfLines={7}
+                                                    multiline></Field>
+                                                <Text style={styles.subSectionTitle}>Pricing</Text>
+                                                <Text style={[styles.inputTitle, {marginTop: 8}]}>
+                                                    Tell your customer a little bit about your pricing.
+                                                </Text>
+                                                <View
+                                                    style={{
+                                                        flex: 1,
+                                                        marginTop: 8,
+                                                        flexDirection: 'row',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                        
+                                                    }}>
+                                                    <View style={{flex: 1, marginTop: 0,  height: 120}}>
+                                                        <Field
+                                                            component={CustomFormikTextInput}
+                                                            mode="outlined"
+                                                            style={[styles.inputPrompt]}
+                                                            left={<TextInput.Affix text="RM" />}
+                                                            label="Price Start"
+                                                            name="priceStart"
+                                                            placeholder="Starting Price"
+                                                            keyboardType="numeric"></Field>
+                                                    </View>
+                                                    <Text style={{marginBottom: 30}}>{'   ~   '}</Text>
+                                                    <View  style={{flex: 1, marginTop: 0, height: 120}}>
+                                                        <Field
+                                                            component={CustomFormikTextInput}
+                                                            mode="outlined"
+                                                            style={[styles.inputPrompt]}
+                                                            left={<TextInput.Affix text="RM" />}
+                                                            label="Price End"
+                                                            name="priceEnd"
+                                                            placeholder="Ending Price"
+                                                            keyboardType="numeric"></Field>
+                                                    </View>
+                                                </View>
+
+                                                <View style={styles.actionBtnContainer}>
                                                     <Button
-                                                        style={styles.registerBtn}
+                                                        style={styles.actionBtn}
                                                         mode="contained"
                                                         disabled={isSubmitting}
                                                         contentStyle={{height: 50}}
@@ -532,7 +580,7 @@ const SetupBusinessProfileStepper = () => {
                                                                   })
                                                                 : handleSubmit();
                                                         }}>
-                                                        SIGN UP
+                                                        NEXT
                                                     </Button>
                                                 </View>
                                             </>
@@ -575,6 +623,9 @@ const styles = StyleSheet.create({
         backgroundColor: CustomColors.WHITE,
         borderTopRightRadius: 24,
         borderTopLeftRadius: 24,
+        borderWidth: 2,
+        borderColor: 'white',
+        overflow: 'hidden',
     },
     headerTitle: {
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
@@ -590,13 +641,13 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         marginTop: 8,
     },
-    registerBtnContainer: {
+    actionBtnContainer: {
         flex: 1,
         justifyContent: 'flex-end',
         alignItems: 'center',
     },
-    registerBtn: {
-        marginTop: 12,
+    actionBtn: {
+        marginTop: 40,
         width: '100%',
         borderRadius: 8,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
@@ -650,6 +701,34 @@ const styles = StyleSheet.create({
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_14,
         color: CustomColors.GRAY_DARK,
+    },
+    imageSetupContainer: {
+        width: '100%',
+        paddingBottom: 50,
+        marginBottom: 16,
+        marginTop: 16,
+    },
+    coverImage: {
+        width: Dimensions.get('window').width,
+        marginLeft: -20,
+        height: undefined,
+        aspectRatio: 5 / 2,
+    },
+    businessProfileImage: {
+        width: '100%',
+        height: undefined,
+        aspectRatio: 1,
+    },
+    businessProfileImageWrapper: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        overflow: 'hidden',
+        position: 'absolute',
+        left: 0,
+        bottom: 0,
+        borderWidth: 3,
+        borderColor: CustomColors.WHITE,
     },
 });
 
