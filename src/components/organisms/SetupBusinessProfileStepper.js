@@ -35,6 +35,9 @@ import CategoryPetIcon from '@assets/images/serviceCategory/category-petCare';
 import Animated from 'react-native-reanimated';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 import ImageCropPicker from 'react-native-image-crop-picker';
+import storage from '@react-native-firebase/storage';
+import auth from '@react-native-firebase/auth';
+import {showMessage} from 'react-native-flash-message';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -47,7 +50,28 @@ const validationSchema = yup.object().shape({
         .max(20)
         .required('Starting price is mandatory.')
         .matches(/^\d*\.?\d*$/, 'Only numbers is allowed'),
-    priceEnd: '',
+    priceEnd: yup
+        .string()
+        .max(20)
+        .required('Ending price is mandatory.')
+        .matches(/^\d*\.?\d*$/, 'Only numbers is allowed')
+        .when('priceStart', priceStart => {
+            if (priceStart) {
+                return yup
+                    .string()
+                    .max(20)
+                    .required('Ending price is mandatory.')
+                    .typeError('Ending Price is required')
+                    .test('price range', 'Ending Price must be larger than start price', endPrice => {
+                        if (!endPrice) {
+                            //If value is empty
+                            return true;
+                        }
+
+                        return parseFloat(endPrice) > parseFloat(priceStart);
+                    });
+            }
+        }),
 });
 
 const SetupBusinessProfileStepper = () => {
@@ -124,6 +148,7 @@ const SetupBusinessProfileStepper = () => {
             backgroundColor: 'transparent', // change the color to "rgba(1,0,0,0)"
         },
     };
+    const [userInput, setUserInput] = useState({});
 
     const [initialFormValue, setInitialFormValue] = useState({
         businessCategory: 'car',
@@ -135,21 +160,11 @@ const SetupBusinessProfileStepper = () => {
         priceEnd: '',
     });
 
-    const [coverImage, setCoverImage] = useState(null);
-    const [businessLogoUri, setBusinessLogoUri] = useState('');
+    const [coverImagePath, setCoverImagePath] = useState(null);
+    const [businessLogoPath, setBusinessLogoPath] = useState('');
 
     const coverImageActionSheet = useRef(null);
-    const renderCoverImageActionSheet = () => {
-        return (
-            <View>
-                <View style={{width: 200, height: 5, borderRadius: 10, backgroundColor: '#C5C5C5'}}></View>
-                <Text>Swipe down to close</Text>
-            </View>
-        );
-    };
-    const coverImageActionSheetOnClose = () => {
-        coverImageActionSheet.current.snapTo(0);
-    };
+    const businessLogoActionSheet = useRef(null);
 
     const businessCategory = {
         car: {
@@ -382,7 +397,22 @@ const SetupBusinessProfileStepper = () => {
                                 <Formik
                                     initialValues={initialFormValue}
                                     validationSchema={validationSchema}
-                                    onSubmit={(values, settings) => {}}>
+                                    onSubmit={(values, settings) => {
+                                        const {businessCategory, serviceType, businessName, businessDesc, businessServiceDesc, priceStart, priceEnd} = values
+
+                                        setUserInput({
+                                            businessCategory: values,
+                                            serviceType: '',
+                                            businessName: '',
+                                            businessDesc: '',
+                                            businessServiceDesc: '',
+                                            priceStart: '',
+                                            priceEnd: '',
+                                            coverImagePath: coverImagePath,
+                                            businessLogoPath: businessLogoPath
+                                            
+                                        });
+                                    }}>
                                     {({
                                         handleSubmit,
                                         values,
@@ -512,8 +542,8 @@ const SetupBusinessProfileStepper = () => {
                                                         <Image
                                                             style={styles.coverImage}
                                                             source={
-                                                                !!coverImage
-                                                                    ? {uri: coverImage}
+                                                                !!coverImagePath
+                                                                    ? {uri: coverImagePath}
                                                                     : require('@assets/images/default-coverImage.png')
                                                             }
                                                             resizeMode="cover"
@@ -521,14 +551,16 @@ const SetupBusinessProfileStepper = () => {
                                                     </TouchableHighlight>
                                                     <TouchableHighlight
                                                         style={styles.businessProfileImageWrapper}
-                                                        onPress={() => alert('box tapped!')}
+                                                        onPress={() => {
+                                                            businessLogoActionSheet.current.snapTo(1);
+                                                        }}
                                                         activeOpacity={0.6}
                                                         underlayColor="#FFFFFF">
                                                         <Image
                                                             style={styles.businessProfileImage}
                                                             source={
-                                                                !!businessLogoUri
-                                                                    ? businessLogoUri
+                                                                !!businessLogoPath
+                                                                    ? {uri: businessLogoPath}
                                                                     : require('@assets/images/default-profileImage.png')
                                                             }
                                                         />
@@ -607,17 +639,21 @@ const SetupBusinessProfileStepper = () => {
                                                         color={CustomColors.PRIMARY_BLUE}
                                                         dark
                                                         onPress={() => {
-                                                            Object.keys(errors).length > 0
-                                                                ? setModal({
-                                                                      isVisible: true,
-                                                                      modalType: 'error',
-                                                                      modalTitle: 'Error !',
-                                                                      modalDesc: 'Please ensure all input are correct.',
-                                                                      onDismiss: () => {
-                                                                          setModal({...modal, isVisible: false});
-                                                                      },
-                                                                  })
-                                                                : handleSubmit();
+                                                            if (Object.keys(errors).length > 0) {
+                                                                showMessage({
+                                                                    message: 'Please make sure all inputs are valid.',
+                                                                    type: 'info',
+                                                                    position: 'center',
+                                                                    backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                                    color: 'white', // text color
+                                                                    titleStyle: {marginTop: 5},
+                                                                    hideOnPress: true,
+                                                                    autoHide: true,
+                                                                    duration: 1000,
+                                                                });
+                                                            } else {
+                                                                handleSubmit();
+                                                            }
                                                         }}>
                                                         NEXT
                                                     </Button>
@@ -641,11 +677,10 @@ const SetupBusinessProfileStepper = () => {
             </SafeAreaView>
             <BottomSheet
                 ref={coverImageActionSheet}
-                keyboardAware
                 bottomSheerColor="#FFFFFF"
                 // ref="BottomSheet"
                 initialPosition={0}
-                snapPoints={[0, 200]}
+                snapPoints={[0, 260]}
                 isBackDrop={true}
                 isBackDropDismissByPress={true}
                 isRoundBorderWithTipHeader={true}
@@ -660,14 +695,41 @@ const SetupBusinessProfileStepper = () => {
                         <TouchableOpacity
                             onPress={() => {
                                 ImageCropPicker.openPicker({
-                                    width: 800,
-                                    height: 400,
+                                    width: 1200,
+                                    height: 600,
                                     cropping: true,
                                     mediaType: 'photo',
-                                }).then(image => {
-                                    console.log(image.path)
-                                    setCoverImage(image.path)
-                                });
+                                })
+                                    .then(image => {
+                                        setCoverImagePath(image.path);
+                                        coverImageActionSheet.current.snapTo(0);
+
+                                        // var reference = null;
+
+                                        // if (image.mime == 'image/jpeg') {
+                                        //     reference = storage().ref(
+                                        //         `userData/${auth().currentUser.uid}/coverImage.png`,
+                                        //     );
+                                        // } else {
+                                        //     reference = storage().ref(
+                                        //         `userData/${auth().currentUser.uid}/coverImage.jpg`,
+                                        //     );
+                                        // }
+
+                                        // reference
+                                        //     .putFile(image.path)
+                                        //     .then(data => {
+                                        //         setCoverImagePath(image.path);
+
+                                        //     })
+                                        //     .catch(err => {
+                                        //         console.log('Cover image upload error');
+                                        //         console.log(err);
+                                        //     });
+                                    })
+                                    .catch(e => {
+                                        console.log(e);
+                                    });
                             }}>
                             <View style={styles.actionButton}>
                                 <View
@@ -685,7 +747,21 @@ const SetupBusinessProfileStepper = () => {
                                 <Text style={styles.actionButtonLabel}>Select From Gallery</Text>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                ImageCropPicker.openCamera({
+                                    width: 1200,
+                                    height: 600,
+                                    cropping: true,
+                                })
+                                    .then(image => {
+                                        setCoverImagePath(image.path);
+                                        coverImageActionSheet.current.snapTo(0);
+                                    })
+                                    .catch(e => {
+                                        console.log(e);
+                                    });
+                            }}>
                             <View style={styles.actionButton}>
                                 <View
                                     style={{
@@ -700,6 +776,131 @@ const SetupBusinessProfileStepper = () => {
                                     <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
                                 </View>
                                 <Text style={styles.actionButtonLabel}>Snap cover image from camera</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setCoverImagePath(null);
+                                businessLogoActionSheet.current.snapTo(0);
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="file-image-o" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Use default image</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                }
+            />
+            <BottomSheet
+                ref={businessLogoActionSheet}
+                bottomSheerColor="#FFFFFF"
+                // ref="BottomSheet"
+                initialPosition={0}
+                snapPoints={[0, 260]}
+                isBackDrop={true}
+                isBackDropDismissByPress={true}
+                isRoundBorderWithTipHeader={true}
+                // backDropColor="red"
+                // isModal
+                // containerStyle={{backgroundColor:"red"}}
+                // tipStyle={{backgroundColor:"red"}}
+                // headerStyle={{backgroundColor:"red"}}
+                // bodyStyle={{backgroundColor:"red",flex:1}}
+                body={
+                    <View style={{paddingVertical: 16}}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                ImageCropPicker.openPicker({
+                                    width: 800,
+                                    height: 800,
+                                    cropping: true,
+                                    mediaType: 'photo',
+                                })
+                                    .then(image => {
+                                        setBusinessLogoPath(image.path);
+                                        businessLogoActionSheet.current.snapTo(0);
+                                    })
+                                    .catch(e => {
+                                        console.log(e);
+                                    });
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="photo" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Select From Gallery</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                ImageCropPicker.openCamera({
+                                    width: 800,
+                                    height: 800,
+                                    cropping: true,
+                                })
+                                    .then(image => {
+                                        setBusinessLogoPath(image.path);
+                                        businessLogoActionSheet.current.snapTo(0);
+                                    })
+                                    .catch(e => {
+                                        console.log(e);
+                                    });
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Snap Business Profile from camera</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setBusinessLogoPath(null);
+                                businessLogoActionSheet.current.snapTo(0);
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="file-image-o" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Use default image</Text>
                             </View>
                         </TouchableOpacity>
                     </View>

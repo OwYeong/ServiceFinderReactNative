@@ -25,7 +25,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import SplashPage from '@pages/SplashPage';
 import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
-import {CustomColors} from '@styles';
+import {CustomColors, CustomTypography} from '@styles';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import RegisterPage from '@pages/RegisterPage';
 import {GoogleSignin} from 'react-native-google-signin';
@@ -34,6 +34,7 @@ import auth from '@react-native-firebase/auth';
 import RootStack from '@navigations/RootStack';
 import {setLoginBlock} from '@slices/appSlice';
 import UserService from '@services/UserService';
+import FlashMessage from "react-native-flash-message";
 
 const Stack = createStackNavigator();
 const theme = {
@@ -126,6 +127,7 @@ const App: () => Node = () => {
                         <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
                     </Stack.Navigator> */}
                 </NavigationContainer>
+                <FlashMessage textStyle={{fontFamily: CustomTypography.FONT_FAMILY_REGULAR, fontSize: CustomTypography.FONT_SIZE_14}} />
             </SafeAreaProvider>
         </PaperProvider>
     );
