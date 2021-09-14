@@ -1,13 +1,24 @@
 import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import {CustomColors, CustomTypography} from '@styles';
 import {FastField, Field, Formik} from 'formik';
-import React, {useEffect, useState} from 'react';
-import {LayoutAnimation, StatusBar, StyleSheet, Text, View, Image, TouchableHighlight, Dimensions} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+    LayoutAnimation,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
+    Image,
+    TouchableHighlight,
+    TouchableOpacity,
+    Dimensions,
+} from 'react-native';
 import {Button, HelperText, Surface, TextInput, TouchableRipple} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StepIndicator from 'react-native-step-indicator';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as yup from 'yup';
 import LoadingModal from './LoadingModal';
@@ -21,6 +32,9 @@ import CategoryHealthIcon from '@assets/images/serviceCategory/category-healthCa
 import CategoryMaintenanceIcon from '@assets/images/serviceCategory/category-maintenance';
 import CategoryPersonalIcon from '@assets/images/serviceCategory/category-personalCare';
 import CategoryPetIcon from '@assets/images/serviceCategory/category-petCare';
+import Animated from 'react-native-reanimated';
+import BottomSheet from 'react-native-bottomsheet-reanimated';
+import ImageCropPicker from 'react-native-image-crop-picker';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -120,6 +134,22 @@ const SetupBusinessProfileStepper = () => {
         priceStart: '',
         priceEnd: '',
     });
+
+    const [coverImage, setCoverImage] = useState(null);
+    const [businessLogoUri, setBusinessLogoUri] = useState('');
+
+    const coverImageActionSheet = useRef(null);
+    const renderCoverImageActionSheet = () => {
+        return (
+            <View>
+                <View style={{width: 200, height: 5, borderRadius: 10, backgroundColor: '#C5C5C5'}}></View>
+                <Text>Swipe down to close</Text>
+            </View>
+        );
+    };
+    const coverImageActionSheetOnClose = () => {
+        coverImageActionSheet.current.snapTo(0);
+    };
 
     const businessCategory = {
         car: {
@@ -474,12 +504,18 @@ const SetupBusinessProfileStepper = () => {
                                                 </Text>
                                                 <View style={styles.imageSetupContainer}>
                                                     <TouchableHighlight
-                                                        onPress={() => alert('box tapped!')}
+                                                        onPress={() => {
+                                                            coverImageActionSheet.current.snapTo(1);
+                                                        }}
                                                         activeOpacity={0.6}
                                                         underlayColor="#FFFFFF">
                                                         <Image
                                                             style={styles.coverImage}
-                                                            source={require('@assets/images/default-coverImage.png')}
+                                                            source={
+                                                                !!coverImage
+                                                                    ? {uri: coverImage}
+                                                                    : require('@assets/images/default-coverImage.png')
+                                                            }
                                                             resizeMode="cover"
                                                         />
                                                     </TouchableHighlight>
@@ -490,7 +526,11 @@ const SetupBusinessProfileStepper = () => {
                                                         underlayColor="#FFFFFF">
                                                         <Image
                                                             style={styles.businessProfileImage}
-                                                            source={require('@assets/images/default-profileImage.png')}
+                                                            source={
+                                                                !!businessLogoUri
+                                                                    ? businessLogoUri
+                                                                    : require('@assets/images/default-profileImage.png')
+                                                            }
                                                         />
                                                     </TouchableHighlight>
                                                 </View>
@@ -532,9 +572,8 @@ const SetupBusinessProfileStepper = () => {
                                                         flexDirection: 'row',
                                                         justifyContent: 'center',
                                                         alignItems: 'center',
-                                                        
                                                     }}>
-                                                    <View style={{flex: 1, marginTop: 0,  height: 120}}>
+                                                    <View style={{flex: 1, marginTop: 0, height: 120}}>
                                                         <Field
                                                             component={CustomFormikTextInput}
                                                             mode="outlined"
@@ -546,7 +585,7 @@ const SetupBusinessProfileStepper = () => {
                                                             keyboardType="numeric"></Field>
                                                     </View>
                                                     <Text style={{marginBottom: 30}}>{'   ~   '}</Text>
-                                                    <View  style={{flex: 1, marginTop: 0, height: 120}}>
+                                                    <View style={{flex: 1, marginTop: 0, height: 120}}>
                                                         <Field
                                                             component={CustomFormikTextInput}
                                                             mode="outlined"
@@ -600,6 +639,72 @@ const SetupBusinessProfileStepper = () => {
                         useNativeDriver={true}></LoadingModal>
                 </View>
             </SafeAreaView>
+            <BottomSheet
+                ref={coverImageActionSheet}
+                keyboardAware
+                bottomSheerColor="#FFFFFF"
+                // ref="BottomSheet"
+                initialPosition={0}
+                snapPoints={[0, 200]}
+                isBackDrop={true}
+                isBackDropDismissByPress={true}
+                isRoundBorderWithTipHeader={true}
+                // backDropColor="red"
+                // isModal
+                // containerStyle={{backgroundColor:"red"}}
+                // tipStyle={{backgroundColor:"red"}}
+                // headerStyle={{backgroundColor:"red"}}
+                // bodyStyle={{backgroundColor:"red",flex:1}}
+                body={
+                    <View style={{paddingVertical: 16}}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                ImageCropPicker.openPicker({
+                                    width: 800,
+                                    height: 400,
+                                    cropping: true,
+                                    mediaType: 'photo',
+                                }).then(image => {
+                                    console.log(image.path)
+                                    setCoverImage(image.path)
+                                });
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="photo" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Select From Gallery</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Snap cover image from camera</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                }
+            />
         </View>
     );
 };
@@ -729,6 +834,20 @@ const styles = StyleSheet.create({
         bottom: 0,
         borderWidth: 3,
         borderColor: CustomColors.WHITE,
+    },
+    actionButton: {
+        width: '100%',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    actionButtonLabel: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_14,
+        color: CustomColors.GRAY_DARK,
+        marginHorizontal: 16,
     },
 });
 
