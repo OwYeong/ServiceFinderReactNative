@@ -38,6 +38,8 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 import {showMessage} from 'react-native-flash-message';
+import Swiper from 'react-native-swiper';
+import MapView from 'react-native-maps';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -91,7 +93,7 @@ const SetupBusinessProfileStepper = () => {
                 ),
         },
         {
-            label: 'Service\nLocation',
+            label: 'Service\nCoverage',
             icon: (position, stepStatus) =>
                 stepStatus == 'finished' ? (
                     <Ionicons name="location-sharp" size={20} color={CustomColors.PRIMARY_BLUE} />
@@ -165,6 +167,7 @@ const SetupBusinessProfileStepper = () => {
 
     const coverImageActionSheet = useRef(null);
     const businessLogoActionSheet = useRef(null);
+    const swiperRef = useRef(null);
 
     const businessCategory = {
         car: {
@@ -388,283 +391,326 @@ const SetupBusinessProfileStepper = () => {
                             labels={stepIndicatorList.map(e => e.label)}
                         />
                     </View>
+
                     <View style={styles.contentContainer}>
-                        <ScrollView contentContainerStyle={{flexGrow: 1}}>
-                            <View style={{flex: 1, padding: 20}}>
-                                <Text style={styles.sectionTitle}>Business Profile</Text>
-                                <Text style={styles.sectionDesc}>Complete the details about your business.</Text>
-                                <Text style={styles.subSectionTitle}>Business Type</Text>
-                                <Formik
-                                    initialValues={initialFormValue}
-                                    validationSchema={validationSchema}
-                                    onSubmit={(values, settings) => {
-                                        const {businessCategory, serviceType, businessName, businessDesc, businessServiceDesc, priceStart, priceEnd} = values
+                        <Swiper
+                            ref={swiperRef}
+                            showsButtons={false}
+                            showsPagination={false}
+                            scrollEnabled={false}
+                            loop={false}>
+                            <View style={styles.businessProfileSetupContainer}>
+                                <ScrollView contentContainerStyle={{flexGrow: 1}}>
+                                    <View style={{flex: 1, padding: 20}}>
+                                        <Text style={styles.sectionTitle}>Business Profile</Text>
+                                        <Text style={styles.sectionDesc}>
+                                            Complete the details about your business.
+                                        </Text>
+                                        <Text style={styles.subSectionTitle}>Business Type</Text>
+                                        <Formik
+                                            initialValues={initialFormValue}
+                                            validationSchema={validationSchema}
+                                            onSubmit={(values, settings) => {
+                                                const {
+                                                    businessCategory,
+                                                    serviceType,
+                                                    businessName,
+                                                    businessDesc,
+                                                    businessServiceDesc,
+                                                    priceStart,
+                                                    priceEnd,
+                                                } = values;
 
-                                        setUserInput({
-                                            businessCategory: values,
-                                            serviceType: '',
-                                            businessName: '',
-                                            businessDesc: '',
-                                            businessServiceDesc: '',
-                                            priceStart: '',
-                                            priceEnd: '',
-                                            coverImagePath: coverImagePath,
-                                            businessLogoPath: businessLogoPath
-                                            
-                                        });
-                                    }}>
-                                    {({
-                                        handleSubmit,
-                                        values,
-                                        handleChange,
-                                        isValid,
-                                        errors,
-                                        resetForm,
-                                        isSubmitting,
-                                    }) => {
-                                        return (
-                                            <>
-                                                <View style={styles.categorySelectWrapper}>
-                                                    <Text style={[styles.inputTitle, {marginBottom: 8}]}>
-                                                        Please specify your business type:
-                                                    </Text>
-                                                    <FastField name="businessCategory">
-                                                        {props => {
-                                                            const {
-                                                                field: {name, onBlur, onChange, value},
-                                                                form: {errors, touched, setFieldTouched},
-                                                                ...inputProps
-                                                            } = props;
+                                                setUserInput({
+                                                    businessCategory: businessCategory,
+                                                    serviceType: serviceType,
+                                                    businessName: businessName,
+                                                    businessDesc: businessDesc,
+                                                    businessServiceDesc: businessServiceDesc,
+                                                    priceStart: priceStart,
+                                                    priceEnd: priceEnd,
+                                                    coverImagePath: coverImagePath,
+                                                    businessLogoPath: businessLogoPath,
+                                                });
 
-                                                            return (
-                                                                <>
-                                                                    {Object.keys(businessCategory).map((key, index) => (
-                                                                        <TouchableRipple
-                                                                            key={key}
-                                                                            style={styles.categoryButtonWrapper}
-                                                                            borderless
-                                                                            onPress={() => {
-                                                                                console.log('prfesseed');
-                                                                                onChange(name)(key);
-                                                                                // handleChange('serviceType')('');
-                                                                            }}
-                                                                            rippleColor="rgba(0, 0, 0, .1)">
-                                                                            <View
-                                                                                style={[
-                                                                                    styles.categoryButton,
-                                                                                    {
-                                                                                        backgroundColor:
-                                                                                            value == key
-                                                                                                ? CustomColors.PRIMARY_BLUE
-                                                                                                : CustomColors.WHITE,
-                                                                                        borderColor:
-                                                                                            value == key
-                                                                                                ? CustomColors.PRIMARY_BLUE
-                                                                                                : CustomColors.PRIMARY_BLUE_SATURATED,
-                                                                                    },
-                                                                                ]}>
-                                                                                <View style={{width: 36, height: 36}}>
-                                                                                    {businessCategory[key].icon(
-                                                                                        values,
-                                                                                        key,
-                                                                                    )}
-                                                                                    <CategoryCarIcon />
-                                                                                </View>
-                                                                                <Text
-                                                                                    style={[
-                                                                                        styles.categoryButtonLabel,
-                                                                                        {
-                                                                                            color:
-                                                                                                values.businessCategory ==
-                                                                                                key
-                                                                                                    ? CustomColors.WHITE
-                                                                                                    : CustomColors.PRIMARY_BLUE,
-                                                                                        },
-                                                                                    ]}>
-                                                                                    {businessCategory[key].displayName}
-                                                                                </Text>
-                                                                            </View>
-                                                                        </TouchableRipple>
-                                                                    ))}
-                                                                </>
-                                                            );
-                                                        }}
-                                                    </FastField>
-                                                </View>
-                                                <View>
-                                                    <Text style={[styles.inputTitle, {marginTop: 16}]}>
-                                                        What type of service you provide:
-                                                    </Text>
-                                                    <RNPickerSelect
-                                                        placeholder={{label: 'Select your service type', value: null}}
-                                                        items={serviceTypes[values.businessCategory].map(
-                                                            serviceType => ({
-                                                                label: serviceType.displayName,
-                                                                value: serviceType.serviceId,
-                                                            }),
-                                                        )}
-                                                        onValueChange={value => {
-                                                            handleChange('serviceType')(value || '');
-                                                        }}
-                                                        style={{
-                                                            ...pickerSelectStyles,
-                                                            iconContainer: {
-                                                                top: 10,
-                                                                right: 12,
-                                                            },
-                                                        }}
-                                                        useNativeAndroidPickerStyle={false}
-                                                        Icon={() => (
-                                                            <Ionicons
-                                                                name="md-chevron-down"
-                                                                size={20}
-                                                                fill={CustomColors.GRAY_DARK}
+                                                swiperRef.current.scrollBy(1);
+                                            }}>
+                                            {({
+                                                handleSubmit,
+                                                values,
+                                                handleChange,
+                                                isValid,
+                                                errors,
+                                                resetForm,
+                                                isSubmitting,
+                                            }) => {
+                                                return (
+                                                    <>
+                                                        <View style={styles.categorySelectWrapper}>
+                                                            <Text style={[styles.inputTitle, {marginBottom: 8}]}>
+                                                                Please specify your business type:
+                                                            </Text>
+                                                            <FastField name="businessCategory">
+                                                                {props => {
+                                                                    const {
+                                                                        field: {name, onBlur, onChange, value},
+                                                                        form: {errors, touched, setFieldTouched},
+                                                                        ...inputProps
+                                                                    } = props;
+
+                                                                    return (
+                                                                        <>
+                                                                            {Object.keys(businessCategory).map(
+                                                                                (key, index) => (
+                                                                                    <TouchableRipple
+                                                                                        key={key}
+                                                                                        style={
+                                                                                            styles.categoryButtonWrapper
+                                                                                        }
+                                                                                        borderless
+                                                                                        onPress={() => {
+                                                                                            console.log('prfesseed');
+                                                                                            onChange(name)(key);
+                                                                                            // handleChange('serviceType')('');
+                                                                                        }}
+                                                                                        rippleColor="rgba(0, 0, 0, .1)">
+                                                                                        <View
+                                                                                            style={[
+                                                                                                styles.categoryButton,
+                                                                                                {
+                                                                                                    backgroundColor:
+                                                                                                        value == key
+                                                                                                            ? CustomColors.PRIMARY_BLUE
+                                                                                                            : CustomColors.WHITE,
+                                                                                                    borderColor:
+                                                                                                        value == key
+                                                                                                            ? CustomColors.PRIMARY_BLUE
+                                                                                                            : CustomColors.PRIMARY_BLUE_SATURATED,
+                                                                                                },
+                                                                                            ]}>
+                                                                                            <View
+                                                                                                style={{
+                                                                                                    width: 36,
+                                                                                                    height: 36,
+                                                                                                }}>
+                                                                                                {businessCategory[
+                                                                                                    key
+                                                                                                ].icon(values, key)}
+                                                                                                <CategoryCarIcon />
+                                                                                            </View>
+                                                                                            <Text
+                                                                                                style={[
+                                                                                                    styles.categoryButtonLabel,
+                                                                                                    {
+                                                                                                        color:
+                                                                                                            values.businessCategory ==
+                                                                                                            key
+                                                                                                                ? CustomColors.WHITE
+                                                                                                                : CustomColors.PRIMARY_BLUE,
+                                                                                                    },
+                                                                                                ]}>
+                                                                                                {
+                                                                                                    businessCategory[
+                                                                                                        key
+                                                                                                    ].displayName
+                                                                                                }
+                                                                                            </Text>
+                                                                                        </View>
+                                                                                    </TouchableRipple>
+                                                                                ),
+                                                                            )}
+                                                                        </>
+                                                                    );
+                                                                }}
+                                                            </FastField>
+                                                        </View>
+                                                        <View>
+                                                            <Text style={[styles.inputTitle, {marginTop: 16}]}>
+                                                                What type of service you provide:
+                                                            </Text>
+                                                            <RNPickerSelect
+                                                                placeholder={{
+                                                                    label: 'Select your service type',
+                                                                    value: null,
+                                                                }}
+                                                                items={serviceTypes[values.businessCategory].map(
+                                                                    serviceType => ({
+                                                                        label: serviceType.displayName,
+                                                                        value: serviceType.serviceId,
+                                                                    }),
+                                                                )}
+                                                                onValueChange={value => {
+                                                                    handleChange('serviceType')(value || '');
+                                                                }}
+                                                                style={{
+                                                                    ...pickerSelectStyles,
+                                                                    iconContainer: {
+                                                                        top: 10,
+                                                                        right: 12,
+                                                                    },
+                                                                }}
+                                                                useNativeAndroidPickerStyle={false}
+                                                                Icon={() => (
+                                                                    <Ionicons
+                                                                        name="md-chevron-down"
+                                                                        size={20}
+                                                                        fill={CustomColors.GRAY_DARK}
+                                                                    />
+                                                                )}
+                                                                value={values.serviceType}
                                                             />
-                                                        )}
-                                                        value={values.serviceType}
-                                                    />
-                                                    <HelperText type="error" style={styles.errorText}>
-                                                        {errors['serviceType']}
-                                                    </HelperText>
-                                                </View>
+                                                            <HelperText type="error" style={styles.errorText}>
+                                                                {errors['serviceType']}
+                                                            </HelperText>
+                                                        </View>
 
-                                                <Text style={styles.subSectionTitle}>Business Details</Text>
-                                                <Text style={[styles.inputTitle, {marginTop: 8}]}>
-                                                    Tell us about your service business.
-                                                </Text>
-                                                <View style={styles.imageSetupContainer}>
-                                                    <TouchableHighlight
-                                                        onPress={() => {
-                                                            coverImageActionSheet.current.snapTo(1);
-                                                        }}
-                                                        activeOpacity={0.6}
-                                                        underlayColor="#FFFFFF">
-                                                        <Image
-                                                            style={styles.coverImage}
-                                                            source={
-                                                                !!coverImagePath
-                                                                    ? {uri: coverImagePath}
-                                                                    : require('@assets/images/default-coverImage.png')
-                                                            }
-                                                            resizeMode="cover"
-                                                        />
-                                                    </TouchableHighlight>
-                                                    <TouchableHighlight
-                                                        style={styles.businessProfileImageWrapper}
-                                                        onPress={() => {
-                                                            businessLogoActionSheet.current.snapTo(1);
-                                                        }}
-                                                        activeOpacity={0.6}
-                                                        underlayColor="#FFFFFF">
-                                                        <Image
-                                                            style={styles.businessProfileImage}
-                                                            source={
-                                                                !!businessLogoPath
-                                                                    ? {uri: businessLogoPath}
-                                                                    : require('@assets/images/default-profileImage.png')
-                                                            }
-                                                        />
-                                                    </TouchableHighlight>
-                                                </View>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    mode="outlined"
-                                                    style={styles.inputPrompt}
-                                                    label="Business Name"
-                                                    name="businessName"
-                                                    placeholder="Your business name"></Field>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    mode="outlined"
-                                                    style={[styles.inputPrompt]}
-                                                    label="Business Desc"
-                                                    name="businessDesc"
-                                                    placeholder="Your business description"
-                                                    numberOfLines={5}
-                                                    multiline></Field>
-                                                <Field
-                                                    component={CustomFormikTextInput}
-                                                    mode="outlined"
-                                                    style={[styles.inputPrompt]}
-                                                    label="What service that your business provide?"
-                                                    name="businessServiceDesc"
-                                                    placeholder={
-                                                        'Ex: We provide a wide range of services which includes: \n1) ...\n2) ...\n3) ...'
-                                                    }
-                                                    numberOfLines={7}
-                                                    multiline></Field>
-                                                <Text style={styles.subSectionTitle}>Pricing</Text>
-                                                <Text style={[styles.inputTitle, {marginTop: 8}]}>
-                                                    Tell your customer a little bit about your pricing.
-                                                </Text>
-                                                <View
-                                                    style={{
-                                                        flex: 1,
-                                                        marginTop: 8,
-                                                        flexDirection: 'row',
-                                                        justifyContent: 'center',
-                                                        alignItems: 'center',
-                                                    }}>
-                                                    <View style={{flex: 1, marginTop: 0, height: 120}}>
+                                                        <Text style={styles.subSectionTitle}>Business Details</Text>
+                                                        <Text style={[styles.inputTitle, {marginTop: 8}]}>
+                                                            Tell us about your service business.
+                                                        </Text>
+                                                        <View style={styles.imageSetupContainer}>
+                                                            <TouchableHighlight
+                                                                onPress={() => {
+                                                                    coverImageActionSheet.current.snapTo(1);
+                                                                }}
+                                                                activeOpacity={0.6}
+                                                                underlayColor="#FFFFFF">
+                                                                <Image
+                                                                    style={styles.coverImage}
+                                                                    source={
+                                                                        !!coverImagePath
+                                                                            ? {uri: coverImagePath}
+                                                                            : require('@assets/images/default-coverImage.png')
+                                                                    }
+                                                                    resizeMode="cover"
+                                                                />
+                                                            </TouchableHighlight>
+                                                            <TouchableHighlight
+                                                                style={styles.businessProfileImageWrapper}
+                                                                onPress={() => {
+                                                                    businessLogoActionSheet.current.snapTo(1);
+                                                                }}
+                                                                activeOpacity={0.6}
+                                                                underlayColor="#FFFFFF">
+                                                                <Image
+                                                                    style={styles.businessProfileImage}
+                                                                    source={
+                                                                        !!businessLogoPath
+                                                                            ? {uri: businessLogoPath}
+                                                                            : require('@assets/images/default-profileImage.png')
+                                                                    }
+                                                                />
+                                                            </TouchableHighlight>
+                                                        </View>
+                                                        <Field
+                                                            component={CustomFormikTextInput}
+                                                            mode="outlined"
+                                                            style={styles.inputPrompt}
+                                                            label="Business Name"
+                                                            name="businessName"
+                                                            placeholder="Your business name"></Field>
                                                         <Field
                                                             component={CustomFormikTextInput}
                                                             mode="outlined"
                                                             style={[styles.inputPrompt]}
-                                                            left={<TextInput.Affix text="RM" />}
-                                                            label="Price Start"
-                                                            name="priceStart"
-                                                            placeholder="Starting Price"
-                                                            keyboardType="numeric"></Field>
-                                                    </View>
-                                                    <Text style={{marginBottom: 30}}>{'   ~   '}</Text>
-                                                    <View style={{flex: 1, marginTop: 0, height: 120}}>
+                                                            label="Business Desc"
+                                                            name="businessDesc"
+                                                            placeholder="Your business description"
+                                                            numberOfLines={5}
+                                                            multiline></Field>
                                                         <Field
                                                             component={CustomFormikTextInput}
                                                             mode="outlined"
                                                             style={[styles.inputPrompt]}
-                                                            left={<TextInput.Affix text="RM" />}
-                                                            label="Price End"
-                                                            name="priceEnd"
-                                                            placeholder="Ending Price"
-                                                            keyboardType="numeric"></Field>
-                                                    </View>
-                                                </View>
-
-                                                <View style={styles.actionBtnContainer}>
-                                                    <Button
-                                                        style={styles.actionBtn}
-                                                        mode="contained"
-                                                        disabled={isSubmitting}
-                                                        contentStyle={{height: 50}}
-                                                        color={CustomColors.PRIMARY_BLUE}
-                                                        dark
-                                                        onPress={() => {
-                                                            if (Object.keys(errors).length > 0) {
-                                                                showMessage({
-                                                                    message: 'Please make sure all inputs are valid.',
-                                                                    type: 'info',
-                                                                    position: 'center',
-                                                                    backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                                                    color: 'white', // text color
-                                                                    titleStyle: {marginTop: 5},
-                                                                    hideOnPress: true,
-                                                                    autoHide: true,
-                                                                    duration: 1000,
-                                                                });
-                                                            } else {
-                                                                handleSubmit();
+                                                            label="What service that your business provide?"
+                                                            name="businessServiceDesc"
+                                                            placeholder={
+                                                                'Ex: We provide a wide range of services which includes: \n1) ...\n2) ...\n3) ...'
                                                             }
-                                                        }}>
-                                                        NEXT
-                                                    </Button>
-                                                </View>
-                                            </>
-                                        );
-                                    }}
-                                </Formik>
+                                                            numberOfLines={7}
+                                                            multiline></Field>
+                                                        <Text style={styles.subSectionTitle}>Pricing</Text>
+                                                        <Text style={[styles.inputTitle, {marginTop: 8}]}>
+                                                            Tell your customer a little bit about your pricing.
+                                                        </Text>
+                                                        <View
+                                                            style={{
+                                                                flex: 1,
+                                                                marginTop: 8,
+                                                                flexDirection: 'row',
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center',
+                                                            }}>
+                                                            <View style={{flex: 1, marginTop: 0, height: 120}}>
+                                                                <Field
+                                                                    component={CustomFormikTextInput}
+                                                                    mode="outlined"
+                                                                    style={[styles.inputPrompt]}
+                                                                    left={<TextInput.Affix text="RM" />}
+                                                                    label="Price Start"
+                                                                    name="priceStart"
+                                                                    placeholder="Starting Price"
+                                                                    keyboardType="numeric"></Field>
+                                                            </View>
+                                                            <Text style={{marginBottom: 30}}>{'   ~   '}</Text>
+                                                            <View style={{flex: 1, marginTop: 0, height: 120}}>
+                                                                <Field
+                                                                    component={CustomFormikTextInput}
+                                                                    mode="outlined"
+                                                                    style={[styles.inputPrompt]}
+                                                                    left={<TextInput.Affix text="RM" />}
+                                                                    label="Price End"
+                                                                    name="priceEnd"
+                                                                    placeholder="Ending Price"
+                                                                    keyboardType="numeric"></Field>
+                                                            </View>
+                                                        </View>
+
+                                                        <View style={styles.actionBtnContainer}>
+                                                            <Button
+                                                                style={styles.actionBtn}
+                                                                mode="contained"
+                                                                disabled={isSubmitting}
+                                                                contentStyle={{height: 50}}
+                                                                color={CustomColors.PRIMARY_BLUE}
+                                                                dark
+                                                                onPress={() => {
+                                                                    if (Object.keys(errors).length > 0) {
+                                                                        showMessage({
+                                                                            message:
+                                                                                'Please make sure all inputs are valid.',
+                                                                            type: 'info',
+                                                                            position: 'center',
+                                                                            backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                                            color: 'white', // text color
+                                                                            titleStyle: {marginTop: 5},
+                                                                            hideOnPress: true,
+                                                                            autoHide: true,
+                                                                            duration: 1000,
+                                                                        });
+                                                                    } else {
+                                                                        handleSubmit();
+                                                                    }
+                                                                }}>
+                                                                NEXT
+                                                            </Button>
+                                                        </View>
+                                                    </>
+                                                );
+                                            }}
+                                        </Formik>
+                                    </View>
+                                </ScrollView>
                             </View>
-                        </ScrollView>
+                            <View style={styles.serviceLocationSetupContainer}>
+                                <Text style={styles.sectionTitle}>Service Coverage Setup</Text>
+                                <Text style={styles.sectionDesc}>Please specify your service location and coverage. Only customer who are in your area of service could see your service. </Text>
+                                <Text style={styles.subSectionTitle}>Business Type</Text>
+                                <MapView style={{flex: 1, width: '100%'}}></MapView>
+                            </View>
+                        </Swiper>
                     </View>
+
                     <LoadingModal
                         animationIn={'bounceIn'}
                         animationOut={'bounceOut'}
@@ -1049,6 +1095,15 @@ const styles = StyleSheet.create({
         fontSize: CustomTypography.FONT_SIZE_14,
         color: CustomColors.GRAY_DARK,
         marginHorizontal: 16,
+    },
+    businessProfileSetupContainer: {
+        width: '100%',
+        flex: 1,
+    },
+    serviceLocationSetupContainer: {
+        flex: 1,
+        width: '100%',
+        padding: 20,
     },
 });
 
