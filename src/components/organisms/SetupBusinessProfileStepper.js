@@ -1,7 +1,8 @@
 import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import {CustomColors, CustomTypography} from '@styles';
 import {FastField, Field, Formik} from 'formik';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import ReactNative, {TouchableWithoutFeedback} from 'react-native';
 import {
     LayoutAnimation,
     StatusBar,
@@ -13,7 +14,7 @@ import {
     TouchableOpacity,
     Dimensions,
 } from 'react-native';
-import {Button, HelperText, Surface, TextInput, TouchableRipple} from 'react-native-paper';
+import {Button, HelperText, Menu, Searchbar, Surface, TextInput, TouchableRipple} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StepIndicator from 'react-native-step-indicator';
@@ -40,6 +41,12 @@ import auth from '@react-native-firebase/auth';
 import {showMessage} from 'react-native-flash-message';
 import Swiper from 'react-native-swiper';
 import MapView from 'react-native-maps';
+import AutocompleteInput from '@atoms/AutocompleteInput';
+import MapService from '@services/MapService';
+import FeatherIcon from 'react-native-vector-icons/Feather';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import {debounce} from 'lodash';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -164,10 +171,42 @@ const SetupBusinessProfileStepper = () => {
 
     const [coverImagePath, setCoverImagePath] = useState(null);
     const [businessLogoPath, setBusinessLogoPath] = useState('');
+    const [showClearIcon, setShowClearIcon] = useState(false);
+    const [searchBary, setSearchBary] = useState(0);
+
+    const [addressQuery, setAddressQuery] = useState('');
+    const [addressQueryResult, setAddressQueryResult] = useState([]);
+    const [showAddressSuggestion, setShowAddressSuggestion] = useState(false);
 
     const coverImageActionSheet = useRef(null);
     const businessLogoActionSheet = useRef(null);
     const swiperRef = useRef(null);
+    const serviceCoverageSectionScrollViewRef = useRef(null);
+    const addressSearchBarRef = useRef(null);
+
+    const searchAddress = async query => {
+        try {
+            const res = await MapService.searchAddress(query);
+            console.log(res);
+            const queryResult = res.results.map(result => {
+                return {
+                    addressCoor: {
+                        lat: result.position.lat,
+                        lon: result.position.lon,
+                    },
+                    addressFullName: result.address.freeformAddress,
+                    id: result.id,
+                };
+            });
+
+            setAddressQueryResult(queryResult);
+        } catch (err) {
+            console.log('search address error');
+            console.log(err);
+        }
+    };
+
+    const searchAddressCallback = useCallback(debounce(searchAddress, 1000), []);
 
     const businessCategory = {
         car: {
@@ -373,6 +412,10 @@ const SetupBusinessProfileStepper = () => {
         return stepIndicatorList[position].icon(position, stepStatus);
     };
 
+    useEffect(() => {
+        console.log('hellow');
+    }, [addressQuery]);
+
     useEffect(() => {}, []);
 
     return (
@@ -398,6 +441,7 @@ const SetupBusinessProfileStepper = () => {
                             showsButtons={false}
                             showsPagination={false}
                             scrollEnabled={false}
+                            keyboardShouldPersistTaps="handled"
                             loop={false}>
                             <View style={styles.businessProfileSetupContainer}>
                                 <ScrollView contentContainerStyle={{flexGrow: 1}}>
@@ -422,15 +466,17 @@ const SetupBusinessProfileStepper = () => {
                                                 } = values;
 
                                                 setUserInput({
-                                                    businessCategory: businessCategory,
-                                                    serviceType: serviceType,
-                                                    businessName: businessName,
-                                                    businessDesc: businessDesc,
-                                                    businessServiceDesc: businessServiceDesc,
-                                                    priceStart: priceStart,
-                                                    priceEnd: priceEnd,
-                                                    coverImagePath: coverImagePath,
-                                                    businessLogoPath: businessLogoPath,
+                                                    businessProfile: {
+                                                        businessCategory: businessCategory,
+                                                        serviceType: serviceType,
+                                                        businessName: businessName,
+                                                        businessDesc: businessDesc,
+                                                        businessServiceDesc: businessServiceDesc,
+                                                        priceStart: priceStart,
+                                                        priceEnd: priceEnd,
+                                                        coverImagePath: coverImagePath,
+                                                        businessLogoPath: businessLogoPath,
+                                                    },
                                                 });
 
                                                 swiperRef.current.scrollBy(1);
@@ -676,6 +722,7 @@ const SetupBusinessProfileStepper = () => {
                                                                 dark
                                                                 onPress={() => {
                                                                     if (Object.keys(errors).length > 0) {
+                                                                        swiperRef.current.scrollBy(1);
                                                                         showMessage({
                                                                             message:
                                                                                 'Please make sure all inputs are valid.',
@@ -702,12 +749,127 @@ const SetupBusinessProfileStepper = () => {
                                     </View>
                                 </ScrollView>
                             </View>
-                            <View style={styles.serviceLocationSetupContainer}>
-                                <Text style={styles.sectionTitle}>Service Coverage Setup</Text>
-                                <Text style={styles.sectionDesc}>Please specify your service location and coverage. Only customer who are in your area of service could see your service. </Text>
-                                <Text style={styles.subSectionTitle}>Business Type</Text>
-                                <MapView style={{flex: 1, width: '100%'}}></MapView>
-                            </View>
+                            <ScrollView ref={serviceCoverageSectionScrollViewRef} contentContainerStyle={{flexGrow: 1}}>
+                                <View style={styles.serviceLocationSetupContainer}>
+                                    <Text style={styles.sectionTitle}>Service Coverage Setup</Text>
+                                    <Text style={styles.sectionDesc}>
+                                        Please specify your service location and coverage. Only customer who are in your
+                                        area of service could see your service.{' '}
+                                    </Text>
+                                    <Text style={styles.subSectionTitle}>Business Type</Text>
+                                    <View
+                                        style={{width: '100%'}}
+                                        onLayout={event => {
+                                            var {x, y, width, height} = event.nativeEvent.layout;
+                                            console.log('onlayout', event.nativeEvent.layout);
+
+                                            setSearchBary(y);
+                                        }}>
+                                        <Menu
+                                            onDismiss={() => {
+                                                setAddressQueryResult([]);
+                                            }}
+                                            contentStyle={{height: 200}}
+                                            style={{marginTop: 80, left: 22, right: 22, padding: 0}}
+                                            anchor={
+                                                <Searchbar
+                                                    ref={addressSearchBarRef}
+                                                    style={[styles.searchBar]}
+                                                    onChangeText={text => {
+                                                        LayoutAnimation.configureNext(
+                                                            LayoutAnimation.Presets.easeInEaseOut,
+                                                        );
+                                                        setShowClearIcon(text.length > 0);
+                                                        setAddressQuery(text);
+                                                        searchAddressCallback(addressQuery);
+                                                    }}
+                                                    value={addressQuery}
+                                                    inputStyle={{padding: 0, margin: 0, fontSize: 14}}
+                                                    onFocus={event => {
+                                                        // `bind` the function if you're using ES6 classes
+                                                        console.log('y is ', searchBary);
+                                                        addressSearchBarRef.current.blur();
+                                                        addressSearchBarRef.current.focus();
+                                                        serviceCoverageSectionScrollViewRef.current.scrollTo({
+                                                            x: 0,
+                                                            y: searchBary,
+                                                            animated: true,
+                                                        });
+                                                        // serviceCoverageSectionScrollViewRef.current.props.scrollToFocusedInput(
+                                                        //     ReactNative.findNodeHandle(event.target),
+                                                        // );
+                                                    }}
+                                                    icon={() => <FeatherIcon name="search" size={20} />}
+                                                    clearIcon={() =>
+                                                        showClearIcon ? <MaterialIcon name="cancel" size={20} /> : null
+                                                    }
+                                                    placeholder="Find your service"
+                                                />
+                                            }
+                                            visible={addressQueryResult.length > 0}>
+                                            {addressQueryResult.map(addr => (
+                                                <TouchableRipple
+                                                    key={addr.id}
+                                                    rippleColor="rgba(0, 0, 0, .32)"
+                                                    onPress={() => {
+                                                        setUserInput({
+                                                            ...userInput,
+                                                            serviceCoverage: {
+                                                                addressCoor: {
+                                                                    lat: addr.addressCoor.lat,
+                                                                    lon: addr.addressCoor.lon,
+                                                                },
+                                                                addressFullName: addr.addressFullName,
+                                                            },
+                                                        });
+                                                        setAddressQuery(addr.addressFullName);
+                                                        setAddressQueryResult([]);
+                                                    }}>
+                                                    <View
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: 16,
+                                                            paddingVertical: 8,
+                                                            backgroundColor: 'transparent',
+                                                        }}>
+                                                        <Text style={styles.addressSearchResult}>
+                                                            {addr.addressFullName}
+                                                        </Text>
+                                                    </View>
+                                                </TouchableRipple>
+                                            ))}
+
+                                            {/* {array.map((value, index) => (
+                                        <Menu.Item title={`${query}_${index}`} onPress={() => setMenuVisible(false)} />
+                                    ))} */}
+                                        </Menu>
+                                    </View>
+                                    <MapView style={{width: '100%', height: 200}}></MapView>
+                                    <View style={styles.actionBtnContainer}>
+                                        <Button
+                                            style={styles.actionBtn}
+                                            mode="contained"
+                                            contentStyle={{height: 50}}
+                                            color={CustomColors.PRIMARY_BLUE}
+                                            dark
+                                            onPress={() => {
+                                                showMessage({
+                                                    message: 'Please make sure all inputs are valid.',
+                                                    type: 'info',
+                                                    position: 'center',
+                                                    backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                    color: 'white', // text color
+                                                    titleStyle: {marginTop: 5},
+                                                    hideOnPress: true,
+                                                    autoHide: true,
+                                                    duration: 1000,
+                                                });
+                                            }}>
+                                            NEXT
+                                        </Button>
+                                    </View>
+                                </View>
+                            </ScrollView>
                         </Swiper>
                     </View>
 
@@ -1104,6 +1266,19 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         padding: 20,
+    },
+    searchBar: {
+        alignItems: 'center',
+        borderRadius: 8,
+        width: '100%',
+        height: 40,
+        elevation: 0,
+        backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
+    },
+    addressSearchResult: {
+        fontSize: CustomTypography.FONT_SIZE_14,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        color: CustomColors.GRAY_DARK,
     },
 });
 
