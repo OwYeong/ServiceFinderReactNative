@@ -2,7 +2,7 @@ import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import {CustomColors, CustomTypography} from '@styles';
 import {FastField, Field, Formik} from 'formik';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import ReactNative, {TouchableWithoutFeedback} from 'react-native';
+import ReactNative, {Keyboard, TouchableWithoutFeedback} from 'react-native';
 import {
     LayoutAnimation,
     StatusBar,
@@ -40,7 +40,7 @@ import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 import {showMessage} from 'react-native-flash-message';
 import Swiper from 'react-native-swiper';
-import MapView from 'react-native-maps';
+import MapView, {OverlayComponent} from 'react-native-maps';
 import AutocompleteInput from '@atoms/AutocompleteInput';
 import MapService from '@services/MapService';
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -416,7 +416,21 @@ const SetupBusinessProfileStepper = () => {
         console.log('hellow');
     }, [addressQuery]);
 
-    useEffect(() => {}, []);
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {});
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            if (addressSearchBarRef.current.isFocused()) {
+                setAddressQueryResult([]);
+                addressSearchBarRef.current.blur();
+            }
+        });
+
+        return () => {
+            // clean up
+            keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+        };
+    }, []);
 
     return (
         <View style={{backgroundColor: CustomColors.PRIMARY_BLUE}}>
@@ -770,7 +784,7 @@ const SetupBusinessProfileStepper = () => {
                                                 setAddressQueryResult([]);
                                             }}
                                             contentStyle={{height: 200}}
-                                            style={{marginTop: 80, left: 22, right: 22, padding: 0}}
+                                            style={{marginTop: 70, left: 22, right: 22, padding: 0}}
                                             anchor={
                                                 <Searchbar
                                                     ref={addressSearchBarRef}
@@ -781,15 +795,16 @@ const SetupBusinessProfileStepper = () => {
                                                         );
                                                         setShowClearIcon(text.length > 0);
                                                         setAddressQuery(text);
-                                                        searchAddressCallback(addressQuery);
+
+                                                        if (!!text) {
+                                                            searchAddressCallback(addressQuery);
+                                                        }
                                                     }}
                                                     value={addressQuery}
                                                     inputStyle={{padding: 0, margin: 0, fontSize: 14}}
                                                     onFocus={event => {
                                                         // `bind` the function if you're using ES6 classes
                                                         console.log('y is ', searchBary);
-                                                        addressSearchBarRef.current.blur();
-                                                        addressSearchBarRef.current.focus();
                                                         serviceCoverageSectionScrollViewRef.current.scrollTo({
                                                             x: 0,
                                                             y: searchBary,
@@ -803,48 +818,102 @@ const SetupBusinessProfileStepper = () => {
                                                     clearIcon={() =>
                                                         showClearIcon ? <MaterialIcon name="cancel" size={20} /> : null
                                                     }
+                                                    onIconPress={() => {
+                                                        console.log('clear clicked');
+                                                    }}
                                                     placeholder="Find your service"
                                                 />
                                             }
                                             visible={addressQueryResult.length > 0}>
-                                            {addressQueryResult.map(addr => (
-                                                <TouchableRipple
-                                                    key={addr.id}
-                                                    rippleColor="rgba(0, 0, 0, .32)"
-                                                    onPress={() => {
-                                                        setUserInput({
-                                                            ...userInput,
-                                                            serviceCoverage: {
-                                                                addressCoor: {
-                                                                    lat: addr.addressCoor.lat,
-                                                                    lon: addr.addressCoor.lon,
+                                            <ScrollView
+                                                contentContainerStyle={{flexGrow: 1}}
+                                                keyboardShouldPersistTaps="always">
+                                                {addressQueryResult.map(addr => (
+                                                    <TouchableRipple
+                                                        key={addr.id}
+                                                        rippleColor="rgba(0, 0, 0, .32)"
+                                                        onPress={() => {
+                                                            setUserInput({
+                                                                ...userInput,
+                                                                serviceCoverage: {
+                                                                    addressCoor: {
+                                                                        lat: addr.addressCoor.lat,
+                                                                        lon: addr.addressCoor.lon,
+                                                                    },
+                                                                    addressFullName: addr.addressFullName,
                                                                 },
-                                                                addressFullName: addr.addressFullName,
-                                                            },
-                                                        });
-                                                        setAddressQuery(addr.addressFullName);
-                                                        setAddressQueryResult([]);
-                                                    }}>
-                                                    <View
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: 16,
-                                                            paddingVertical: 8,
-                                                            backgroundColor: 'transparent',
+                                                            });
+                                                            setAddressQuery(addr.addressFullName);
+                                                            setAddressQueryResult([]);
                                                         }}>
-                                                        <Text style={styles.addressSearchResult}>
-                                                            {addr.addressFullName}
-                                                        </Text>
-                                                    </View>
-                                                </TouchableRipple>
-                                            ))}
+                                                        <View
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: 16,
+                                                                paddingVertical: 8,
+                                                                backgroundColor: 'transparent',
+                                                            }}>
+                                                            <Text style={styles.addressSearchResult}>
+                                                                {addr.addressFullName}
+                                                            </Text>
+                                                        </View>
+                                                    </TouchableRipple>
+                                                ))}
+                                            </ScrollView>
 
                                             {/* {array.map((value, index) => (
                                         <Menu.Item title={`${query}_${index}`} onPress={() => setMenuVisible(false)} />
                                     ))} */}
                                         </Menu>
                                     </View>
-                                    <MapView style={{width: '100%', height: 200}}></MapView>
+                                    <View style={styles.container}>
+                                        <MapView
+                                            showsUserLocation={false}
+                                            showsMyLocationButton={false}
+                                            initialCamera={{
+                                                altitude: 15000,
+                                                center: {
+                                                    latitude: 3.0671123333851362,
+                                                    longitude: 101.60356068473712,
+                                                },
+                                                heading: 0,
+                                                pitch: 0,
+                                                zoom: 11,
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                height: 200,
+                                                marginTop: 20,
+                                                borderRadius: 20,
+                                                overflow: 'hidden',
+                                            }}
+                                        />
+
+                                        <TouchableRipple
+                                            style={{position: 'absolute', right: 16, bottom: 16,borderRadius: 24,}}
+                                            borderless
+                                            rippleColor="rgba(0, 0, 0, .32)"
+                                            onPress={() => {}}>
+                                            <View
+                                                style={{
+                                                    width: 48,
+                                                    height: 48,
+                                                    opacity: 0.7,
+                                                    borderRadius: 24,
+                                                    overflow: 'hidden',
+                                                    backgroundColor: 'white',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                }}>
+                                                <MaterialIcon
+                                                    name="my-location"
+                                                    size={20}
+                                                    color={CustomColors.GRAY_DARK}
+                                                />
+                                            </View>
+                                        </TouchableRipple>
+                                    </View>
+
                                     <View style={styles.actionBtnContainer}>
                                         <Button
                                             style={styles.actionBtn}
