@@ -2,7 +2,7 @@ import CustomFormikTextInput from '@molecules/CustomFormikTextInput';
 import {CustomColors, CustomTypography} from '@styles';
 import {FastField, Field, Formik} from 'formik';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import ReactNative, {Keyboard, TouchableWithoutFeedback} from 'react-native';
+import ReactNative, {Alert, Keyboard, Platform, TouchableWithoutFeedback} from 'react-native';
 import {
     LayoutAnimation,
     StatusBar,
@@ -40,13 +40,17 @@ import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 import {showMessage} from 'react-native-flash-message';
 import Swiper from 'react-native-swiper';
-import MapView, {OverlayComponent} from 'react-native-maps';
+import MapView, {Marker, OverlayComponent} from 'react-native-maps';
 import AutocompleteInput from '@atoms/AutocompleteInput';
 import MapService from '@services/MapService';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {debounce} from 'lodash';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import GeoLocationUtils from '@utils/GeoLocationUtils';
+import Geolocation from 'react-native-geolocation-service';
+import {PERMISSIONS, request} from 'react-native-permissions';
+import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -183,6 +187,7 @@ const SetupBusinessProfileStepper = () => {
     const swiperRef = useRef(null);
     const serviceCoverageSectionScrollViewRef = useRef(null);
     const addressSearchBarRef = useRef(null);
+    const mapViewRef = useRef(null);
 
     const searchAddress = async query => {
         try {
@@ -837,14 +842,25 @@ const SetupBusinessProfileStepper = () => {
                                                                 ...userInput,
                                                                 serviceCoverage: {
                                                                     addressCoor: {
-                                                                        lat: addr.addressCoor.lat,
-                                                                        lon: addr.addressCoor.lon,
+                                                                        latitude: addr.addressCoor.lat,
+                                                                        longitude: addr.addressCoor.lon,
                                                                     },
                                                                     addressFullName: addr.addressFullName,
                                                                 },
                                                             });
                                                             setAddressQuery(addr.addressFullName);
                                                             setAddressQueryResult([]);
+                                                            mapViewRef.current.animateCamera(
+                                                                {
+                                                                    ...mapViewRef.current.getCamera(),
+                                                                    center: {
+                                                                        latitude: addr.addressCoor.lat,
+                                                                        longitude: addr.addressCoor.lon,
+                                                                    },
+                                                                    zoom: 13,
+                                                                },
+                                                                {duration: 2000},
+                                                            );
                                                         }}>
                                                         <View
                                                             style={{
@@ -868,8 +884,35 @@ const SetupBusinessProfileStepper = () => {
                                     </View>
                                     <View style={styles.container}>
                                         <MapView
+                                            ref={mapViewRef}
                                             showsUserLocation={false}
                                             showsMyLocationButton={false}
+                                            onRegionChangeComplete={(region, {isGesture}) => {
+                                                console.log(region);
+                                                setUserInput({
+                                                    ...userInput,
+                                                    serviceCoverage: {
+                                                        addressCoor: {
+                                                            latitude: region.latitude,
+                                                            longitude: region.longitude,
+                                                        },
+                                                    },
+                                                });
+                                                MapService.findAddressByGeoCode(`${region.latitude},${region.longitude}`)
+                                                    .then(response=>{
+                                                        setUserInput({
+                                                            ...userInput,
+                                                            serviceCoverage: {
+                                                                ...userInput.serviceCoverage,
+                                                                addressFullName: response.addresses[0].address.freeformAddress
+                                                            },
+                                                        });
+                                                        setAddressQuery(response.addresses[0].address.freeformAddress);
+                                                    })
+                                                    .catch(err => {
+                                                        console.log(err);
+                                                    });
+                                            }}
                                             initialCamera={{
                                                 altitude: 15000,
                                                 center: {
@@ -878,7 +921,7 @@ const SetupBusinessProfileStepper = () => {
                                                 },
                                                 heading: 0,
                                                 pitch: 0,
-                                                zoom: 11,
+                                                zoom: 6,
                                             }}
                                             style={{
                                                 width: '100%',
@@ -886,14 +929,81 @@ const SetupBusinessProfileStepper = () => {
                                                 marginTop: 20,
                                                 borderRadius: 20,
                                                 overflow: 'hidden',
-                                            }}
-                                        />
+                                            }}></MapView>
+                                        {userInput.serviceCoverage?.addressCoor ? (
+                                            <View
+                                                style={{
+                                                    left: '50%',
+                                                    marginLeft: -24,
+                                                    marginTop: -35,
+                                                    position: 'absolute',
+                                                    top: '50%',
+                                                }}>
+                                                <MaterialIcon name="location-on" size={48} color={'red'} />
+                                            </View>
+                                        ) : null}
 
                                         <TouchableRipple
-                                            style={{position: 'absolute', right: 16, bottom: 16,borderRadius: 24,}}
+                                            style={{position: 'absolute', right: 16, bottom: 16, borderRadius: 24}}
                                             borderless
                                             rippleColor="rgba(0, 0, 0, .32)"
-                                            onPress={() => {}}>
+                                            onPress={() => {
+                                                RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({
+                                                    interval: 10000,
+                                                    fastInterval: 5000,
+                                                })
+                                                    .then(data => {
+                                                        // The user has accepted to enable the location services
+                                                        // data can be :
+                                                        //  - "already-enabled" if the location services has been already enabled
+                                                        //  - "enabled" if user has clicked on OK button in the popup
+
+                                                        if (!GeoLocationUtils.hasLocationPermission()) {
+                                                            return;
+                                                        }
+
+                                                        Geolocation.getCurrentPosition(
+                                                            position => {
+                                                                console.log(position);
+                                                                mapViewRef.current.animateCamera(
+                                                                    {
+                                                                        ...mapViewRef.current.getCamera(),
+                                                                        center: {
+                                                                            latitude: position.coords.latitude,
+                                                                            longitude: position.coords.longitude,
+                                                                        },
+                                                                        zoom: 13,
+                                                                    },
+                                                                    {duration: 2000},
+                                                                );
+                                                            },
+                                                            error => {
+                                                                Alert.alert(
+                                                                    `Unstable Location Service`,
+                                                                    'Unable to Locate your location at the moment. Please try again later.',
+                                                                );
+                                                                console.log(error);
+                                                            },
+                                                            {
+                                                                timeout: 15000,
+                                                                maximumAge: 10000,
+                                                                distanceFilter: 0,
+                                                                forceRequestLocation: true,
+                                                                forceLocationManager: true,
+                                                                showLocationDialog: true,
+                                                            },
+                                                        );
+                                                    })
+                                                    .catch(err => {
+                                                        // The user has not accepted to enable the location services or something went wrong during the process
+                                                        // "err" : { "code" : "ERR00|ERR01|ERR02|ERR03", "message" : "message"}
+                                                        // codes :
+                                                        //  - ERR00 : The user has clicked on Cancel button in the popup
+                                                        //  - ERR01 : If the Settings change are unavailable
+                                                        //  - ERR02 : If the popup has failed to open
+                                                        //  - ERR03 : Internal error
+                                                    });
+                                            }}>
                                             <View
                                                 style={{
                                                     width: 48,
