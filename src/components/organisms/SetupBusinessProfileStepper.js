@@ -14,7 +14,7 @@ import {
     TouchableOpacity,
     Dimensions,
 } from 'react-native';
-import {Button, HelperText, Menu, Searchbar, Surface, TextInput, TouchableRipple} from 'react-native-paper';
+import {Button, Checkbox, HelperText, Menu, Searchbar, Surface, TextInput, TouchableRipple} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StepIndicator from 'react-native-step-indicator';
@@ -40,7 +40,7 @@ import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 import {showMessage} from 'react-native-flash-message';
 import Swiper from 'react-native-swiper';
-import MapView, {Marker, OverlayComponent} from 'react-native-maps';
+import MapView, {Circle, Marker, OverlayComponent} from 'react-native-maps';
 import AutocompleteInput from '@atoms/AutocompleteInput';
 import MapService from '@services/MapService';
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -51,6 +51,9 @@ import GeoLocationUtils from '@utils/GeoLocationUtils';
 import Geolocation from 'react-native-geolocation-service';
 import {PERMISSIONS, request} from 'react-native-permissions';
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
+import {getBoundsOfDistance, isPointInPolygon} from 'geolib';
+import FormIllustrationSvg from '@assets/images/form-illustration';
+import {Constants} from '~constants';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -117,7 +120,7 @@ const SetupBusinessProfileStepper = () => {
                 ),
         },
         {
-            label: 'Additional\nInput',
+            label: 'AdditionalForm',
             icon: (position, stepStatus) =>
                 stepStatus == 'finished' ? (
                     <Ionicons name="document-text" size={20} color={CustomColors.PRIMARY_BLUE} />
@@ -161,7 +164,19 @@ const SetupBusinessProfileStepper = () => {
             backgroundColor: 'transparent', // change the color to "rgba(1,0,0,0)"
         },
     };
-    const [userInput, setUserInput] = useState({});
+    const [userInput, setUserInput] = useState({
+        serviceCoverage: {
+            coverageDistance: '5',
+        },
+        additionalFormSetup: [
+            {
+                id: 1,
+                questionName: 'Untitled Question',
+                questionType: Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER,
+                options: [],
+            },
+        ],
+    });
 
     const [initialFormValue, setInitialFormValue] = useState({
         businessCategory: 'car',
@@ -181,6 +196,8 @@ const SetupBusinessProfileStepper = () => {
     const [addressQuery, setAddressQuery] = useState('');
     const [addressQueryResult, setAddressQueryResult] = useState([]);
     const [showAddressSuggestion, setShowAddressSuggestion] = useState(false);
+    const [showAdditionalInputFormSetup, setShowAdditionalInputFormSetup] = useState(false);
+    const [currentSwiperIndex, setCurrentSwiperIndex] = useState(0);
 
     const coverImageActionSheet = useRef(null);
     const businessLogoActionSheet = useRef(null);
@@ -448,7 +465,7 @@ const SetupBusinessProfileStepper = () => {
                             style={{marginTop: 10}}
                             renderStepIndicator={renderStepIndicator}
                             customStyles={stepIndicatorCustomStyles}
-                            currentPosition={1}
+                            currentPosition={currentSwiperIndex}
                             stepCount={3}
                             labels={stepIndicatorList.map(e => e.label)}
                         />
@@ -460,6 +477,9 @@ const SetupBusinessProfileStepper = () => {
                             showsButtons={false}
                             showsPagination={false}
                             scrollEnabled={false}
+                            onIndexChanged={index => {
+                                setCurrentSwiperIndex(index);
+                            }}
                             keyboardShouldPersistTaps="handled"
                             loop={false}>
                             <View style={styles.businessProfileSetupContainer}>
@@ -485,6 +505,7 @@ const SetupBusinessProfileStepper = () => {
                                                 } = values;
 
                                                 setUserInput({
+                                                    ...userInput,
                                                     businessProfile: {
                                                         businessCategory: businessCategory,
                                                         serviceType: serviceType,
@@ -775,9 +796,27 @@ const SetupBusinessProfileStepper = () => {
                                         Please specify your service location and coverage. Only customer who are in your
                                         area of service could see your service.{' '}
                                     </Text>
-                                    <Text style={styles.subSectionTitle}>Business Type</Text>
+                                    <Text style={styles.subSectionTitle}>Selected Address</Text>
+                                    <Text style={styles.inputTitle}>
+                                        {userInput.serviceCoverage?.addressFullName || 'No address is selected'}
+                                    </Text>
+                                    <TextInput
+                                        mode="outlined"
+                                        label="Coverage Distance"
+                                        placeholder="Your Coverage Distance"
+                                        keyboardType="numeric"
+                                        right={<TextInput.Affix text="KM" />}
+                                        style={[styles.inputPrompt, {width: '50%'}]}
+                                        value={userInput.serviceCoverage.coverageDistance}
+                                        onChangeText={text => {
+                                            setUserInput({
+                                                ...userInput,
+                                                serviceCoverage: {...userInput.serviceCoverage, coverageDistance: text},
+                                            });
+                                        }}
+                                    />
                                     <View
-                                        style={{width: '100%'}}
+                                        style={{width: '100%', marginTop: 16}}
                                         onLayout={event => {
                                             var {x, y, width, height} = event.nativeEvent.layout;
                                             console.log('onlayout', event.nativeEvent.layout);
@@ -810,11 +849,13 @@ const SetupBusinessProfileStepper = () => {
                                                     onFocus={event => {
                                                         // `bind` the function if you're using ES6 classes
                                                         console.log('y is ', searchBary);
+
                                                         serviceCoverageSectionScrollViewRef.current.scrollTo({
                                                             x: 0,
                                                             y: searchBary,
                                                             animated: true,
                                                         });
+
                                                         // serviceCoverageSectionScrollViewRef.current.props.scrollToFocusedInput(
                                                         //     ReactNative.findNodeHandle(event.target),
                                                         // );
@@ -841,6 +882,7 @@ const SetupBusinessProfileStepper = () => {
                                                             setUserInput({
                                                                 ...userInput,
                                                                 serviceCoverage: {
+                                                                    ...userInput.serviceCoverage,
                                                                     addressCoor: {
                                                                         latitude: addr.addressCoor.lat,
                                                                         longitude: addr.addressCoor.lon,
@@ -850,17 +892,21 @@ const SetupBusinessProfileStepper = () => {
                                                             });
                                                             setAddressQuery(addr.addressFullName);
                                                             setAddressQueryResult([]);
-                                                            mapViewRef.current.animateCamera(
+                                                            const radiusBoundaries = getBoundsOfDistance(
                                                                 {
-                                                                    ...mapViewRef.current.getCamera(),
-                                                                    center: {
-                                                                        latitude: addr.addressCoor.lat,
-                                                                        longitude: addr.addressCoor.lon,
-                                                                    },
-                                                                    zoom: 13,
+                                                                    latitude: addr.addressCoor.lat,
+                                                                    longitude: addr.addressCoor.lon,
                                                                 },
-                                                                {duration: 2000},
+                                                                userInput.serviceCoverage.coverageDistance * 1000,
                                                             );
+                                                            mapViewRef.current.fitToCoordinates(radiusBoundaries, {
+                                                                edgePadding: {
+                                                                    top: 20,
+                                                                    right: 20,
+                                                                    bottom: 20,
+                                                                    left: 20,
+                                                                },
+                                                            });
                                                         }}>
                                                         <View
                                                             style={{
@@ -886,28 +932,42 @@ const SetupBusinessProfileStepper = () => {
                                         <MapView
                                             ref={mapViewRef}
                                             showsUserLocation={false}
+                                            rotateEnabled={false}
                                             showsMyLocationButton={false}
                                             onRegionChangeComplete={(region, {isGesture}) => {
                                                 console.log(region);
-                                                setUserInput({
-                                                    ...userInput,
-                                                    serviceCoverage: {
-                                                        addressCoor: {
-                                                            latitude: region.latitude,
-                                                            longitude: region.longitude,
-                                                        },
-                                                    },
-                                                });
-                                                MapService.findAddressByGeoCode(`${region.latitude},${region.longitude}`)
-                                                    .then(response=>{
+                                                // setUserInput({
+                                                //     ...userInput,
+                                                //     serviceCoverage: {
+                                                //         addressCoor: {
+                                                //             latitude: region.latitude,
+                                                //             longitude: region.longitude,
+                                                //         },
+                                                //     },
+                                                // });
+                                                if (!userInput.serviceCoverage.addressCoor) {
+                                                    return;
+                                                }
+                                                MapService.findAddressByGeoCode(
+                                                    `${region.latitude},${region.longitude}`,
+                                                )
+                                                    .then(response => {
                                                         setUserInput({
                                                             ...userInput,
                                                             serviceCoverage: {
                                                                 ...userInput.serviceCoverage,
-                                                                addressFullName: response.addresses[0].address.freeformAddress
+                                                                addressCoor: {
+                                                                    latitude: region.latitude,
+                                                                    longitude: region.longitude,
+                                                                },
+                                                                addressFullName:
+                                                                    response.addresses[0].address.freeformAddress,
                                                             },
                                                         });
                                                         setAddressQuery(response.addresses[0].address.freeformAddress);
+
+                                                        console.log('asd');
+                                                        // addressSearchBarRef.current.setNativeProps({ selection:{ start:0 } })
                                                     })
                                                     .catch(err => {
                                                         console.log(err);
@@ -921,7 +981,7 @@ const SetupBusinessProfileStepper = () => {
                                                 },
                                                 heading: 0,
                                                 pitch: 0,
-                                                zoom: 6,
+                                                zoom: 13,
                                             }}
                                             style={{
                                                 width: '100%',
@@ -929,13 +989,29 @@ const SetupBusinessProfileStepper = () => {
                                                 marginTop: 20,
                                                 borderRadius: 20,
                                                 overflow: 'hidden',
-                                            }}></MapView>
-                                        {userInput.serviceCoverage?.addressCoor ? (
+                                            }}>
+                                            {!!userInput.serviceCoverage?.addressCoor ? (
+                                                <Circle
+                                                    center={userInput.serviceCoverage.addressCoor}
+                                                    radius={
+                                                        parseFloat(userInput.serviceCoverage.coverageDistance) * 1000 ||
+                                                        5000
+                                                    }
+                                                    fillColor={'rgba(255, 80, 80,0.2)'}
+                                                    strokeWidth={0}
+                                                />
+                                            ) : null}
+                                            {/* {!!userInput.serviceCoverage?.addressCoor ? (
+                                                <Marker coordinate={userInput.serviceCoverage.addressCoor} />
+                                            ) : null} */}
+                                        </MapView>
+
+                                        {!!userInput.serviceCoverage?.addressCoor ? (
                                             <View
                                                 style={{
                                                     left: '50%',
                                                     marginLeft: -24,
-                                                    marginTop: -35,
+                                                    marginTop: -34,
                                                     position: 'absolute',
                                                     top: '50%',
                                                 }}>
@@ -964,18 +1040,31 @@ const SetupBusinessProfileStepper = () => {
 
                                                         Geolocation.getCurrentPosition(
                                                             position => {
-                                                                console.log(position);
-                                                                mapViewRef.current.animateCamera(
-                                                                    {
-                                                                        ...mapViewRef.current.getCamera(),
-                                                                        center: {
+                                                                setUserInput({
+                                                                    ...userInput,
+                                                                    serviceCoverage: {
+                                                                        ...userInput.serviceCoverage,
+                                                                        addressCoor: {
                                                                             latitude: position.coords.latitude,
                                                                             longitude: position.coords.longitude,
                                                                         },
-                                                                        zoom: 13,
                                                                     },
-                                                                    {duration: 2000},
+                                                                });
+                                                                const radiusBoundaries = getBoundsOfDistance(
+                                                                    {
+                                                                        latitude: position.coords.latitude,
+                                                                        longitude: position.coords.longitude,
+                                                                    },
+                                                                    userInput.serviceCoverage.coverageDistance * 1000,
                                                                 );
+                                                                mapViewRef.current.fitToCoordinates(radiusBoundaries, {
+                                                                    edgePadding: {
+                                                                        top: 20,
+                                                                        right: 20,
+                                                                        bottom: 20,
+                                                                        left: 20,
+                                                                    },
+                                                                });
                                                             },
                                                             error => {
                                                                 Alert.alert(
@@ -1022,6 +1111,52 @@ const SetupBusinessProfileStepper = () => {
                                                 />
                                             </View>
                                         </TouchableRipple>
+                                        {userInput.serviceCoverage?.addressCoor ? (
+                                            <TouchableRipple
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: 16,
+                                                    bottom: 16,
+                                                    borderRadius: 4,
+                                                }}
+                                                borderless
+                                                rippleColor="rgba(0, 0, 0, .32)"
+                                                onPress={() => {
+                                                    const radiusBoundaries = getBoundsOfDistance(
+                                                        {
+                                                            latitude: userInput.serviceCoverage.addressCoor.latitude,
+                                                            longitude: userInput.serviceCoverage.addressCoor.longitude,
+                                                        },
+                                                        userInput.serviceCoverage.coverageDistance * 1000,
+                                                    );
+                                                    mapViewRef.current.fitToCoordinates(radiusBoundaries, {
+                                                        edgePadding: {
+                                                            top: 20,
+                                                            right: 20,
+                                                            bottom: 20,
+                                                            left: 20,
+                                                        },
+                                                    });
+                                                }}>
+                                                <View
+                                                    style={{
+                                                        borderRadius: 4,
+                                                        paddingVertical: 4,
+                                                        paddingHorizontal: 16,
+                                                        opacity: 0.8,
+                                                        alignItems: 'center',
+                                                        backgroundColor: 'white',
+                                                    }}>
+                                                    <Text
+                                                        style={{
+                                                            fontSize: CustomTypography.FONT_SIZE_14,
+                                                            fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                        }}>
+                                                        Fit View
+                                                    </Text>
+                                                </View>
+                                            </TouchableRipple>
+                                        ) : null}
                                     </View>
 
                                     <View style={styles.actionBtnContainer}>
@@ -1032,20 +1167,346 @@ const SetupBusinessProfileStepper = () => {
                                             color={CustomColors.PRIMARY_BLUE}
                                             dark
                                             onPress={() => {
-                                                showMessage({
-                                                    message: 'Please make sure all inputs are valid.',
-                                                    type: 'info',
-                                                    position: 'center',
-                                                    backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                                    color: 'white', // text color
-                                                    titleStyle: {marginTop: 5},
-                                                    hideOnPress: true,
-                                                    autoHide: true,
-                                                    duration: 1000,
-                                                });
+                                                if (
+                                                    !!userInput.serviceCoverage?.addressCoor &&
+                                                    !!userInput.serviceCoverage?.addressFullName
+                                                ) {
+                                                    swiperRef.current.scrollBy(2);
+                                                } else {
+                                                    showMessage({
+                                                        message: 'Please select your service location first.',
+                                                        type: 'info',
+                                                        position: 'center',
+                                                        titleStyle: {marginTop: 5},
+                                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                        color: 'white', // text color
+                                                        hideOnPress: true,
+                                                        autoHide: true,
+                                                        duration: 1000,
+                                                    });
+                                                }
                                             }}>
                                             NEXT
                                         </Button>
+                                    </View>
+                                </View>
+                            </ScrollView>
+                            <ScrollView contentContainerStyle={{flexGrow: 1}}>
+                                <View style={styles.additionalInputSetupContainer}>
+                                    <Text style={styles.sectionTitle}>Additonal Form Setup</Text>
+                                    <Text style={styles.sectionDesc}>
+                                        This section is optional. If your business need some additional input from your
+                                        customer, You could setup your questionnaire here.{' '}
+                                    </Text>
+
+                                    {!showAdditionalInputFormSetup ? (
+                                        <View style={{marginTop: 50, justifyContent: 'center', alignItems: 'center'}}>
+                                            <View style={styles.formIllustrationWrapper}>
+                                                <FormIllustrationSvg fill={'white'} />
+                                            </View>
+                                        </View>
+                                    ) : null}
+                                    {showAdditionalInputFormSetup ? (
+                                        <View style={styles.formSetupContainer}>
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-end',
+                                                }}>
+                                                <View style={{flex: 1}}>
+                                                    <Text style={styles.subSectionTitle}>Form Setup</Text>
+                                                </View>
+                                                <TouchableRipple
+                                                    style={{
+                                                        width: 30,
+                                                        height: 30,
+                                                        borderRadius: 18,
+                                                        marginBottom: 5,
+                                                    }}
+                                                    borderless
+                                                    rippleColor="rgba(0, 0, 0, .32)"
+                                                    onPress={() => {}}>
+                                                    <View
+                                                        style={{
+                                                            width: 30,
+                                                            height: 30,
+                                                            borderWidth: 2,
+                                                            borderColor: CustomColors.GRAY,
+                                                            borderRadius: 18,
+                                                            overflow: 'hidden',
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                        }}>
+                                                        <MaterialIcon name="add" size={20} color={CustomColors.GRAY} />
+                                                    </View>
+                                                </TouchableRipple>
+                                            </View>
+
+                                            {userInput.additionalFormSetup.map((currentQuestion, index) => (
+                                                <View style={styles.questionSetupWrapper} key={currentQuestion.id}>
+                                                    <View style={{flexDirection: 'row', justifyContent: 'flex-end'}}>
+                                                        <TouchableRipple
+                                                            style={{
+                                                                width: 30,
+                                                                height: 30,
+                                                                borderRadius: 18,
+                                                                marginBottom: 5,
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center',
+                                                            }}
+                                                            borderless
+                                                            rippleColor="rgba(0, 0, 0, .32)"
+                                                            onPress={() => {}}>
+                                                            <MaterialIcon
+                                                                name="close"
+                                                                size={24}
+                                                                color={CustomColors.GRAY_DARK}
+                                                            />
+                                                        </TouchableRipple>
+                                                    </View>
+                                                    <TextInput
+                                                        mode="outlined"
+                                                        label="Question"
+                                                        multiline
+                                                        placeholder="Your question"
+                                                        style={[styles.inputPrompt]}
+                                                        value={currentQuestion.questionName}
+                                                        onChangeText={text => {
+                                                            const newUserInput = {...userInput};
+
+                                                            newUserInput.additionalFormSetup[index].questionName = text;
+
+                                                            setUserInput(newUserInput);
+                                                        }}></TextInput>
+                                                    <Text style={[styles.inputTitle, {marginTop: 16, marginLeft: 8}]}>
+                                                        Question Type
+                                                    </Text>
+                                                    <RNPickerSelect
+                                                        placeholder={{}}
+                                                        items={[
+                                                            {
+                                                                label: 'Text answer',
+                                                                value: Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER,
+                                                            },
+                                                            {
+                                                                label: 'Multiple choice',
+                                                                value: Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE,
+                                                            },
+                                                            {
+                                                                label: 'Checkboxes',
+                                                                value: Constants.QUESTIONNAIRE_TYPE.CHECK_BOX,
+                                                            },
+                                                        ]}
+                                                        onValueChange={value => {
+                                                            const newUserInput = {...userInput};
+
+                                                            newUserInput.additionalFormSetup[index].questionType =
+                                                                value;
+
+                                                            if (
+                                                                value == Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ||
+                                                                value == Constants.QUESTIONNAIRE_TYPE.CHECK_BOX
+                                                            ) {
+                                                                newUserInput.additionalFormSetup[index].options = [
+                                                                    {optionId: 1, optionName: 'Option 1'},
+                                                                ];
+                                                            } else {
+                                                                newUserInput.additionalFormSetup[index].options = [];
+                                                            }
+
+                                                            setUserInput(newUserInput);
+                                                        }}
+                                                        style={{
+                                                            ...pickerSelectStyles,
+
+                                                            iconContainer: {
+                                                                top: 20,
+                                                                right: 12,
+                                                            },
+                                                        }}
+                                                        useNativeAndroidPickerStyle={false}
+                                                        Icon={() => (
+                                                            <Ionicons
+                                                                name="md-chevron-down"
+                                                                size={20}
+                                                                fill={CustomColors.GRAY_DARK}
+                                                            />
+                                                        )}
+                                                        value={currentQuestion.questionType}
+                                                    />
+                                                    {currentQuestion.questionType ==
+                                                    Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? null : (
+                                                        <View style={{marginTop: 16}}>
+                                                            {currentQuestion.options.map((option, index) => (
+                                                                <View
+                                                                    style={{flexDirection: 'row', alignItems: 'center'}}
+                                                                    key={option.optionId}>
+                                                                    <Checkbox
+                                                                        style={{marginTop: 5}}
+                                                                        status={'unchecked'}
+                                                                        disabled
+                                                                    />
+                                                                    <TextInput
+                                                                        mode="flat"
+                                                                        label=""
+                                                                        multiline
+                                                                        placeholder="Option 1"
+                                                                        style={[
+                                                                            styles.inputPrompt,
+                                                                            {
+                                                                                flex: 1,
+                                                                                height: 36,
+                                                                                marginHorizontal: 8,
+                                                                                marginTop: 0,
+                                                                                backgroundColor: 'transparent',
+                                                                            },
+                                                                        ]}
+                                                                        onChangeText={text => {
+                                                                            const newUserInput = {...userInput};
+
+                                                                            newUserInput.additionalFormSetup[
+                                                                                index
+                                                                            ].options[index].optionName = text;
+
+                                                                            setUserInput(newUserInput);
+                                                                        }}
+                                                                        value={option.optionName}
+                                                                    />
+                                                                    <TouchableRipple
+                                                                        style={{
+                                                                            width: 30,
+                                                                            height: 30,
+                                                                            marginTop: 5,
+                                                                            borderRadius: 18,
+                                                                            justifyContent: 'center',
+                                                                            alignItems: 'center',
+                                                                        }}
+                                                                        borderless
+                                                                        rippleColor="rgba(0, 0, 0, .32)"
+                                                                        onPress={() => {}}>
+                                                                        <MaterialIcon
+                                                                            name="close"
+                                                                            size={24}
+                                                                            color={CustomColors.GRAY_DARK}
+                                                                        />
+                                                                    </TouchableRipple>
+                                                                </View>
+                                                            ))}
+
+                                                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                                                <Checkbox
+                                                                    style={{marginTop: 5}}
+                                                                    status={'unchecked'}
+                                                                    disabled
+                                                                />
+                                                                <Button
+                                                                    mode="text"
+                                                                    color={CustomColors.PRIMARY_BLUE}
+                                                                    uppercase={false}
+                                                                    style={{
+                                                                        fontSize: CustomTypography.FONT_SIZE_12,
+                                                                        fontFamily:
+                                                                            CustomTypography.FONT_FAMILY_REGULAR,
+                                                                    }}
+                                                                    onPress={() => {
+                                                                        const newUserInput = {...userInput};
+                                                                        console.log(
+                                                                            parseFloat(
+                                                                                currentQuestion.options[
+                                                                                    currentQuestion.options.length - 1
+                                                                                ].optionId,
+                                                                            )+1
+                                                                        );
+
+                                                                        newUserInput.additionalFormSetup[
+                                                                            index
+                                                                        ].options.push({
+                                                                            optionId:
+                                                                                parseFloat(
+                                                                                    currentQuestion.options[
+                                                                                        currentQuestion.options.length -
+                                                                                            1
+                                                                                    ].optionId,
+                                                                                ) + 1,
+                                                                            optionName:
+                                                                                'Option ' +
+                                                                                (parseFloat(
+                                                                                    currentQuestion.options[
+                                                                                        currentQuestion.options.length -
+                                                                                            1
+                                                                                    ].optionId
+                                                                                ) +
+                                                                                1),
+                                                                        });
+
+                                                                        setUserInput(newUserInput);
+                                                                    }}>
+                                                                    Add option
+                                                                </Button>
+                                                            </View>
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            ))}
+                                        </View>
+                                    ) : null}
+
+                                    <View style={styles.actionBtnContainer}>
+                                        {showAdditionalInputFormSetup ? (
+                                            <Button
+                                                style={styles.actionBtn}
+                                                mode="contained"
+                                                contentStyle={{height: 50}}
+                                                color={CustomColors.PRIMARY_BLUE}
+                                                dark
+                                                onPress={() => {}}>
+                                                Proceed
+                                            </Button>
+                                        ) : (
+                                            <>
+                                                <Button
+                                                    style={styles.actionBtn}
+                                                    mode="contained"
+                                                    contentStyle={{height: 50}}
+                                                    color={CustomColors.PRIMARY_BLUE}
+                                                    dark
+                                                    onPress={() => {
+                                                        setShowAdditionalInputFormSetup(true);
+                                                    }}>
+                                                    Sure, Setup Now
+                                                </Button>
+                                                <Button
+                                                    style={[styles.actionBtn, {marginTop: 16}]}
+                                                    mode="contained"
+                                                    contentStyle={{height: 50}}
+                                                    color={'#b2b2b2'}
+                                                    dark
+                                                    onPress={() => {
+                                                        if (
+                                                            !!userInput.serviceCoverage?.addressCoor &&
+                                                            !!userInput.serviceCoverage?.addressFullName
+                                                        ) {
+                                                            swiperRef.current.scrollBy(2);
+                                                        } else {
+                                                            showMessage({
+                                                                message: 'Please select your service location first.',
+                                                                type: 'info',
+                                                                position: 'center',
+                                                                titleStyle: {marginTop: 5},
+                                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                                color: 'white', // text color
+                                                                hideOnPress: true,
+                                                                autoHide: true,
+                                                                duration: 1000,
+                                                            });
+                                                        }
+                                                    }}>
+                                                    NO THANKS
+                                                </Button>
+                                            </>
+                                        )}
                                     </View>
                                 </View>
                             </ScrollView>
@@ -1328,6 +1789,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     inputPrompt: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
@@ -1458,6 +1920,23 @@ const styles = StyleSheet.create({
         fontSize: CustomTypography.FONT_SIZE_14,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         color: CustomColors.GRAY_DARK,
+    },
+    additionalInputSetupContainer: {
+        flex: 1,
+        width: '100%',
+        padding: 20,
+    },
+    formIllustrationWrapper: {
+        width: 250,
+        height: 250,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    questionSetupWrapper: {
+        borderRadius: 8,
+        backgroundColor: '#F9F9F9',
+        elevation: 1,
+        padding: 16,
     },
 });
 
