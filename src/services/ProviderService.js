@@ -1,6 +1,7 @@
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {Constants} from '~constants';
+import storage from '@react-native-firebase/storage';
 
 const ProviderService = {
     getPopularServiceOfTheMonthWithPagination: (lastVisibleDocument = null) => {
@@ -60,71 +61,87 @@ const ProviderService = {
                 });
         });
     },
-    registerVendorAccount: (firstName, lastName, email, password) => {
+    updateProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
-            auth()
-                .createUserWithEmailAndPassword(email, password)
-                .then(authUser => {
-                    console.log('Vendor account created & signed in!');
-                    console.log(authUser);
+            const serviceProvidersCollection = firestore().collection('serviceProviders');
+            
+            serviceProvidersCollection
+                .doc(documentId)
+                .set({
+                    ...data,
+                })
+                .then(() => {
+                    resolve('Service Provider data successfully upadated!');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
+    uploadCoverImageToStorage: (userId, coverImagePath, mimeType ) => {
+        return new Promise((resolve, reject) => {
+            var coverImageReference = null;
 
-                    store.dispatch(setLoginBlock(true));
-
-                    const usersCollection = firestore().collection('users');
-
-                    usersCollection
-                        .doc(authUser.user.uid)
-                        .set({
-                            firstName: firstName,
-                            lastName: lastName,
-                            accType: Constants.ACCOUNT_TYPE.VENDOR,
-                            loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
+            if (mimeType == 'image/jpeg') {
+                coverImageReference = storage().ref(`userData/${userId}/coverImage.png`);
+            } else {
+                coverImageReference = storage().ref(`userData/${userId}/coverImage.jpg`);
+            }
+            console.log('uploadCoverImageToStorage using ', coverImagePath)
+            coverImageReference
+                .putFile(coverImagePath)
+                .then(data => {
+                    console.log('uploaded cover image')
+                    coverImageReference
+                        .getDownloadURL()
+                        .then(url => {
+                            //from url you can fetched the uploaded image easily
+                            console.log('retrieved download url ', url)
+                            resolve(url);
                         })
-                        .then(() => {});
-
-                    //update user display name for email verification
-                    authUser.user
-                        .updateProfile({
-                            displayName: firstName + ' ' + lastName,
-                        })
-                        .then(() => {
-                            //Send email verification
-                            authUser.user
-                                .sendEmailVerification()
-                                .then(result => {
-                                    console.log('Verification email successfully sent');
-
-                                    //Signout silently as the account is automatically sign in when creating.
-                                    auth()
-                                        .signOut()
-                                        .then(() => {
-                                            console.log('Silently Logged out.');
-                                            resolve('Silent loggout');
-                                        })
-                                        .catch(err => {
-                                            console.log('Silent Loggout Error.');
-                                        });
-                                })
-                                .catch(error => {
-                                    console.log('Error occured when sending email verification.');
-                                    console.log(error);
-                                });
-                        })
-                        .catch(error => {
-                            // An error occurred
-                            // ...
+                        .catch(err => {
+                            reject('Provider Service - Error occured when getting image url.');
+                            console.log('Provider Service - Error occured when getting image url.');
+                            console.log(err);
                         });
                 })
-                .catch(error => {
-                    if (error.code === 'auth/email-already-in-use') {
-                        console.log('That email address is already in use!');
-                        reject('Email address is already in use!');
-                    }
+                .catch(err => {
+                    reject('Provider Service - Error occured when uploading image.');
+                    console.log('Provider Service - Error occured when uploading image.');
+                    console.log(err);
+                });
+        });
+    },
+    uploadBusinessLogoToStorage: (userId, businessLogoPath,mimeType) => {
+        return new Promise((resolve, reject) => {
+            var businessLogoImageReference = null;
 
-                    if (error.code === 'auth/invalid-email') {
-                        console.log('That email address is invalid!');
-                        reject('Email address is invalid!');
-                    }
+            if (mimeType == 'image/jpeg') {
+                businessLogoImageReference = storage().ref(`userData/${userId}/coverImage.png`);
+            } else {
+                businessLogoImageReference = storage().ref(`userData/${userId}/coverImage.jpg`);
+            }
+
+            businessLogoImageReference
+                .putFile(businessLogoPath)
+                .then(data => {
+                    businessLogoImageReference
+                        .getDownloadURL()
+                        .then(url => {
+                            //from url you can fetched the uploaded image easily
+                            resolve(url);
+                        })
+                        .catch(err => {
+                            reject('Provider Service - Error occured when getting business logo image url.');
+                            console.log('Provider Service - Error occured when getting business logo image url.');
+                            console.log(err);
+                        });
+                })
+                .catch(err => {
+                    reject('Provider Service - Error occured when uploading business logo image.');
+                    console.log('Provider Service - Error occured when uploading business logo image.');
+                    console.log(err);
                 });
         });
     },

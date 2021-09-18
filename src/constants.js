@@ -9,7 +9,12 @@ export const Constants = {
         VENDOR: 'vendor'
     },
     //Service Type,
-    SALOON_SERVICE: 'saloon'
-
+    SALOON_SERVICE: 'saloon',
+    //Questionnaire Type
+    QUESTIONNAIRE_TYPE: {
+        TEXT_ANSWER: 'textAnswer',
+        MULTIPLE_CHOICE: 'multipleChoice',
+        CHECK_BOX: 'checkBox',
+    }
 
 };

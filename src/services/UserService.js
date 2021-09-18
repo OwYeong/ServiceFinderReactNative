@@ -84,6 +84,7 @@ const UserService = {
                                 accType: Constants.ACCOUNT_TYPE.VENDOR,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                                 isFirstTimeUser: true,
+                                isBusinessProfileSetup: false
                             })
                             .then(() => {});
 
@@ -408,6 +409,26 @@ const UserService = {
                 .doc(documentId)
                 .update({
                     isFirstTimeUser: isFirstTimeUser,
+                })
+                .then(() => {
+                    resolve('Successfully updated');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
+    updateIsBusinessProfileSetupStatus:(documentId, isBusinessProfileSetup) => {
+        console.log('updateIsBusinessProfileSetupStatus')
+        return new Promise((resolve, reject) => {
+            console.log('updateIsBusinessProfileSetupStatus')
+            const usersCollection = firestore().collection('users');
+            
+            usersCollection
+                .doc(documentId)
+                .update({
+                    isBusinessProfileSetup: isBusinessProfileSetup,
                 })
                 .then(() => {
                     resolve('Successfully updated');
