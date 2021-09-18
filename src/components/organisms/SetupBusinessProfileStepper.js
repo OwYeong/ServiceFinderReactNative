@@ -14,7 +14,17 @@ import {
     TouchableOpacity,
     Dimensions,
 } from 'react-native';
-import {Button, Checkbox, HelperText, Menu, Searchbar, Surface, TextInput, TouchableRipple} from 'react-native-paper';
+import {
+    Button,
+    Checkbox,
+    HelperText,
+    Menu,
+    RadioButton,
+    Searchbar,
+    Surface,
+    TextInput,
+    TouchableRipple,
+} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StepIndicator from 'react-native-step-indicator';
@@ -36,7 +46,6 @@ import CategoryPetIcon from '@assets/images/serviceCategory/category-petCare';
 import Animated from 'react-native-reanimated';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 import {showMessage} from 'react-native-flash-message';
 import Swiper from 'react-native-swiper';
@@ -54,6 +63,9 @@ import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 import {getBoundsOfDistance, isPointInPolygon} from 'geolib';
 import FormIllustrationSvg from '@assets/images/form-illustration';
 import {Constants} from '~constants';
+import ProviderService from '@services/ProviderService';
+import moment from 'moment';
+import UserService from '@services/UserService';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -189,7 +201,9 @@ const SetupBusinessProfileStepper = () => {
     });
 
     const [coverImagePath, setCoverImagePath] = useState(null);
+    const [coverImageMime, setCoverImageMime] = useState(null);
     const [businessLogoPath, setBusinessLogoPath] = useState('');
+    const [businessLogoMime, setBusinessLogoMime] = useState('');
     const [showClearIcon, setShowClearIcon] = useState(false);
     const [searchBary, setSearchBary] = useState(0);
 
@@ -453,6 +467,142 @@ const SetupBusinessProfileStepper = () => {
             keyboardDidShowListener.remove();
         };
     }, []);
+
+    const finishSetup = withAdditionalForm => {
+        setLoadingModal({isVisible: true, modalTitle: 'Finishing Setup'});
+        console.log('cover img path ', userInput.businessProfile.coverImagePath);
+        console.log('business logo img path ', userInput.businessProfile.businessLogoPath);
+        var promises = [];
+
+        const isUserSetupCoverImage = !!userInput.businessProfile.coverImagePath;
+        if (isUserSetupCoverImage) {
+            // Upload Cover Image
+            var coverImageUploadPromise = ProviderService.uploadCoverImageToStorage(
+                auth().currentUser.uid,
+                userInput.businessProfile.coverImagePath,
+                coverImageMime,
+            );
+            promises.push(coverImageUploadPromise);
+        }
+
+        const isUserSetupBusinessLogo = !!userInput.businessProfile.businessLogoPath;
+        if (isUserSetupBusinessLogo) {
+            // Upload Business Logo Image
+            var businessLogoUploadPromise = ProviderService.uploadBusinessLogoToStorage(
+                auth().currentUser.uid,
+                userInput.businessProfile.businessLogoPath,
+                businessLogoMime,
+            );
+            promises.push(businessLogoUploadPromise);
+        }
+
+        Promise.all(promises)
+            .then(values => {
+                var providerData = {
+                    businessCategory: userInput.businessProfile.businessCategory,
+                    serviceType: userInput.businessProfile.serviceType,
+                    businessName: userInput.businessProfile.businessName,
+                    businessDesc: userInput.businessProfile.businessDesc,
+                    businessServiceDesc: userInput.businessProfile.businessServiceDesc,
+                    priceStart: userInput.businessProfile.priceStart,
+                    priceEnd: userInput.businessProfile.priceEnd,
+                    popularity: {
+                        [moment().format('MMM_YYYY').toUpperCase()]: 0,
+                    },
+                    serviceCoverage: {...userInput.serviceCoverage},
+                };
+
+                if (isUserSetupCoverImage) {
+                    providerData = {
+                        ...providerData,
+                        coverImgUrl: values[0],
+                    };
+
+                    if (isUserSetupBusinessLogo) {
+                        providerData = {
+                            ...providerData,
+                            businessLogoUrl: values[1],
+                        };
+                    }
+                } else {
+                    if (isUserSetupBusinessLogo) {
+                        providerData = {
+                            ...providerData,
+                            businessLogoUrl: values[0],
+                        };
+                    }
+                }
+
+                if (withAdditionalForm) {
+                    providerData = {
+                        ...providerData,
+                        withAdditionalForm: true,
+                        additionalForm: [...userInput.additionalFormSetup],
+                    };
+                } else {
+                    providerData = {
+                        ...providerData,
+                        withAdditionalForm: false,
+                    };
+                }
+
+                ProviderService.updateProviderData(providerData)
+                    .then(data => {
+                        console.log('updating business Profile setup status');
+                        UserService.updateIsBusinessProfileSetupStatus(auth().currentUser.uid, true)
+                            .then(() => {
+                                console.log('refetching user info to redux');
+                                UserService.fetchLoggedInUserDataToRedux();
+                            })
+                            .catch(err => {
+                                console.log('update vendor isBusinessProfileSetup error');
+                            });
+                    })
+                    .catch(err => {});
+            })
+            .catch(error => {
+                console.log('coverImageUploadPromise or businessLogoUploadPromise error.');
+                var providerData = {
+                    businessCategory: userInput.businessProfile.businessCategory,
+                    serviceType: userInput.businessProfile.serviceType,
+                    businessName: userInput.businessProfile.businessName,
+                    businessDesc: userInput.businessProfile.businessDesc,
+                    businessServiceDesc: userInput.businessProfile.businessServiceDesc,
+                    priceStart: userInput.businessProfile.priceStart,
+                    priceEnd: userInput.businessProfile.priceEnd,
+                    popularity: {
+                        [moment().format('MMM_YYYY').toUpperCase()]: 0,
+                    },
+                    serviceCoverage: {...userInput.serviceCoverage},
+                };
+
+                if (withAdditionalForm) {
+                    providerData = {
+                        ...providerData,
+                        withAdditionalForm: true,
+                        additionalForm: [...userInput.additionalFormSetup],
+                    };
+                } else {
+                    providerData = {
+                        ...providerData,
+                        withAdditionalForm: false,
+                    };
+                }
+                ProviderService.updateProviderData(providerData)
+                    .then(data => {
+                        console.log('updating business Profile setup status');
+                        UserService.updateIsBusinessProfileSetupStatus(auth().currentUser.uid, true)
+                            .then(data => {
+                                console.log('refetching user info to redux');
+                                UserService.fetchLoggedInUserDataToRedux();
+                            })
+                            .catch(err => {
+                                console.log('update vendor isBusinessProfileSetup error');
+                            });
+                    })
+                    .catch(err => {});
+            });
+    };
 
     return (
         <View style={{backgroundColor: CustomColors.PRIMARY_BLUE}}>
@@ -762,7 +912,6 @@ const SetupBusinessProfileStepper = () => {
                                                                 dark
                                                                 onPress={() => {
                                                                     if (Object.keys(errors).length > 0) {
-                                                                        swiperRef.current.scrollBy(1);
                                                                         showMessage({
                                                                             message:
                                                                                 'Please make sure all inputs are valid.',
@@ -1227,7 +1376,21 @@ const SetupBusinessProfileStepper = () => {
                                                     }}
                                                     borderless
                                                     rippleColor="rgba(0, 0, 0, .32)"
-                                                    onPress={() => {}}>
+                                                    onPress={() => {
+                                                        const newUserInput = {...userInput};
+
+                                                        newUserInput.additionalFormSetup.push({
+                                                            id:
+                                                                userInput.additionalFormSetup[
+                                                                    userInput.additionalFormSetup.length - 1
+                                                                ].id + 1,
+                                                            questionName: 'Untitled Question',
+                                                            questionType: Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER,
+                                                            options: [],
+                                                        });
+
+                                                        setUserInput(newUserInput);
+                                                    }}>
                                                     <View
                                                         style={{
                                                             width: 30,
@@ -1247,24 +1410,24 @@ const SetupBusinessProfileStepper = () => {
                                             {userInput.additionalFormSetup.map((currentQuestion, index) => (
                                                 <View style={styles.questionSetupWrapper} key={currentQuestion.id}>
                                                     <View style={{flexDirection: 'row', justifyContent: 'flex-end'}}>
-                                                        <TouchableRipple
-                                                            style={{
-                                                                width: 30,
-                                                                height: 30,
-                                                                borderRadius: 18,
-                                                                marginBottom: 5,
-                                                                justifyContent: 'center',
-                                                                alignItems: 'center',
-                                                            }}
-                                                            borderless
-                                                            rippleColor="rgba(0, 0, 0, .32)"
-                                                            onPress={() => {}}>
-                                                            <MaterialIcon
-                                                                name="close"
-                                                                size={24}
+                                                        {userInput.additionalFormSetup.length > 1 ? (
+                                                            <Button
+                                                                mode="text"
                                                                 color={CustomColors.GRAY_DARK}
-                                                            />
-                                                        </TouchableRipple>
+                                                                style={{
+                                                                    fontSize: CustomTypography.FONT_SIZE_12,
+                                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                                }}
+                                                                onPress={() => {
+                                                                    const newUserInput = {...userInput};
+
+                                                                    newUserInput.additionalFormSetup.splice(index, 1);
+
+                                                                    setUserInput(newUserInput);
+                                                                }}>
+                                                                REMOVE THIS QUESTION
+                                                            </Button>
+                                                        ) : null}
                                                     </View>
                                                     <TextInput
                                                         mode="outlined"
@@ -1339,20 +1502,26 @@ const SetupBusinessProfileStepper = () => {
                                                     {currentQuestion.questionType ==
                                                     Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? null : (
                                                         <View style={{marginTop: 16}}>
-                                                            {currentQuestion.options.map((option, index) => (
+                                                            {currentQuestion.options.map((option, i) => (
                                                                 <View
                                                                     style={{flexDirection: 'row', alignItems: 'center'}}
                                                                     key={option.optionId}>
-                                                                    <Checkbox
-                                                                        style={{marginTop: 5}}
-                                                                        status={'unchecked'}
-                                                                        disabled
-                                                                    />
+                                                                    {currentQuestion.questionType ==
+                                                                    Constants.QUESTIONNAIRE_TYPE.CHECK_BOX ? (
+                                                                        <Checkbox
+                                                                            style={{marginTop: 5}}
+                                                                            status={'unchecked'}
+                                                                            disabled
+                                                                        />
+                                                                    ) : null}
+                                                                    {currentQuestion.questionType ==
+                                                                    Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ? (
+                                                                        <RadioButton status={'unchecked'} disabled />
+                                                                    ) : null}
                                                                     <TextInput
                                                                         mode="flat"
                                                                         label=""
-                                                                        multiline
-                                                                        placeholder="Option 1"
+                                                                        placeholder="Option name"
                                                                         style={[
                                                                             styles.inputPrompt,
                                                                             {
@@ -1363,44 +1532,75 @@ const SetupBusinessProfileStepper = () => {
                                                                                 backgroundColor: 'transparent',
                                                                             },
                                                                         ]}
+                                                                        onEndEditing={e => {
+                                                                            if (e.nativeEvent.text == '') {
+                                                                                const newUserInput = {...userInput};
+
+                                                                                newUserInput.additionalFormSetup[
+                                                                                    index
+                                                                                ].options[i].optionName =
+                                                                                    'Option ' + (i + 1);
+
+                                                                                setUserInput(newUserInput);
+                                                                            }
+                                                                        }}
                                                                         onChangeText={text => {
                                                                             const newUserInput = {...userInput};
 
                                                                             newUserInput.additionalFormSetup[
                                                                                 index
-                                                                            ].options[index].optionName = text;
+                                                                            ].options[i].optionName = text;
 
                                                                             setUserInput(newUserInput);
                                                                         }}
                                                                         value={option.optionName}
                                                                     />
-                                                                    <TouchableRipple
-                                                                        style={{
-                                                                            width: 30,
-                                                                            height: 30,
-                                                                            marginTop: 5,
-                                                                            borderRadius: 18,
-                                                                            justifyContent: 'center',
-                                                                            alignItems: 'center',
-                                                                        }}
-                                                                        borderless
-                                                                        rippleColor="rgba(0, 0, 0, .32)"
-                                                                        onPress={() => {}}>
-                                                                        <MaterialIcon
-                                                                            name="close"
-                                                                            size={24}
-                                                                            color={CustomColors.GRAY_DARK}
-                                                                        />
-                                                                    </TouchableRipple>
+                                                                    {currentQuestion.options.length > 1 ? (
+                                                                        <TouchableRipple
+                                                                            style={{
+                                                                                width: 30,
+                                                                                height: 30,
+                                                                                marginTop: 5,
+                                                                                borderRadius: 18,
+                                                                                justifyContent: 'center',
+                                                                                alignItems: 'center',
+                                                                            }}
+                                                                            borderless
+                                                                            rippleColor="rgba(0, 0, 0, .32)"
+                                                                            onPress={() => {
+                                                                                const newUserInput = {...userInput};
+
+                                                                                newUserInput.additionalFormSetup[
+                                                                                    index
+                                                                                ].options.splice(i, 1);
+
+                                                                                setUserInput(newUserInput);
+                                                                            }}>
+                                                                            <MaterialIcon
+                                                                                name="close"
+                                                                                size={24}
+                                                                                color={CustomColors.GRAY_DARK}
+                                                                            />
+                                                                        </TouchableRipple>
+                                                                    ) : (
+                                                                        <View style={{width: 30, height: 30}}></View>
+                                                                    )}
                                                                 </View>
                                                             ))}
 
                                                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                                                <Checkbox
-                                                                    style={{marginTop: 5}}
-                                                                    status={'unchecked'}
-                                                                    disabled
-                                                                />
+                                                                {currentQuestion.questionType ==
+                                                                Constants.QUESTIONNAIRE_TYPE.CHECK_BOX ? (
+                                                                    <Checkbox
+                                                                        style={{marginTop: 5}}
+                                                                        status={'unchecked'}
+                                                                        disabled
+                                                                    />
+                                                                ) : null}
+                                                                {currentQuestion.questionType ==
+                                                                Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ? (
+                                                                    <RadioButton status={'unchecked'} disabled />
+                                                                ) : null}
                                                                 <Button
                                                                     mode="text"
                                                                     color={CustomColors.PRIMARY_BLUE}
@@ -1417,7 +1617,7 @@ const SetupBusinessProfileStepper = () => {
                                                                                 currentQuestion.options[
                                                                                     currentQuestion.options.length - 1
                                                                                 ].optionId,
-                                                                            )+1
+                                                                            ) + 1,
                                                                         );
 
                                                                         newUserInput.additionalFormSetup[
@@ -1433,12 +1633,9 @@ const SetupBusinessProfileStepper = () => {
                                                                             optionName:
                                                                                 'Option ' +
                                                                                 (parseFloat(
-                                                                                    currentQuestion.options[
-                                                                                        currentQuestion.options.length -
-                                                                                            1
-                                                                                    ].optionId
+                                                                                    currentQuestion.options.length,
                                                                                 ) +
-                                                                                1),
+                                                                                    1),
                                                                         });
 
                                                                         setUserInput(newUserInput);
@@ -1455,15 +1652,29 @@ const SetupBusinessProfileStepper = () => {
 
                                     <View style={styles.actionBtnContainer}>
                                         {showAdditionalInputFormSetup ? (
-                                            <Button
-                                                style={styles.actionBtn}
-                                                mode="contained"
-                                                contentStyle={{height: 50}}
-                                                color={CustomColors.PRIMARY_BLUE}
-                                                dark
-                                                onPress={() => {}}>
-                                                Proceed
-                                            </Button>
+                                            <>
+                                                <Button
+                                                    style={styles.actionBtn}
+                                                    mode="contained"
+                                                    contentStyle={{height: 50}}
+                                                    color={CustomColors.PRIMARY_BLUE}
+                                                    dark
+                                                    onPress={() => {
+                                                        finishSetup(true);
+                                                    }}>
+                                                    FINISH
+                                                </Button>
+                                                <Button
+                                                    style={[styles.actionBtn, {marginTop: 16}]}
+                                                    mode="text"
+                                                    color={'#b2b2b2'}
+                                                    dark
+                                                    onPress={() => {
+                                                        finishSetup(false);
+                                                    }}>
+                                                    PROCEED WITHOUT FORM
+                                                </Button>
+                                            </>
                                         ) : (
                                             <>
                                                 <Button
@@ -1484,24 +1695,7 @@ const SetupBusinessProfileStepper = () => {
                                                     color={'#b2b2b2'}
                                                     dark
                                                     onPress={() => {
-                                                        if (
-                                                            !!userInput.serviceCoverage?.addressCoor &&
-                                                            !!userInput.serviceCoverage?.addressFullName
-                                                        ) {
-                                                            swiperRef.current.scrollBy(2);
-                                                        } else {
-                                                            showMessage({
-                                                                message: 'Please select your service location first.',
-                                                                type: 'info',
-                                                                position: 'center',
-                                                                titleStyle: {marginTop: 5},
-                                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                                                color: 'white', // text color
-                                                                hideOnPress: true,
-                                                                autoHide: true,
-                                                                duration: 1000,
-                                                            });
-                                                        }
+                                                        finishSetup(false);
                                                     }}>
                                                     NO THANKS
                                                 </Button>
@@ -1550,6 +1744,7 @@ const SetupBusinessProfileStepper = () => {
                                 })
                                     .then(image => {
                                         setCoverImagePath(image.path);
+                                        setCoverImageMime(image.mime);
                                         coverImageActionSheet.current.snapTo(0);
 
                                         // var reference = null;
@@ -1604,6 +1799,7 @@ const SetupBusinessProfileStepper = () => {
                                 })
                                     .then(image => {
                                         setCoverImagePath(image.path);
+                                        setCoverImageMime(image.mime);
                                         coverImageActionSheet.current.snapTo(0);
                                     })
                                     .catch(e => {
@@ -1677,6 +1873,7 @@ const SetupBusinessProfileStepper = () => {
                                 })
                                     .then(image => {
                                         setBusinessLogoPath(image.path);
+                                        setBusinessLogoMime(image.mime);
                                         businessLogoActionSheet.current.snapTo(0);
                                     })
                                     .catch(e => {
@@ -1708,6 +1905,7 @@ const SetupBusinessProfileStepper = () => {
                                 })
                                     .then(image => {
                                         setBusinessLogoPath(image.path);
+                                        setBusinessLogoMime(image.mime);
                                         businessLogoActionSheet.current.snapTo(0);
                                     })
                                     .catch(e => {
@@ -1933,6 +2131,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     questionSetupWrapper: {
+        marginTop: 16,
         borderRadius: 8,
         backgroundColor: '#F9F9F9',
         elevation: 1,

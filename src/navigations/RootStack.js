@@ -37,9 +37,8 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             options={{
                                 animationEnabled: true,
                                 headerShown: false,
-                            }}
-                        >
-                            {(props) => <IntroductionSliderPage {...props} accType={userInfo.accType} />}
+                            }}>
+                            {props => <IntroductionSliderPage {...props} accType={userInfo.accType} />}
                         </Stack.Screen>
                     ) : null}
 
@@ -65,14 +64,16 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                     ) : null}
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.VENDOR ? (
                         <>
-                            <Stack.Screen
-                                name="ProviderBusinessSetup"
-                                component={SetupBusinessProfileWalkThrough}
-                                options={{
-                                    animationEnabled: true,
-                                    headerShown: false,
-                                }}
-                            />
+                            {!userInfo.isBusinessProfileSetup ? (
+                                <Stack.Screen
+                                    name="ProviderBusinessSetup"
+                                    component={SetupBusinessProfileWalkThrough}
+                                    options={{
+                                        animationEnabled: true,
+                                        headerShown: false,
+                                    }}
+                                />
+                            ) : null}
                             <Stack.Screen
                                 name="Provider"
                                 component={ProviderStack}
