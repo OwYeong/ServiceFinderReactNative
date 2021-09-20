@@ -509,6 +509,9 @@ const SetupBusinessProfileStepper = () => {
                     popularity: {
                         [moment().format('MMM_YYYY').toUpperCase()]: 0,
                     },
+                    totalEarnings: 0,
+                    averageRatings: 0,
+                    jobsCompleted: 0, 
                     serviceCoverage: {...userInput.serviceCoverage},
                 };
 

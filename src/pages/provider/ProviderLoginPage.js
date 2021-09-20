@@ -225,26 +225,6 @@ const ProviderLoginPage = () => {
                                                         />
                                                     )
                                                 }></Field>
-                                            <Ripple
-                                                style={styles.forgotPasswordLabelContainer}
-                                                onPress={() => {
-                                                    setIsForgotPasswordClicked(true);
-                                                }}>
-                                                <Text
-                                                    style={[
-                                                        styles.forgotPasswordLabel,
-                                                        {
-                                                            color: isForgotPasswordClicked
-                                                                ? CustomColors.PRIMARY_BLUE
-                                                                : CustomColors.PRIMARY_DARK_BLUE,
-                                                            textDecorationLine: isForgotPasswordClicked
-                                                                ? 'underline'
-                                                                : 'none',
-                                                        },
-                                                    ]}>
-                                                    Forgot password?
-                                                </Text>
-                                            </Ripple>
                                             <Button
                                                 style={styles.loginBtn}
                                                 contentStyle={{height: 50}}
