@@ -8,6 +8,7 @@ import {useDispatch} from 'react-redux';
 import {setUserInfo} from '@slices/loginSlice';
 import {setLoginBlock} from '@slices/appSlice';
 import store from '../../store';
+import firebase from '@react-native-firebase/app';
 
 const UserService = {
     vendor: {
@@ -84,7 +85,8 @@ const UserService = {
                                 accType: Constants.ACCOUNT_TYPE.VENDOR,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                                 isFirstTimeUser: true,
-                                isBusinessProfileSetup: false
+                                isBusinessProfileSetup: false,
+                                firstJoined: firebase.firestore.FieldValue.serverTimestamp()
                             })
                             .then(() => {});
 
@@ -156,6 +158,7 @@ const UserService = {
                                 accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                                 isFirstTimeUser: true,
+                                firstJoined: firebase.firestore.FieldValue.serverTimestamp()
                             })
                             .then(() => {});
 
@@ -278,6 +281,7 @@ const UserService = {
                                     accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                     loginProvider: Constants.LOGIN_PROVIDER_GOOGLE,
                                     isFirstTimeUser: true,
+                                    firstJoined: firebase.firestore.FieldValue.serverTimestamp()
                                 },
                                 authUser.user.uid,
                             )
@@ -339,6 +343,7 @@ const UserService = {
                                     accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                     loginProvider: Constants.LOGIN_PROVIDER_FACEBOOK,
                                     isFirstTimeUser: true,
+                                    firstJoined: firebase.firestore.FieldValue.serverTimestamp()
                                 },
                                 authUser.user.uid,
                             )
@@ -519,6 +524,7 @@ const UserService = {
                 const loggedInUserData = {
                     email: currentUserEmail,
                     ...currentUser.data(),
+                    firstJoined: currentUser.data().firstJoined.toDate().toString(),
                 };
 
                 store.dispatch(setUserInfo(loggedInUserData));

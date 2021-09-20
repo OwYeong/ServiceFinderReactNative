@@ -2,6 +2,9 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {Constants} from '~constants';
 import storage from '@react-native-firebase/storage';
+import { setProviderInfo } from '@slices/loginSlice';
+import store from '../../store';
+import UserService from './UserService';
 
 const ProviderService = {
     getPopularServiceOfTheMonthWithPagination: (lastVisibleDocument = null) => {
@@ -145,6 +148,36 @@ const ProviderService = {
                 });
         });
     },
+    fetchProviderDataToRedux: () => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                console.log('fetching logged in provider data into redux ...');
+                if (auth().currentUser == null) {
+                    reject('User not logged in');
+                }
+                
+                console.log(auth().currentUser.uid)
+                const currentServiceProvider = await firestore().collection('serviceProviders').doc(auth().currentUser.uid).get();
+
+                if (!currentServiceProvider.exists) {
+                    throw 'user document does not exist';
+                }
+
+                const loggedInProviderData = {
+                    ...currentServiceProvider.data(),
+                };
+
+                store.dispatch(setProviderInfo(loggedInProviderData));
+
+                resolve('Finish fetching');
+            } catch (error) {
+                console.log(error);
+                UserService.logOut();
+                reject('Some Error occurs');
+                
+            }
+        });
+    }
 };
 
 export default ProviderService;

@@ -42,8 +42,6 @@ const ProviderStack = () => {
     const tabIndicatorLeftPos = useRef(new Animated.Value(0)).current;
     const navigation = useNavigation();
 
-    console.log(navigation);
-
     return (
         <>
             <Tab.Navigator
