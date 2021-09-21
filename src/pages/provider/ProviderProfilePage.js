@@ -1,5 +1,5 @@
 import UserService from '@services/UserService';
-import React, {useState} from 'react';
+import React, {useState,useEffect} from 'react';
 import {
     Dimensions,
     Image,
@@ -20,7 +20,8 @@ import {TabView, TabBar, SceneMap, PagerPan} from 'react-native-tab-view';
 
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import ProviderSchedulePage from './ProviderSchedulePage';
-
+import PhotoListingComponent from '@organisms/PhotoListingComponent';
+import ProviderService from '@services/ProviderService';
 
 const ProviderProfilePage = () => {
     const providerInfo = useSelector(state => state.loginState.providerInfo);
@@ -33,12 +34,22 @@ const ProviderProfilePage = () => {
             {key: 'reviews', title: 'Reviews'},
         ],
     });
- 
+
+    const [photosList, setPhotosList] = useState([])
+
+    useEffect(()=>{
+        ProviderService.getAllPost().then((data)=>{
+            setPhotosList(data.data)
+            console.log(data.data)
+            // <PhotoListingComponent dataList={photosList} />
+        })
+    },[])
+
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled" >
+                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
                     <View style={styles.bigContainer}>
                         <View style={{padding: 16}}>
                             <View style={styles.imageContainer}>
@@ -145,10 +156,16 @@ const ProviderProfilePage = () => {
                         <TabView
                             style={{height: Dimensions.get('window').height - 64 - 48}}
                             navigationState={navigationState}
-                            renderScene={SceneMap({
-                                photos: ProviderSchedulePage,
-                                reviews: ProviderSchedulePage,
-                            })}
+                            renderScene={({route}) => {
+                                switch (route.key) {
+                                    case 'photos':
+                                        return <PhotoListingComponent dataList={photosList} />;
+                                    case 'reviews':
+                                        return <ProviderSchedulePage />;
+                                    default:
+                                        return null;
+                                }
+                            }}
                             renderTabBar={props => {
                                 return (
                                     <TabBar
@@ -168,7 +185,10 @@ const ProviderProfilePage = () => {
                                 setNavigationState({...navigationState, index: index});
                             }}
                             renderPager={props => <PagerPan {...props} />}
-                            initialLayout={{width: Dimensions.get('window').width, height: Dimensions.get('window').height - 64 - 50}}
+                            initialLayout={{
+                                width: Dimensions.get('window').width,
+                                height: Dimensions.get('window').height - 64 - 50,
+                            }}
                         />
                     </View>
                 </ScrollView>

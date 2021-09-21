@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {Constants} from '~constants';
 import storage from '@react-native-firebase/storage';
-import { setProviderInfo } from '@slices/loginSlice';
+import {setProviderInfo} from '@slices/loginSlice';
 import store from '../../store';
 import UserService from './UserService';
 
@@ -64,10 +64,48 @@ const ProviderService = {
                 });
         });
     },
+    getAllPost: (userId = auth().currentUser.uid) => {
+        return new Promise((resolve, reject) => {
+            let popularService = firestore().collection('posts');
+
+            popularService
+                .where('userId', "==", userId)
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const popularServices = [];
+
+                        querySnapshot.forEach(docSnapshot => {
+                            let service = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                            };
+                            popularServices.push(service);
+                        });
+
+                        const result = {
+                            data: popularServices,
+                        };
+
+                        resolve(result);
+                    } else {
+                        const result = {
+                            data: [],
+                        };
+
+                        resolve(result);
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getPopularServiceOfTheMonthWithPagination\n');
+                    reject(error);
+                });
+        });
+    },
     updateProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
             const serviceProvidersCollection = firestore().collection('serviceProviders');
-            
+
             serviceProvidersCollection
                 .doc(documentId)
                 .set({
@@ -82,7 +120,7 @@ const ProviderService = {
                 });
         });
     },
-    uploadCoverImageToStorage: (userId, coverImagePath, mimeType ) => {
+    uploadCoverImageToStorage: (userId, coverImagePath, mimeType) => {
         return new Promise((resolve, reject) => {
             var coverImageReference = null;
 
@@ -91,16 +129,16 @@ const ProviderService = {
             } else {
                 coverImageReference = storage().ref(`userData/${userId}/coverImage.jpg`);
             }
-            console.log('uploadCoverImageToStorage using ', coverImagePath)
+            console.log('uploadCoverImageToStorage using ', coverImagePath);
             coverImageReference
                 .putFile(coverImagePath)
                 .then(data => {
-                    console.log('uploaded cover image')
+                    console.log('uploaded cover image');
                     coverImageReference
                         .getDownloadURL()
                         .then(url => {
                             //from url you can fetched the uploaded image easily
-                            console.log('retrieved download url ', url)
+                            console.log('retrieved download url ', url);
                             resolve(url);
                         })
                         .catch(err => {
@@ -116,7 +154,7 @@ const ProviderService = {
                 });
         });
     },
-    uploadBusinessLogoToStorage: (userId, businessLogoPath,mimeType) => {
+    uploadBusinessLogoToStorage: (userId, businessLogoPath, mimeType) => {
         return new Promise((resolve, reject) => {
             var businessLogoImageReference = null;
 
@@ -155,9 +193,12 @@ const ProviderService = {
                 if (auth().currentUser == null) {
                     reject('User not logged in');
                 }
-                
-                console.log(auth().currentUser.uid)
-                const currentServiceProvider = await firestore().collection('serviceProviders').doc(auth().currentUser.uid).get();
+
+                console.log(auth().currentUser.uid);
+                const currentServiceProvider = await firestore()
+                    .collection('serviceProviders')
+                    .doc(auth().currentUser.uid)
+                    .get();
 
                 if (!currentServiceProvider.exists) {
                     throw 'user document does not exist';
@@ -174,10 +215,9 @@ const ProviderService = {
                 console.log(error);
                 UserService.logOut();
                 reject('Some Error occurs');
-                
             }
         });
-    }
+    },
 };
 
 export default ProviderService;
