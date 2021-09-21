@@ -1,60 +1,175 @@
 import UserService from '@services/UserService';
-import React from 'react';
-import {Button, Image, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import React, {useState} from 'react';
+import {
+    Dimensions,
+    Image,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableHighlight,
+    useWindowDimensions,
+    View,
+} from 'react-native';
 import {CustomColors, CustomMixins, CustomTypography} from '@styles';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import { TouchableHighlight } from 'react-native-gesture-handler';
-import { useSelector } from 'react-redux';
+import {useSelector} from 'react-redux';
+import {Button, IconButton} from 'react-native-paper';
+import CommonFunction from '@utils/CommonFunction';
+import {TabView, TabBar, SceneMap, PagerPan} from 'react-native-tab-view';
+
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import ProviderSchedulePage from './ProviderSchedulePage';
+
 
 const ProviderProfilePage = () => {
     const providerInfo = useSelector(state => state.loginState.providerInfo);
     const userInfo = useSelector(state => state.loginState.userInfo);
 
+    const [navigationState, setNavigationState] = useState({
+        index: 0,
+        routes: [
+            {key: 'photos', title: 'Photos'},
+            {key: 'reviews', title: 'Reviews'},
+        ],
+    });
+ 
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
+                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled" >
                     <View style={styles.bigContainer}>
-                        <View style={styles.imageContainer}>
-                            <TouchableHighlight
-                                onPress={() => {
-                                    coverImageActionSheet.current.snapTo(1);
-                                }}
-                                activeOpacity={0.6}
-                                underlayColor="#FFFFFF">
-                                <Image
-                                    style={styles.coverImage}
-                                    source={
-                                        !!providerInfo?.coverImgUrl
-                                            ? {uri: providerInfo?.coverImgUrl}
-                                            : require('@assets/images/default-coverImage.png')
-                                    }
-                                    resizeMode="cover"
+                        <View style={{padding: 16}}>
+                            <View style={styles.imageContainer}>
+                                <TouchableHighlight
+                                    style={{borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: 'hidden'}}
+                                    onPress={() => {
+                                        // coverImageActionSheet.current.snapTo(1);
+                                    }}
+                                    activeOpacity={0.6}
+                                    underlayColor="#FFFFFF">
+                                    <Image
+                                        style={styles.coverImage}
+                                        source={
+                                            !!providerInfo?.coverImgUrl
+                                                ? {uri: providerInfo?.coverImgUrl}
+                                                : require('@assets/images/default-coverImage.png')
+                                        }
+                                        resizeMode="cover"
+                                    />
+                                </TouchableHighlight>
+                                <TouchableHighlight
+                                    style={[styles.businessProfileImageWrapper]}
+                                    onPress={() => {
+                                        // businessLogoActionSheet.current.snapTo(1);
+                                    }}
+                                    activeOpacity={0.6}
+                                    underlayColor="#FFFFFF">
+                                    <Image
+                                        style={styles.businessProfileImage}
+                                        source={
+                                            !!providerInfo?.businessLogoUrl
+                                                ? {uri: providerInfo?.businessLogoUrl}
+                                                : require('@assets/images/default-profileImage.png')
+                                        }
+                                    />
+                                </TouchableHighlight>
+                            </View>
+                            <Text style={styles.businessName}>{providerInfo?.businessName}</Text>
+                            <Text style={styles.serviceType}>
+                                {CommonFunction.getDisplayNameForServiceType(providerInfo?.serviceType)}
+                            </Text>
+                            <View style={styles.actionBtnContainer}>
+                                <Button
+                                    style={{
+                                        flex: 1,
+                                        marginRight: 8,
+                                        borderRadius: 8,
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+
+                                        elevation: 1,
+                                    }}
+                                    contentStyle={{
+                                        height: 40,
+                                    }}
+                                    labelStyle={{
+                                        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                        marginTop: 10,
+                                        color: CustomColors.GRAY_DARK,
+                                    }}
+                                    icon="mode-edit"
+                                    mode="contained"
+                                    uppercase={false}
+                                    onPress={() => console.log('Pressed')}>
+                                    Edit Business Profile
+                                </Button>
+                                <IconButton
+                                    style={{
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                        borderRadius: 8,
+                                        margin: 0,
+                                        height: 40,
+                                        width: 60,
+                                        elevation: 1,
+                                    }}
+                                    icon="more-horiz"
+                                    color={CustomColors.GRAY_DARK}
+                                    size={24}
+                                    onPress={() => console.log('Pressed')}
                                 />
-                            </TouchableHighlight>
-                            <TouchableHighlight
-                                style={styles.businessProfileImageWrapper}
-                                onPress={() => {
-                                    businessLogoActionSheet.current.snapTo(1);
+                            </View>
+
+                            <View
+                                style={{
+                                    marginTop: 24,
+                                    borderBottomColor: CustomColors.GRAY_LIGHT,
+                                    borderBottomWidth: 2,
                                 }}
-                                activeOpacity={0.6}
-                                underlayColor="#FFFFFF">
-                                <Image
-                                    style={styles.businessProfileImage}
-                                    source={
-                                        !!providerInfo?.businessLogoUrl
-                                            ? {uri: providerInfo?.businessLogoUrl}
-                                            : require('@assets/images/default-profileImage.png')
-                                    }
-                                />
-                            </TouchableHighlight>
+                            />
+                            <View style={styles.businessInfoContainer}>
+                                <Text style={styles.title}>Business description</Text>
+                                <Text style={styles.desc}>{providerInfo?.businessDesc}</Text>
+                                <Text style={styles.title}>Service Description</Text>
+                                <Text style={styles.desc}>{providerInfo?.businessServiceDesc}</Text>
+                            </View>
+
+                            {/* <Button
+                                onPress={async () => {
+                                    UserService.logOut();
+                                }}
+                                title="LogOut">
+                                logout
+                            </Button> */}
                         </View>
-                        <Button
-                            onPress={async () => {
-                                UserService.logOut();
+                        <TabView
+                            style={{height: Dimensions.get('window').height - 64 - 48}}
+                            navigationState={navigationState}
+                            renderScene={SceneMap({
+                                photos: ProviderSchedulePage,
+                                reviews: ProviderSchedulePage,
+                            })}
+                            renderTabBar={props => {
+                                return (
+                                    <TabBar
+                                        {...props}
+                                        inactiveColor={CustomColors.GRAY}
+                                        indicatorStyle={{backgroundColor: CustomColors.GRAY_DARK}}
+                                        style={{backgroundColor: 'white', elevation: 0}}
+                                        labelStyle={{
+                                            fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                            fontSize: CustomTypography.FONT_SIZE_16,
+                                            color: CustomColors.GRAY_DARK,
+                                        }}
+                                    />
+                                );
                             }}
-                            title="LogOut"></Button>
+                            onIndexChange={index => {
+                                setNavigationState({...navigationState, index: index});
+                            }}
+                            renderPager={props => <PagerPan {...props} />}
+                            initialLayout={{width: Dimensions.get('window').width, height: Dimensions.get('window').height - 64 - 50}}
+                        />
                     </View>
                 </ScrollView>
             </SafeAreaView>
@@ -73,13 +188,12 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         width: '100%',
-        padding: 16,
-        marginBottom: 16,
+        paddingBottom: 90,
+        marginBottom: 8,
     },
     coverImage: {
-        marginLeft: -20,
         height: undefined,
-        aspectRatio: 4 / 2,
+        aspectRatio: 3.5 / 2,
     },
     businessProfileImage: {
         width: '100%',
@@ -87,14 +201,45 @@ const styles = StyleSheet.create({
         aspectRatio: 1,
     },
     businessProfileImageWrapper: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 180,
+        height: 180,
+        borderRadius: 100,
         overflow: 'hidden',
-        position: 'absolute',
-        left: 0,
-        bottom: 0,
-        borderWidth: 3,
+        borderWidth: 5,
         borderColor: CustomColors.WHITE,
+        position: 'absolute',
+        bottom: 0,
+        alignSelf: 'center',
     },
+    businessName: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_26,
+        color: CustomColors.GRAY_DARK,
+        justifyContent: 'center',
+        textAlign: 'center',
+    },
+    serviceType: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        color: CustomColors.GRAY_DARK,
+        justifyContent: 'center',
+        textAlign: 'center',
+        marginTop: -5,
+    },
+    actionBtnContainer: {
+        flexDirection: 'row',
+        marginTop: 16,
+    },
+    title: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_20,
+        color: CustomColors.GRAY_DARK,
+        marginTop: 20,
+    },
+    desc: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        color: CustomColors.GRAY_DARK,
+    },
+    businessInfoContainer: {},
 });
