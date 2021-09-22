@@ -1,12 +1,11 @@
-import React from 'react';
-import {Dimensions, FlatList, Image, StyleSheet, Text, TouchableHighlight, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TouchableHighlight, View} from 'react-native';
 
-const PhotoListingComponent = ({dataList}) => {
-    const windowWidth = Dimensions.get('window').width;
-
+const PhotoListingComponent = ({dataList, isScrollEnabled = true}) => {
     return (
         <FlatList
-            nestedScrollEnabled
+            scrollEnabled={isScrollEnabled}
+            nestedScrollEnabled={true}
             data={[
                 ...dataList,
                 ...dataList,
@@ -18,10 +17,10 @@ const PhotoListingComponent = ({dataList}) => {
                 ...dataList,
                 ...dataList,
             ]}
-            renderItem={({item}) => (
+            renderItem={({item, index}) => (
                 <TouchableHighlight
                     style={{
-                        flex: 1,
+                        flex: 1 / 3,
                         borderWidth: 1,
                         borderColor: 'white',
                     }}

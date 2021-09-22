@@ -1,5 +1,5 @@
 import UserService from '@services/UserService';
-import React, {useState,useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     Dimensions,
     Image,
@@ -34,22 +34,35 @@ const ProviderProfilePage = () => {
             {key: 'reviews', title: 'Reviews'},
         ],
     });
+    const [tabBarOffsetY, setTabBarOffsetY] = useState(0);
+    const [isPhotoListingScrollable, setIsPhotoListingScrollable] = useState(false)
 
-    const [photosList, setPhotosList] = useState([])
+    const [photosList, setPhotosList] = useState([]);
 
-    useEffect(()=>{
-        ProviderService.getAllPost().then((data)=>{
-            setPhotosList(data.data)
-            console.log(data.data)
+    useEffect(() => {
+        ProviderService.getAllPost().then(data => {
+            setPhotosList(data.data);
+            console.log(data.data);
             // <PhotoListingComponent dataList={photosList} />
-        })
-    },[])
+        });
+    }, []);
 
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
+                <ScrollView
+                    onScroll={event => {
+                        console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY);
+
+                        if (event.nativeEvent.contentOffset.y > tabBarOffsetY) {
+                            setIsPhotoListingScrollable(true);
+                        } else {
+                            setIsPhotoListingScrollable(false);
+                        }
+                    }}
+                    contentContainerStyle={{flexGrow: 1}}
+                    nestedScrollEnabled={true}>
                     <View style={styles.bigContainer}>
                         <View style={{padding: 16}}>
                             <View style={styles.imageContainer}>
@@ -154,12 +167,13 @@ const ProviderProfilePage = () => {
                             </Button> */}
                         </View>
                         <TabView
+                        
                             style={{height: Dimensions.get('window').height - 64 - 48}}
                             navigationState={navigationState}
                             renderScene={({route}) => {
                                 switch (route.key) {
                                     case 'photos':
-                                        return <PhotoListingComponent dataList={photosList} />;
+                                        return <PhotoListingComponent dataList={photosList} isScrollEnabled={isPhotoListingScrollable} />;
                                     case 'reviews':
                                         return <ProviderSchedulePage />;
                                     default:
@@ -170,6 +184,11 @@ const ProviderProfilePage = () => {
                                 return (
                                     <TabBar
                                         {...props}
+                                        onLayout={event => {
+                                            var {x, y, width, height} = event.nativeEvent.layout;
+            
+                                            setTabBarOffsetY(y);
+                                        }}
                                         inactiveColor={CustomColors.GRAY}
                                         indicatorStyle={{backgroundColor: CustomColors.GRAY_DARK}}
                                         style={{backgroundColor: 'white', elevation: 0}}
