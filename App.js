@@ -9,7 +9,7 @@ import 'react-native-gesture-handler';
 import React, {useEffect, useState} from 'react';
 import type {Node} from 'react';
 import firestore from '@react-native-firebase/firestore';
-import {ScrollView, StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
+import {ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, useColorScheme, View} from 'react-native';
 
 import {
     Colors,
@@ -24,7 +24,7 @@ import LoginPage from '@pages/LoginPage';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import SplashPage from '@pages/SplashPage';
-import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
+import {DefaultTheme, Portal, Provider as PaperProvider} from 'react-native-paper';
 import {CustomColors, CustomTypography} from '@styles';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import RegisterPage from '@pages/RegisterPage';
@@ -34,7 +34,13 @@ import auth from '@react-native-firebase/auth';
 import RootStack from '@navigations/RootStack';
 import {setLoginBlock} from '@slices/appSlice';
 import UserService from '@services/UserService';
-import FlashMessage from "react-native-flash-message";
+import FlashMessage from 'react-native-flash-message';
+import {PortalProvider, PortalHost} from '@gorhom/portal';
+import BottomSheet from 'react-native-bottomsheet-reanimated';
+
+import ImageCropPicker from 'react-native-image-crop-picker';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const Stack = createStackNavigator();
 const theme = {
@@ -115,19 +121,29 @@ const App: () => Node = () => {
             }}
             theme={theme}>
             <SafeAreaProvider>
-                <NavigationContainer>
-                    <RootStack
-                        isAuth={isAuth}
-                        isLoading={isLoading}
-                        loginBlock={loginBlock}
-                        loggedInAcctype={loggedInAcctype}></RootStack>
-                    {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
+                <GestureHandlerRootView style={{width: '100%', height: '100%', flex: 1}}>
+                    <PortalProvider>
+                        <NavigationContainer>
+                            <RootStack
+                                isAuth={isAuth}
+                                isLoading={isLoading}
+                                loginBlock={loginBlock}
+                                loggedInAcctype={loggedInAcctype}></RootStack>
+                            {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
                         <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
                         <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
                         <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
                     </Stack.Navigator> */}
-                </NavigationContainer>
-                <FlashMessage textStyle={{fontFamily: CustomTypography.FONT_FAMILY_REGULAR, fontSize: CustomTypography.FONT_SIZE_14}} />
+                        </NavigationContainer>
+
+                        <FlashMessage
+                            textStyle={{
+                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                fontSize: CustomTypography.FONT_SIZE_14,
+                            }}
+                        />
+                    </PortalProvider>
+                </GestureHandlerRootView>
             </SafeAreaProvider>
         </PaperProvider>
     );

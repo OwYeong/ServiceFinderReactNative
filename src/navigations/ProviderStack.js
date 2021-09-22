@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useEffect, useRef} from 'react';
 import CustomerHomepage from '@pages/customer/CustomerHomepage';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import CustomerBookingPage from '@pages/customer/CustomerBookingPage';
@@ -73,8 +73,7 @@ const ProviderStack = () => {
                     },
                     tabBarButton: props => <TouchableRipple {...props} />,
                 })}
-                renderTouchable={props => <Touchable {...props} />}
-            >
+                renderTouchable={props => <Touchable {...props} />}>
                 <Tab.Screen
                     name="ProviderHomepage"
                     component={ProviderHomePage}

@@ -1,5 +1,5 @@
 import UserService from '@services/UserService';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
     Dimensions,
     Image,
@@ -8,20 +8,25 @@ import {
     StyleSheet,
     Text,
     TouchableHighlight,
+    TouchableOpacity,
     useWindowDimensions,
     View,
 } from 'react-native';
 import {CustomColors, CustomMixins, CustomTypography} from '@styles';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {Button, IconButton} from 'react-native-paper';
 import CommonFunction from '@utils/CommonFunction';
 import {TabView, TabBar, SceneMap, PagerPan} from 'react-native-tab-view';
 
-import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import ProviderSchedulePage from './ProviderSchedulePage';
 import PhotoListingComponent from '@organisms/PhotoListingComponent';
 import ProviderService from '@services/ProviderService';
+
+import BottomSheet from 'react-native-bottomsheet-reanimated';
+import ImageCropPicker from 'react-native-image-crop-picker';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {Portal} from '@gorhom/portal';
 
 const ProviderProfilePage = () => {
     const providerInfo = useSelector(state => state.loginState.providerInfo);
@@ -35,9 +40,12 @@ const ProviderProfilePage = () => {
         ],
     });
     const [tabBarOffsetY, setTabBarOffsetY] = useState(0);
-    const [isPhotoListingScrollable, setIsPhotoListingScrollable] = useState(false)
+    const [isPhotoListingScrollable, setIsPhotoListingScrollable] = useState(false);
 
     const [photosList, setPhotosList] = useState([]);
+
+    const coverImageActionSheet = useRef(null);
+    const businessLogoActionSheet = useRef(null);
 
     useEffect(() => {
         ProviderService.getAllPost().then(data => {
@@ -52,6 +60,7 @@ const ProviderProfilePage = () => {
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
                 <ScrollView
+                    style={{flex: 1}}
                     onScroll={event => {
                         console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY);
 
@@ -69,7 +78,7 @@ const ProviderProfilePage = () => {
                                 <TouchableHighlight
                                     style={{borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: 'hidden'}}
                                     onPress={() => {
-                                        // coverImageActionSheet.current.snapTo(1);
+                                        coverImageActionSheet.current.snapTo(0);
                                     }}
                                     activeOpacity={0.6}
                                     underlayColor="#FFFFFF">
@@ -86,7 +95,7 @@ const ProviderProfilePage = () => {
                                 <TouchableHighlight
                                     style={[styles.businessProfileImageWrapper]}
                                     onPress={() => {
-                                        // businessLogoActionSheet.current.snapTo(1);
+                                        businessLogoActionSheet.current.snapTo(1);
                                     }}
                                     activeOpacity={0.6}
                                     underlayColor="#FFFFFF">
@@ -166,14 +175,24 @@ const ProviderProfilePage = () => {
                                 logout
                             </Button> */}
                         </View>
+                        <View
+                            onLayout={event => {
+                                var {x, y, width, height} = event.nativeEvent.layout;
+
+                                setTabBarOffsetY(y);
+                            }}></View>
                         <TabView
-                        
-                            style={{height: Dimensions.get('window').height - 64 - 48}}
+                            style={{height: Dimensions.get('window').height - 64}}
                             navigationState={navigationState}
                             renderScene={({route}) => {
                                 switch (route.key) {
                                     case 'photos':
-                                        return <PhotoListingComponent dataList={photosList} isScrollEnabled={isPhotoListingScrollable} />;
+                                        return (
+                                            <PhotoListingComponent
+                                                dataList={photosList}
+                                                isScrollEnabled={isPhotoListingScrollable}
+                                            />
+                                        );
                                     case 'reviews':
                                         return <ProviderSchedulePage />;
                                     default:
@@ -184,11 +203,6 @@ const ProviderProfilePage = () => {
                                 return (
                                     <TabBar
                                         {...props}
-                                        onLayout={event => {
-                                            var {x, y, width, height} = event.nativeEvent.layout;
-            
-                                            setTabBarOffsetY(y);
-                                        }}
                                         inactiveColor={CustomColors.GRAY}
                                         indicatorStyle={{backgroundColor: CustomColors.GRAY_DARK}}
                                         style={{backgroundColor: 'white', elevation: 0}}
@@ -212,6 +226,238 @@ const ProviderProfilePage = () => {
                     </View>
                 </ScrollView>
             </SafeAreaView>
+            <Portal>
+                <BottomSheet
+                    ref={coverImageActionSheet}
+                    bottomSheerColor="#FFFFFF"
+                    // ref="BottomSheet"
+                    initialPosition={0}
+                    snapPoints={[260, 0]}
+                    isBackDrop={true}
+                    isBackDropDismissByPress={true}
+                    isRoundBorderWithTipHeader={true}
+                    // backDropColor="red"
+                    // isModal
+                    // containerStyle={{backgroundColor:"red"}}
+                    // tipStyle={{backgroundColor:"red"}}
+                    // headerStyle={{backgroundColor:"red"}}
+                    // bodyStyle={{backgroundColor:"red",flex:1}}
+                    body={
+                        <View style={{paddingVertical: 16}}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    ImageCropPicker.openPicker({
+                                        width: 1200,
+                                        height: 600,
+                                        cropping: true,
+                                        mediaType: 'photo',
+                                    })
+                                        .then(image => {
+                                            setCoverImagePath(image.path);
+                                            setCoverImageMime(image.mime);
+                                            coverImageActionSheet.current.snapTo(0);
+
+                                            // var reference = null;
+
+                                            // if (image.mime == 'image/jpeg') {
+                                            //     reference = storage().ref(
+                                            //         `userData/${auth().currentUser.uid}/coverImage.png`,
+                                            //     );
+                                            // } else {
+                                            //     reference = storage().ref(
+                                            //         `userData/${auth().currentUser.uid}/coverImage.jpg`,
+                                            //     );
+                                            // }
+
+                                            // reference
+                                            //     .putFile(image.path)
+                                            //     .then(data => {
+                                            //         setCoverImagePath(image.path);
+
+                                            //     })
+                                            //     .catch(err => {
+                                            //         console.log('Cover image upload error');
+                                            //         console.log(err);
+                                            //     });
+                                        })
+                                        .catch(e => {
+                                            console.log(e);
+                                        });
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <FontAwesome name="photo" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Select From Gallery</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    ImageCropPicker.openCamera({
+                                        width: 1200,
+                                        height: 600,
+                                        cropping: true,
+                                    })
+                                        .then(image => {
+                                            setCoverImagePath(image.path);
+                                            setCoverImageMime(image.mime);
+                                            coverImageActionSheet.current.snapTo(0);
+                                        })
+                                        .catch(e => {
+                                            console.log(e);
+                                        });
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Snap cover image from camera</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setCoverImagePath(null);
+                                    businessLogoActionSheet.current.snapTo(0);
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <FontAwesome name="file-image-o" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Use default image</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    }
+                />
+            </Portal>
+            <BottomSheet
+                ref={businessLogoActionSheet}
+                bottomSheerColor="#FFFFFF"
+                // ref="BottomSheet"
+                initialPosition={0}
+                snapPoints={[0, 260]}
+                isBackDrop={true}
+                isBackDropDismissByPress={true}
+                isRoundBorderWithTipHeader={true}
+                // backDropColor="red"
+                // isModal
+                // containerStyle={{backgroundColor:"red"}}
+                // tipStyle={{backgroundColor:"red"}}
+                // headerStyle={{backgroundColor:"red"}}
+                // bodyStyle={{backgroundColor:"red",flex:1}}
+                body={
+                    <View style={{paddingVertical: 16}}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                ImageCropPicker.openPicker({
+                                    width: 800,
+                                    height: 800,
+                                    cropping: true,
+                                    mediaType: 'photo',
+                                })
+                                    .then(image => {
+                                        businessLogoActionSheet.current.snapTo(0);
+                                    })
+                                    .catch(e => {
+                                        console.log(e);
+                                    });
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="photo" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Select From Gallery</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                ImageCropPicker.openCamera({
+                                    width: 800,
+                                    height: 800,
+                                    cropping: true,
+                                })
+                                    .then(image => {
+                                        businessLogoActionSheet.current.snapTo(0);
+                                    })
+                                    .catch(e => {
+                                        console.log(e);
+                                    });
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Snap Business Profile from camera</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                businessLogoActionSheet.current.snapTo(0);
+                            }}>
+                            <View style={styles.actionButton}>
+                                <View
+                                    style={{
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: 25,
+                                        overflow: 'hidden',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                    }}>
+                                    <FontAwesome name="file-image-o" size={24} color={CustomColors.GRAY_DARK} />
+                                </View>
+                                <Text style={styles.actionButtonLabel}>Use default image</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                }
+            />
         </View>
     );
 };
@@ -279,6 +525,20 @@ const styles = StyleSheet.create({
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_16,
         color: CustomColors.GRAY_DARK,
+    },
+    actionButton: {
+        width: '100%',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    actionButtonLabel: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_14,
+        color: CustomColors.GRAY_DARK,
+        marginHorizontal: 16,
     },
     businessInfoContainer: {},
 });
