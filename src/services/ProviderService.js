@@ -5,6 +5,7 @@ import storage from '@react-native-firebase/storage';
 import {setProviderInfo} from '@slices/loginSlice';
 import store from '../../store';
 import UserService from './UserService';
+import firebase from '@react-native-firebase/app';
 
 const ProviderService = {
     getPopularServiceOfTheMonthWithPagination: (lastVisibleDocument = null) => {
@@ -202,6 +203,68 @@ const ProviderService = {
                     console.log('Provider Service - Error occured when uploading business logo image.');
                     console.log(err);
                 });
+        });
+    },
+    uploadPostImageToStorage: (userId, postId, postImagePath, mimeType) => {
+        return new Promise((resolve, reject) => {
+            var postImageLogoRef = null;
+
+            if (mimeType == 'image/jpeg') {
+                postImageLogoRef = storage().ref(`userData/${userId}/postImage/${postId}.png`);
+            } else {
+                postImageLogoRef = storage().ref(`userData/${userId}/postImage/${postId}.png`);
+            }
+
+            postImageLogoRef
+                .putFile(postImagePath)
+                .then(data => {
+                    postImageLogoRef
+                        .getDownloadURL()
+                        .then(url => {
+                            //from url you can fetched the uploaded image easily
+                            resolve(url);
+                        })
+                        .catch(err => {
+                            reject('Provider Service - Error occured when getting post image url.');
+                            console.log('Provider Service - Error occured when getting post image url.');
+                            console.log(err);
+                        });
+                })
+                .catch(err => {
+                    reject('Provider Service - Error occured when uploading post image.');
+                    console.log('Provider Service - Error occured when uploadingpost image.');
+                    console.log(err);
+                });
+        });
+    },
+    createPost: (data, userId = auth().currentUser.uid)=>{
+        return new Promise((resolve, reject) => {
+            const postsCollection = firestore().collection('posts');
+            const newDocumentId = postsCollection.doc().id;
+
+            const {postImage, ...othersData} = data;
+
+            ProviderService.uploadPostImageToStorage(userId, newDocumentId, postImage.path, postImage.mime).then(postImageUrl=>{
+                postsCollection
+                .doc(newDocumentId)
+                .set({
+                    ...othersData,
+                    postedDateTime: firebase.firestore.FieldValue.serverTimestamp(),
+                    userId: userId, 
+                    imageUrl: postImageUrl
+                })
+                .then(() => {
+                    resolve('Successfully created a post updated!');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+            }).catch(error=>{
+                reject('error occurs')
+                console.log('error occure when createing post')
+            })
+            
         });
     },
     fetchProviderDataToRedux: () => {

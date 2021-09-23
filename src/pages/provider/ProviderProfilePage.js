@@ -34,10 +34,13 @@ import AntDesignIcons from 'react-native-vector-icons/AntDesign';
 import {showMessage} from 'react-native-flash-message';
 import auth from '@react-native-firebase/auth';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import { useFocusEffect, useNavigation } from '@react-navigation/core';
 
 const ProviderProfilePage = () => {
     const providerInfo = useSelector(state => state.loginState.providerInfo);
     const userInfo = useSelector(state => state.loginState.userInfo);
+
+    const navigation = useNavigation();
 
     const [navigationState, setNavigationState] = useState({
         index: 0,
@@ -65,7 +68,15 @@ const ProviderProfilePage = () => {
             // <PhotoListingComponent dataList={photosList} />
         });
     }, []);
-
+    useFocusEffect(
+        useCallback(() => {
+            ProviderService.getAllPost().then(data => {
+                setPhotosList(data.data);
+                console.log(data.data);
+                // <PhotoListingComponent dataList={photosList} />
+            });
+        }, [])
+      )
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} />
@@ -110,7 +121,6 @@ const ProviderProfilePage = () => {
                                                     ? {uri: providerInfo?.coverImgUrl}
                                                     : require('@assets/images/default-coverImage.png')
                                             }
-                                            
                                             onLoadStart={() => {
                                                 console.log('image load start');
                                                 setIsCoverImgLoading(true);
@@ -126,7 +136,7 @@ const ProviderProfilePage = () => {
                                 <TouchableHighlight
                                     style={[styles.businessProfileImageWrapper]}
                                     onPress={() => {
-                                        businessLogoActionSheet.current.snapTo(1);
+                                        businessLogoActionSheet.current?.snapTo(1);
                                     }}
                                     activeOpacity={0.6}
                                     underlayColor="#FFFFFF">
@@ -205,7 +215,7 @@ const ProviderProfilePage = () => {
                                     color={CustomColors.GRAY_DARK}
                                     size={24}
                                     onPress={() => {
-                                        serviceProviderProfileActionSheet.current.snapTo(1);
+                                        serviceProviderProfileActionSheet.current?.snapTo(1);
                                     }}
                                 />
                             </View>
@@ -229,7 +239,7 @@ const ProviderProfilePage = () => {
                                     UserService.logOut();
                                 }}
                                 title="LogOut">
-                                logout
+                                logout  
                             </Button> */}
                         </View>
                         <View
@@ -311,7 +321,7 @@ const ProviderProfilePage = () => {
                                     })
                                         .then(image => {
                                             coverImageActionSheet.current.snapTo(0);
-                                            setIsCoverImgLoading(true)
+                                            setIsCoverImgLoading(true);
                                             // Upload Cover Image
                                             var coverImageUploadPromise = ProviderService.uploadCoverImageToStorage(
                                                 auth().currentUser.uid,
@@ -375,7 +385,7 @@ const ProviderProfilePage = () => {
                                     })
                                         .then(image => {
                                             coverImageActionSheet.current.snapTo(0);
-                                            setIsCoverImgLoading(true)
+                                            setIsCoverImgLoading(true);
                                             // Upload Cover Image
                                             var coverImageUploadPromise = ProviderService.uploadCoverImageToStorage(
                                                 auth().currentUser.uid,
@@ -643,10 +653,7 @@ const ProviderProfilePage = () => {
                     // bodyStyle={{backgroundColor:"red",flex:1}}
                     body={
                         <View style={{paddingVertical: 16}}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    
-                                }}>
+                            <TouchableOpacity onPress={() => {}}>
                                 <View style={styles.actionButton}>
                                     <View
                                         style={{
@@ -663,10 +670,26 @@ const ProviderProfilePage = () => {
                                     <Text style={styles.actionButtonLabel}>My Form Setup</Text>
                                 </View>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    
-                                }}>
+                            <TouchableOpacity onPress={() => {
+                                ImageCropPicker.openPicker({
+                                    width: 400,
+                                    height: 400,
+                                    cropping: true,
+                                    mediaType: 'photo',
+                                })
+                                    .then(image => {
+                                        serviceProviderProfileActionSheet.current.snapTo(0);
+                                        navigation.navigate('PostEditCreate', {
+                                            chosenImage: { 
+                                                path: image.path,
+                                                mime: image.mime
+                                            }
+                                          });
+                                    })
+                                    .catch(e => {
+                                        console.log(e);
+                                    });
+                            }}>
                                 <View style={styles.actionButton}>
                                     <View
                                         style={{
@@ -685,7 +708,9 @@ const ProviderProfilePage = () => {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => {
-                                    businessLogoActionSheet.current.snapTo(0);
+                                    UserService.logOut().then(data => {
+                                        businessLogoActionSheet.current.snapTo(0);
+                                    });
                                 }}>
                                 <View style={styles.actionButton}>
                                     <View

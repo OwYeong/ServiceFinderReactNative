@@ -9,6 +9,7 @@ import {Constants} from '~constants';
 import ProviderStack from './ProviderStack';
 import IntroductionSliderPage from '@pages/IntroductionSliderPage';
 import SetupBusinessProfileWalkThrough from '@pages/provider/SetupBusinessProfileWalkthrough';
+import PostEditCreatePage from '@pages/provider/PostEditCreatePage';
 
 const Stack = createStackNavigator();
 
@@ -77,6 +78,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="Provider"
                                 component={ProviderStack}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="PostEditCreate"
+                                component={PostEditCreatePage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,
