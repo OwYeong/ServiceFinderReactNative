@@ -1,6 +1,7 @@
 import UserService from '@services/UserService';
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
 import {
+    ActivityIndicator,
     Dimensions,
     Image,
     ScrollView,
@@ -24,9 +25,15 @@ import PhotoListingComponent from '@organisms/PhotoListingComponent';
 import ProviderService from '@services/ProviderService';
 
 import BottomSheet from 'react-native-bottomsheet-reanimated';
+// import BottomSheet, {BottomSheetBackdrop, useBottomSheetTimingConfigs, BottomSheetView} from '@gorhom/bottom-sheet';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Portal} from '@gorhom/portal';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import AntDesignIcons from 'react-native-vector-icons/AntDesign';
+import {showMessage} from 'react-native-flash-message';
+import auth from '@react-native-firebase/auth';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 
 const ProviderProfilePage = () => {
     const providerInfo = useSelector(state => state.loginState.providerInfo);
@@ -35,7 +42,7 @@ const ProviderProfilePage = () => {
     const [navigationState, setNavigationState] = useState({
         index: 0,
         routes: [
-            {key: 'photos', title: 'Photos'},
+            {key: 'photos', title: 'Posts'},
             {key: 'reviews', title: 'Reviews'},
         ],
     });
@@ -46,6 +53,10 @@ const ProviderProfilePage = () => {
 
     const coverImageActionSheet = useRef(null);
     const businessLogoActionSheet = useRef(null);
+    const serviceProviderProfileActionSheet = useRef(null);
+
+    const [isBusinessLogoLoading, setIsBusinessLogoLoading] = useState(false);
+    const [isCoverImgLoading, setIsCoverImgLoading] = useState(false);
 
     useEffect(() => {
         ProviderService.getAllPost().then(data => {
@@ -57,7 +68,7 @@ const ProviderProfilePage = () => {
 
     return (
         <View style={{backgroundColor: 'white'}}>
-            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
+            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
                 <ScrollView
                     style={{flex: 1}}
@@ -78,19 +89,39 @@ const ProviderProfilePage = () => {
                                 <TouchableHighlight
                                     style={{borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: 'hidden'}}
                                     onPress={() => {
-                                        coverImageActionSheet.current.snapTo(0);
+                                        coverImageActionSheet.current?.snapTo(1);
                                     }}
                                     activeOpacity={0.6}
                                     underlayColor="#FFFFFF">
-                                    <Image
-                                        style={styles.coverImage}
-                                        source={
-                                            !!providerInfo?.coverImgUrl
-                                                ? {uri: providerInfo?.coverImgUrl}
-                                                : require('@assets/images/default-coverImage.png')
-                                        }
-                                        resizeMode="cover"
-                                    />
+                                    <View>
+                                        <SkeletonPlaceholder>
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    aspectRatio: 3.5 / 2,
+                                                    height: undefined,
+                                                    overflow: 'hidden',
+                                                }}></View>
+                                        </SkeletonPlaceholder>
+                                        <Image
+                                            style={[styles.coverImage, {opacity: isCoverImgLoading ? 0 : 1}]}
+                                            source={
+                                                !!providerInfo?.coverImgUrl
+                                                    ? {uri: providerInfo?.coverImgUrl}
+                                                    : require('@assets/images/default-coverImage.png')
+                                            }
+                                            
+                                            onLoadStart={() => {
+                                                console.log('image load start');
+                                                setIsCoverImgLoading(true);
+                                            }}
+                                            onLoadEnd={() => {
+                                                console.log('image load end');
+                                                setIsCoverImgLoading(false);
+                                            }}
+                                            resizeMode="cover"
+                                        />
+                                    </View>
                                 </TouchableHighlight>
                                 <TouchableHighlight
                                     style={[styles.businessProfileImageWrapper]}
@@ -99,14 +130,38 @@ const ProviderProfilePage = () => {
                                     }}
                                     activeOpacity={0.6}
                                     underlayColor="#FFFFFF">
-                                    <Image
-                                        style={styles.businessProfileImage}
-                                        source={
-                                            !!providerInfo?.businessLogoUrl
-                                                ? {uri: providerInfo?.businessLogoUrl}
-                                                : require('@assets/images/default-profileImage.png')
-                                        }
-                                    />
+                                    <View>
+                                        <SkeletonPlaceholder>
+                                            <View
+                                                style={{
+                                                    width: 180,
+                                                    height: 180,
+                                                    marginLeft: -5,
+                                                    marginTop: -5,
+                                                    borderRadius: 90,
+                                                    overflow: 'hidden',
+                                                }}></View>
+                                        </SkeletonPlaceholder>
+                                        <Image
+                                            style={[
+                                                styles.businessProfileImage,
+                                                {opacity: isBusinessLogoLoading ? 0 : 1},
+                                            ]}
+                                            onLoadStart={() => {
+                                                console.log('image load start');
+                                                setIsBusinessLogoLoading(true);
+                                            }}
+                                            onLoadEnd={() => {
+                                                console.log('image load end');
+                                                setIsBusinessLogoLoading(false);
+                                            }}
+                                            source={
+                                                !!providerInfo?.businessLogoUrl
+                                                    ? {uri: providerInfo?.businessLogoUrl}
+                                                    : require('@assets/images/default-profileImage.png')
+                                            }
+                                        />
+                                    </View>
                                 </TouchableHighlight>
                             </View>
                             <Text style={styles.businessName}>{providerInfo?.businessName}</Text>
@@ -149,7 +204,9 @@ const ProviderProfilePage = () => {
                                     icon="more-horiz"
                                     color={CustomColors.GRAY_DARK}
                                     size={24}
-                                    onPress={() => console.log('Pressed')}
+                                    onPress={() => {
+                                        serviceProviderProfileActionSheet.current.snapTo(1);
+                                    }}
                                 />
                             </View>
 
@@ -182,7 +239,7 @@ const ProviderProfilePage = () => {
                                 setTabBarOffsetY(y);
                             }}></View>
                         <TabView
-                            style={{height: Dimensions.get('window').height - 64}}
+                            style={{height: Dimensions.get('window').height - 64 - 24}}
                             navigationState={navigationState}
                             renderScene={({route}) => {
                                 switch (route.key) {
@@ -232,7 +289,7 @@ const ProviderProfilePage = () => {
                     bottomSheerColor="#FFFFFF"
                     // ref="BottomSheet"
                     initialPosition={0}
-                    snapPoints={[260, 0]}
+                    snapPoints={[0, 260]}
                     isBackDrop={true}
                     isBackDropDismissByPress={true}
                     isRoundBorderWithTipHeader={true}
@@ -247,38 +304,47 @@ const ProviderProfilePage = () => {
                             <TouchableOpacity
                                 onPress={() => {
                                     ImageCropPicker.openPicker({
-                                        width: 1200,
-                                        height: 600,
+                                        width: 600,
+                                        height: 300,
                                         cropping: true,
                                         mediaType: 'photo',
                                     })
                                         .then(image => {
-                                            setCoverImagePath(image.path);
-                                            setCoverImageMime(image.mime);
                                             coverImageActionSheet.current.snapTo(0);
+                                            setIsCoverImgLoading(true)
+                                            // Upload Cover Image
+                                            var coverImageUploadPromise = ProviderService.uploadCoverImageToStorage(
+                                                auth().currentUser.uid,
+                                                image.path,
+                                                image.mime,
+                                            );
 
-                                            // var reference = null;
-
-                                            // if (image.mime == 'image/jpeg') {
-                                            //     reference = storage().ref(
-                                            //         `userData/${auth().currentUser.uid}/coverImage.png`,
-                                            //     );
-                                            // } else {
-                                            //     reference = storage().ref(
-                                            //         `userData/${auth().currentUser.uid}/coverImage.jpg`,
-                                            //     );
-                                            // }
-
-                                            // reference
-                                            //     .putFile(image.path)
-                                            //     .then(data => {
-                                            //         setCoverImagePath(image.path);
-
-                                            //     })
-                                            //     .catch(err => {
-                                            //         console.log('Cover image upload error');
-                                            //         console.log(err);
-                                            //     });
+                                            coverImageUploadPromise
+                                                .then(coverImgUrl => {
+                                                    ProviderService.updateProviderData({
+                                                        coverImgUrl: coverImgUrl,
+                                                    })
+                                                        .then(() => {
+                                                            console.log('startfetching');
+                                                            ProviderService.fetchProviderDataToRedux();
+                                                        })
+                                                        .catch(error => {
+                                                            console.log('Firebase update error.');
+                                                        });
+                                                })
+                                                .catch(error => {
+                                                    showMessage({
+                                                        message: 'Image upload failed. Please try again later.',
+                                                        type: 'info',
+                                                        position: 'center',
+                                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                        color: 'white', // text color
+                                                        titleStyle: {marginTop: 5},
+                                                        hideOnPress: true,
+                                                        autoHide: true,
+                                                        duration: 1000,
+                                                    });
+                                                });
                                         })
                                         .catch(e => {
                                             console.log(e);
@@ -303,14 +369,46 @@ const ProviderProfilePage = () => {
                             <TouchableOpacity
                                 onPress={() => {
                                     ImageCropPicker.openCamera({
-                                        width: 1200,
-                                        height: 600,
+                                        width: 600,
+                                        height: 300,
                                         cropping: true,
                                     })
                                         .then(image => {
-                                            setCoverImagePath(image.path);
-                                            setCoverImageMime(image.mime);
                                             coverImageActionSheet.current.snapTo(0);
+                                            setIsCoverImgLoading(true)
+                                            // Upload Cover Image
+                                            var coverImageUploadPromise = ProviderService.uploadCoverImageToStorage(
+                                                auth().currentUser.uid,
+                                                image.path,
+                                                image.mime,
+                                            );
+
+                                            coverImageUploadPromise
+                                                .then(coverImgUrl => {
+                                                    ProviderService.updateProviderData({
+                                                        coverImgUrl: coverImgUrl,
+                                                    })
+                                                        .then(() => {
+                                                            console.log('startfetching');
+                                                            ProviderService.fetchProviderDataToRedux();
+                                                        })
+                                                        .catch(error => {
+                                                            console.log('Firebase update error.');
+                                                        });
+                                                })
+                                                .catch(error => {
+                                                    showMessage({
+                                                        message: 'Image upload failed. Please try again later.',
+                                                        type: 'info',
+                                                        position: 'center',
+                                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                        color: 'white', // text color
+                                                        titleStyle: {marginTop: 5},
+                                                        hideOnPress: true,
+                                                        autoHide: true,
+                                                        duration: 1000,
+                                                    });
+                                                });
                                         })
                                         .catch(e => {
                                             console.log(e);
@@ -357,107 +455,258 @@ const ProviderProfilePage = () => {
                     }
                 />
             </Portal>
-            <BottomSheet
-                ref={businessLogoActionSheet}
-                bottomSheerColor="#FFFFFF"
-                // ref="BottomSheet"
-                initialPosition={0}
-                snapPoints={[0, 260]}
-                isBackDrop={true}
-                isBackDropDismissByPress={true}
-                isRoundBorderWithTipHeader={true}
-                // backDropColor="red"
-                // isModal
-                // containerStyle={{backgroundColor:"red"}}
-                // tipStyle={{backgroundColor:"red"}}
-                // headerStyle={{backgroundColor:"red"}}
-                // bodyStyle={{backgroundColor:"red",flex:1}}
-                body={
-                    <View style={{paddingVertical: 16}}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                ImageCropPicker.openPicker({
-                                    width: 800,
-                                    height: 800,
-                                    cropping: true,
-                                    mediaType: 'photo',
-                                })
-                                    .then(image => {
-                                        businessLogoActionSheet.current.snapTo(0);
+            <Portal>
+                <BottomSheet
+                    ref={businessLogoActionSheet}
+                    bottomSheerColor="#FFFFFF"
+                    // ref="BottomSheet"
+                    initialPosition={0}
+                    snapPoints={[0, 260]}
+                    isBackDrop={true}
+                    isBackDropDismissByPress={true}
+                    isRoundBorderWithTipHeader={true}
+                    // backDropColor="red"
+                    // isModal
+                    // containerStyle={{backgroundColor:"red"}}
+                    // tipStyle={{backgroundColor:"red"}}
+                    // headerStyle={{backgroundColor:"red"}}
+                    // bodyStyle={{backgroundColor:"red",flex:1}}
+                    body={
+                        <View style={{paddingVertical: 16}}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    ImageCropPicker.openPicker({
+                                        width: 400,
+                                        height: 400,
+                                        cropping: true,
+                                        mediaType: 'photo',
                                     })
-                                    .catch(e => {
-                                        console.log(e);
-                                    });
-                            }}>
-                            <View style={styles.actionButton}>
-                                <View
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                        borderRadius: 25,
-                                        overflow: 'hidden',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        backgroundColor: CustomColors.GRAY_LIGHT,
-                                    }}>
-                                    <FontAwesome name="photo" size={24} color={CustomColors.GRAY_DARK} />
+                                        .then(image => {
+                                            businessLogoActionSheet.current.snapTo(0);
+                                            setIsBusinessLogoLoading(true);
+                                            // Upload businessLogo Image
+                                            var businessLogoUploadPromise = ProviderService.uploadBusinessLogoToStorage(
+                                                auth().currentUser.uid,
+                                                image.path,
+                                                image.mime,
+                                            );
+
+                                            businessLogoUploadPromise
+                                                .then(businessLogoUrl => {
+                                                    ProviderService.updateProviderData({
+                                                        businessLogoUrl: businessLogoUrl,
+                                                    })
+                                                        .then(() => {
+                                                            console.log('startfetching');
+                                                            ProviderService.fetchProviderDataToRedux();
+                                                        })
+                                                        .catch(error => {
+                                                            console.log('Firebase update error.');
+                                                        });
+                                                })
+                                                .catch(error => {
+                                                    showMessage({
+                                                        message: 'Image upload failed. Please try again later.',
+                                                        type: 'info',
+                                                        position: 'center',
+                                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                        color: 'white', // text color
+                                                        titleStyle: {marginTop: 5},
+                                                        hideOnPress: true,
+                                                        autoHide: true,
+                                                        duration: 1000,
+                                                    });
+                                                });
+                                        })
+                                        .catch(e => {
+                                            console.log(e);
+                                        });
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <FontAwesome name="photo" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Select From Gallery</Text>
                                 </View>
-                                <Text style={styles.actionButtonLabel}>Select From Gallery</Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                ImageCropPicker.openCamera({
-                                    width: 800,
-                                    height: 800,
-                                    cropping: true,
-                                })
-                                    .then(image => {
-                                        businessLogoActionSheet.current.snapTo(0);
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    ImageCropPicker.openCamera({
+                                        width: 400,
+                                        height: 400,
+                                        cropping: true,
                                     })
-                                    .catch(e => {
-                                        console.log(e);
-                                    });
-                            }}>
-                            <View style={styles.actionButton}>
-                                <View
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                        borderRadius: 25,
-                                        overflow: 'hidden',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        backgroundColor: CustomColors.GRAY_LIGHT,
-                                    }}>
-                                    <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
+                                        .then(image => {
+                                            businessLogoActionSheet.current.snapTo(0);
+                                            setIsBusinessLogoLoading(true);
+                                            // Upload businessLogo Image
+                                            var coverImageUploadPromise = ProviderService.uploadBusinessLogoToStorage(
+                                                auth().currentUser.uid,
+                                                image.path,
+                                                image.mime,
+                                            );
+
+                                            coverImageUploadPromise
+                                                .then(businessLogoUrl => {
+                                                    ProviderService.updateProviderData({
+                                                        businessLogoUrl: businessLogoUrl,
+                                                    })
+                                                        .then(() => {
+                                                            ProviderService.fetchProviderDataToRedux();
+                                                        })
+                                                        .catch(error => {
+                                                            console.log('Firebase update error.');
+                                                        });
+                                                })
+                                                .catch(error => {
+                                                    showMessage({
+                                                        message: 'Image upload failed. Please try again later.',
+                                                        type: 'info',
+                                                        position: 'center',
+                                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                        color: 'white', // text color
+                                                        titleStyle: {marginTop: 5},
+                                                        hideOnPress: true,
+                                                        autoHide: true,
+                                                        duration: 1000,
+                                                    });
+                                                });
+                                        })
+                                        .catch(e => {
+                                            console.log(e);
+                                        });
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Snap Business Profile from camera</Text>
                                 </View>
-                                <Text style={styles.actionButtonLabel}>Snap Business Profile from camera</Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                businessLogoActionSheet.current.snapTo(0);
-                            }}>
-                            <View style={styles.actionButton}>
-                                <View
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                        borderRadius: 25,
-                                        overflow: 'hidden',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        backgroundColor: CustomColors.GRAY_LIGHT,
-                                    }}>
-                                    <FontAwesome name="file-image-o" size={24} color={CustomColors.GRAY_DARK} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    businessLogoActionSheet.current.snapTo(0);
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <FontAwesome name="file-image-o" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Use default image</Text>
                                 </View>
-                                <Text style={styles.actionButtonLabel}>Use default image</Text>
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                }
-            />
+                            </TouchableOpacity>
+                        </View>
+                    }
+                />
+            </Portal>
+            <Portal>
+                <BottomSheet
+                    ref={serviceProviderProfileActionSheet}
+                    bottomSheerColor="#FFFFFF"
+                    // ref="BottomSheet"
+                    initialPosition={0}
+                    snapPoints={[0, 260]}
+                    isBackDrop={true}
+                    isBackDropDismissByPress={true}
+                    isRoundBorderWithTipHeader={true}
+                    // backDropColor="red"
+                    // isModal
+                    // containerStyle={{backgroundColor:"red"}}
+                    // tipStyle={{backgroundColor:"red"}}
+                    // headerStyle={{backgroundColor:"red"}}
+                    // bodyStyle={{backgroundColor:"red",flex:1}}
+                    body={
+                        <View style={{paddingVertical: 16}}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <AntDesignIcons name="form" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>My Form Setup</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <AntDesignIcons name="addfile" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Add Post</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    businessLogoActionSheet.current.snapTo(0);
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <MaterialIcons name="logout" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Logout</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    }
+                />
+            </Portal>
         </View>
     );
 };
@@ -477,13 +726,19 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     coverImage: {
+        width: '100%',
         height: undefined,
         aspectRatio: 3.5 / 2,
+        backgroundColor: 'white',
+        position: 'absolute',
+        top: 0,
+        left: 0,
     },
     businessProfileImage: {
         width: '100%',
         height: undefined,
         aspectRatio: 1,
+        marginTop: -175,
     },
     businessProfileImageWrapper: {
         width: 180,

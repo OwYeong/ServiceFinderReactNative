@@ -12,6 +12,7 @@
     "flow-stop": "flow stop"
   },
   "dependencies": {
+    "@gorhom/bottom-sheet": "^4.0.3",
     "@gorhom/portal": "^1.0.8",
     "@react-native-community/clipboard": "^1.5.1",
     "@react-native-firebase/app": "^12.4.0",

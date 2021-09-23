@@ -102,7 +102,7 @@ const ProviderService = {
                 });
         });
     },
-    updateProviderData: (data, documentId = auth().currentUser.uid) => {
+    setProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
             const serviceProvidersCollection = firestore().collection('serviceProviders');
 
@@ -112,7 +112,25 @@ const ProviderService = {
                     ...data,
                 })
                 .then(() => {
-                    resolve('Service Provider data successfully upadated!');
+                    resolve('Service Provider data successfully updated!');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
+    updateProviderData: (data, documentId = auth().currentUser.uid) => {
+        return new Promise((resolve, reject) => {
+            const serviceProvidersCollection = firestore().collection('serviceProviders');
+
+            serviceProvidersCollection
+                .doc(documentId)
+                .update({
+                    ...data,
+                })
+                .then(() => {
+                    resolve('Service Provider data successfully updated!');
                 })
                 .catch(err => {
                     console.log(err);
@@ -159,9 +177,9 @@ const ProviderService = {
             var businessLogoImageReference = null;
 
             if (mimeType == 'image/jpeg') {
-                businessLogoImageReference = storage().ref(`userData/${userId}/coverImage.png`);
+                businessLogoImageReference = storage().ref(`userData/${userId}/businessLogo.png`);
             } else {
-                businessLogoImageReference = storage().ref(`userData/${userId}/coverImage.jpg`);
+                businessLogoImageReference = storage().ref(`userData/${userId}/businessLogo.jpg`);
             }
 
             businessLogoImageReference

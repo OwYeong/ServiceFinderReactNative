@@ -24,7 +24,7 @@ const promptForBusinessProfileSetupComponent = () => {
 
     return (
         <View style={{backgroundColor: 'white'}}>
-            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent/>
+            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}} forceInset={{ top: 'always' }}>
                 <View style={styles.bigContainer}>
                     <View

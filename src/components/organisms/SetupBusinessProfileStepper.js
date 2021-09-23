@@ -549,7 +549,7 @@ const SetupBusinessProfileStepper = () => {
                     };
                 }
 
-                ProviderService.updateProviderData(providerData)
+                ProviderService.setProviderData(providerData)
                     .then(data => {
                         console.log('updating business Profile setup status');
                         UserService.updateIsBusinessProfileSetupStatus(auth().currentUser.uid, true)
@@ -591,7 +591,7 @@ const SetupBusinessProfileStepper = () => {
                         withAdditionalForm: false,
                     };
                 }
-                ProviderService.updateProviderData(providerData)
+                ProviderService.setProviderData(providerData)
                     .then(data => {
                         console.log('updating business Profile setup status');
                         UserService.updateIsBusinessProfileSetupStatus(auth().currentUser.uid, true)
