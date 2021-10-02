@@ -68,6 +68,7 @@ const ProviderProfilePage = () => {
             // <PhotoListingComponent dataList={photosList} />
         });
     }, []);
+    
     useFocusEffect(
         useCallback(() => {
             ProviderService.getAllPost().then(data => {

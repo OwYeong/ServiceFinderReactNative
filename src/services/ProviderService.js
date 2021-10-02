@@ -70,7 +70,8 @@ const ProviderService = {
             let popularService = firestore().collection('posts');
 
             popularService
-                .where('userId', "==", userId)
+                .where('userId', '==', userId)
+                .orderBy('postedDateTime', 'desc')
                 .get()
                 .then(querySnapshot => {
                     if (querySnapshot.size > 0) {
@@ -237,34 +238,94 @@ const ProviderService = {
                 });
         });
     },
-    createPost: (data, userId = auth().currentUser.uid)=>{
+    getPost: (documentId) => {
+        return new Promise((resolve, reject) => {
+            let postCollections = firestore().collection('posts');
+
+            postCollections
+                .doc(documentId)
+                .get()
+                .then(documentSnapshot => {
+                    if (documentSnapshot.exists) {
+                        let data = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                        };
+
+                        resolve(data);
+                    } else {
+                        reject('Document does not exist');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getPost\n');
+                    reject(error);
+                });
+        });
+    },
+    createPost: (data, userId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
             const postsCollection = firestore().collection('posts');
             const newDocumentId = postsCollection.doc().id;
 
             const {postImage, ...othersData} = data;
 
-            ProviderService.uploadPostImageToStorage(userId, newDocumentId, postImage.path, postImage.mime).then(postImageUrl=>{
-                postsCollection
-                .doc(newDocumentId)
-                .set({
-                    ...othersData,
-                    postedDateTime: firebase.firestore.FieldValue.serverTimestamp(),
-                    userId: userId, 
-                    imageUrl: postImageUrl
+            ProviderService.uploadPostImageToStorage(userId, newDocumentId, postImage.path, postImage.mime)
+                .then(postImageUrl => {
+                    postsCollection
+                        .doc(newDocumentId)
+                        .set({
+                            ...othersData,
+                            postedDateTime: firebase.firestore.FieldValue.serverTimestamp(),
+                            userId: userId,
+                            imageUrl: postImageUrl,
+                        })
+                        .then(() => {
+                            resolve('Successfully created a post updated!');
+                        })
+                        .catch(err => {
+                            console.log(err);
+                            reject('Some error occur');
+                        });
+                })
+                .catch(error => {
+                    reject('error occurs');
+                    console.log('error occure when createing post');
+                });
+        });
+    },
+    updatePost: (data, documentId) => {
+        return new Promise((resolve, reject) => {
+            const postsCollection = firestore().collection('posts');
+
+            postsCollection
+                .doc(documentId)
+                .update({
+                    ...data,
                 })
                 .then(() => {
-                    resolve('Successfully created a post updated!');
+                    resolve('post data successfully updated!');
                 })
                 .catch(err => {
                     console.log(err);
                     reject('Some error occur');
                 });
-            }).catch(error=>{
-                reject('error occurs')
-                console.log('error occure when createing post')
-            })
+        });
+    },
+    deletePost: (documentId) => {
+        return new Promise((resolve, reject) => {
+            const postsCollection = firestore().collection('posts');
             
+            postsCollection
+                .doc(documentId)
+                .delete()
+                .then(() => {
+                    resolve('Successfully deleted a post!');
+                })
+                .catch(error => {
+                    reject('error occurs');
+                    console.log('some error occur when deleting post');
+                });
         });
     },
     fetchProviderDataToRedux: () => {

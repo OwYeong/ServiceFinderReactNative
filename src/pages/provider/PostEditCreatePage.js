@@ -42,19 +42,20 @@ const PostEditCreatePage = ({route}) => {
                                 {!!postData ? 'Edit Post' : 'Create Post'}
                             </Text>
                         </View>
-                        <TouchableHighlight
-                            style={{marginTop: 16, borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: 'hidden'}}
-                            onPress={() => {
-                                coverImageActionSheet.current?.snapTo(1);
-                            }}
-                            activeOpacity={0.6}
-                            underlayColor="#FFFFFF">
+                        <View
+                            style={{
+                                marginTop: 16,
+                                borderTopLeftRadius: 8,
+                                borderTopRightRadius: 8,
+                                overflow: 'hidden',
+                                elevation: 1,
+                            }}s>
                             <Image
                                 style={[styles.postImage]}
                                 source={!!postData ? {uri: postData?.imageUrl} : {uri: chosenImage.path}}
                                 resizeMode="cover"
                             />
-                        </TouchableHighlight>
+                        </View>
                         <TextInput
                             style={styles.inputStyle}
                             value={postTitle}
@@ -80,30 +81,56 @@ const PostEditCreatePage = ({route}) => {
                             color={CustomColors.PRIMARY_BLUE}
                             dark
                             onPress={() => {
-                                ProviderService.createPost({
-                                    postTitle: postTitle,
-                                    postImage: {
-                                        path: chosenImage.path,
-                                        mime: chosenImage.mime,
-                                    },
-                                })
-                                    .then(() => {
-                                        navigation.goBack();
-                                    })
-                                    .catch(error => {
-                                        showMessage({
-                                            message: 'Some Error Occure. Please Try again',
-                                            type: 'info',
-                                            position: 'center',
-                                            titleStyle: {marginTop: 5},
-                                            backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                            color: 'white', // text color
-                                            hideOnPress: true,
-                                            autoHide: true,
-                                            duration: 1000,
+                                if (!!postData) {
+                                    ProviderService.updatePost(
+                                        {
+                                            postTitle: postTitle,
+                                        },
+                                        postData.id,
+                                    )
+                                        .then(() => {
+                                            navigation.goBack();
+                                        })
+                                        .catch(error => {
+                                            showMessage({
+                                                message: 'Some Error Occur. Please Try again',
+                                                type: 'info',
+                                                position: 'center',
+                                                titleStyle: {marginTop: 5},
+                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                color: 'white', // text color
+                                                hideOnPress: true,
+                                                autoHide: true,
+                                                duration: 1000,
+                                            });
+                                            console.log('create post error');
                                         });
-                                        console.log('create post error');
-                                    });
+                                } else {
+                                    ProviderService.createPost({
+                                        postTitle: postTitle,
+                                        postImage: {
+                                            path: chosenImage.path,
+                                            mime: chosenImage.mime,
+                                        },
+                                    })
+                                        .then(() => {
+                                            navigation.goBack();
+                                        })
+                                        .catch(error => {
+                                            showMessage({
+                                                message: 'Some Error Occure. Please Try again',
+                                                type: 'info',
+                                                position: 'center',
+                                                titleStyle: {marginTop: 5},
+                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                color: 'white', // text color
+                                                hideOnPress: true,
+                                                autoHide: true,
+                                                duration: 1000,
+                                            });
+                                            console.log('create post error');
+                                        });
+                                }
                             }}>
                             {!!postData ? 'Edit Post' : 'Create Post'}
                         </Button>
@@ -121,7 +148,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         flex: 1,
-        backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
+        backgroundColor: CustomColors.WHITE,
         padding: 16,
     },
     inputStyle: {

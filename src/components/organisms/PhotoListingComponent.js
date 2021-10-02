@@ -1,15 +1,27 @@
+import { useNavigation } from '@react-navigation/core';
 import React, {useEffect, useState} from 'react';
-import {Dimensions, FlatList, Image, YellowBox, ScrollView, StyleSheet, Text, TouchableHighlight, View, LogBox} from 'react-native';
+import {
+    Dimensions,
+    FlatList,
+    Image,
+    YellowBox,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableHighlight,
+    View,
+    LogBox,
+} from 'react-native';
 
 const PhotoListingComponent = ({dataList, isScrollEnabled = true}) => {
-    useEffect(()=>{
-
-
+    const navigation = useNavigation();
+    useEffect(() => {
         LogBox.ignoreLogs([
-            "VirtualizedLists should never be nested", 
+            'VirtualizedLists should never be nested',
             // name of the error/warning here, or a regex here
-          ]);
-    },[])
+        ]);
+    }, []);
+
     return (
         <View>
             <FlatList
@@ -26,7 +38,11 @@ const PhotoListingComponent = ({dataList, isScrollEnabled = true}) => {
                             borderColor: 'white',
                         }}
                         onPress={() => {
-                            // coverImageActionSheet.current.snapTo(1);
+                            navigation.navigate('PostView', {
+                                postData: {
+                                    ...item,
+                                },
+                            });
                         }}
                         activeOpacity={0.6}
                         underlayColor="#000000">
