@@ -23,6 +23,7 @@ import {TabView, TabBar, SceneMap, PagerPan} from 'react-native-tab-view';
 import ProviderSchedulePage from './ProviderSchedulePage';
 import PhotoListingComponent from '@organisms/PhotoListingComponent';
 import ProviderService from '@services/ProviderService';
+import ReviewService from '@services/ReviewService';
 
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 // import BottomSheet, {BottomSheetBackdrop, useBottomSheetTimingConfigs, BottomSheetView} from '@gorhom/bottom-sheet';
@@ -35,6 +36,7 @@ import {showMessage} from 'react-native-flash-message';
 import auth from '@react-native-firebase/auth';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { useFocusEffect, useNavigation } from '@react-navigation/core';
+import ReviewDisplayComponent from '@organisms/ReviewDisplayComponent';
 
 const ProviderProfilePage = () => {
     const providerInfo = useSelector(state => state.loginState.providerInfo);
@@ -53,6 +55,7 @@ const ProviderProfilePage = () => {
     const [isPhotoListingScrollable, setIsPhotoListingScrollable] = useState(false);
 
     const [photosList, setPhotosList] = useState([]);
+    const [reviewList, setReviewList] = useState([]);
 
     const coverImageActionSheet = useRef(null);
     const businessLogoActionSheet = useRef(null);
@@ -66,7 +69,16 @@ const ProviderProfilePage = () => {
             setPhotosList(data.data);
             console.log(data.data);
             // <PhotoListingComponent dataList={photosList} />
-        });
+        }).catch(err=>{
+            console.log(err);
+        })
+        ReviewService.getAllReview().then(data => {
+            setReviewList(data.data);
+            console.log(data.data);
+            // <PhotoListingComponent dataList={photosList} />
+        }).catch(err=>{
+            console.log(err);
+        })
     }, []);
     
     useFocusEffect(
@@ -262,7 +274,7 @@ const ProviderProfilePage = () => {
                                             />
                                         );
                                     case 'reviews':
-                                        return <ProviderSchedulePage />;
+                                        return <ReviewDisplayComponent dataList={reviewList} averageRating={providerInfo?.averageRatings} starStats={providerInfo?.starStats}/>;
                                     default:
                                         return null;
                                 }
