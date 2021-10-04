@@ -45,6 +45,7 @@ import {getBoundsOfDistance, isPointInPolygon} from 'geolib';
 import LoadingModal from '@organisms/LoadingModal';
 import FormIllustrationSvg from '@assets/images/form-illustration';
 import {Constants} from '~constants';
+import {cloneDeep} from 'lodash';
 
 const FormEditPage = () => {
     const navigation = useNavigation();
@@ -57,7 +58,7 @@ const FormEditPage = () => {
 
     const [userInput, setUserInput] = useState({
         additionalFormSetup: providerInfo?.withAdditionalForm
-            ? [...providerInfo?.additionalForm]
+            ? cloneDeep(providerInfo?.additionalForm)
             : [
                   {
                       id: 1,
@@ -69,31 +70,25 @@ const FormEditPage = () => {
     });
 
     const [showAdditionalInputFormSetup, setShowAdditionalInputFormSetup] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
 
-    const editForm = withAdditionalForm => {
-        setLoadingModal({isVisible: true, modalTitle: 'Finishing Setup'});
+    const editOrCreateForm = () => {
+        setLoadingModal({isVisible: true, modalTitle: 'Editing form'});
 
         var providerData = {};
 
-        if (withAdditionalForm) {
-            providerData = {
-                ...providerData,
-                withAdditionalForm: true,
-                additionalForm: [...userInput.additionalFormSetup],
-            };
-        } else {
-            providerData = {
-                ...providerData,
-                withAdditionalForm: false,
-            };
-        }
+        providerData = {
+            ...providerData,
+            withAdditionalForm: true,
+            additionalForm: [...userInput.additionalFormSetup],
+        };
 
         ProviderService.updateProviderData(providerData)
             .then(data => {
-                console.log('updating business Profile setup status');
                 ProviderService.fetchProviderDataToRedux()
                     .then(data => {
-                        navigation.goBack();
+                        setLoadingModal({isVisible: false, modalTitle: 'Editing form'});
+                        setIsEditMode(false);
                     })
                     .catch(err => {});
             })
@@ -131,7 +126,7 @@ const FormEditPage = () => {
                             You could setup your questionnaire here.{' '}
                         </Text>
 
-                        {!providerInfo?.withAdditionalForm ? (
+                        {!showAdditionalInputFormSetup && !providerInfo?.withAdditionalForm ? (
                             <View style={{marginTop: 100, justifyContent: 'center', alignItems: 'center'}}>
                                 <View style={styles.formIllustrationWrapper}>
                                     <FormIllustrationSvg fill={'white'} />
@@ -147,7 +142,22 @@ const FormEditPage = () => {
                                     mode="contained"
                                     color={CustomColors.PRIMARY_BLUE}
                                     dark
-                                    style={{marginTop: 8, borderRadius: 8}}>
+                                    style={{marginTop: 8, borderRadius: 8}}
+                                    onPress={() => {
+                                        setUserInput({
+                                            additionalFormSetup: [
+                                                {
+                                                    id: 1,
+                                                    questionName: 'Untitled Question',
+                                                    questionType: Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER,
+                                                    options: [],
+                                                },
+                                            ],
+                                        });
+                                        setShowAdditionalInputFormSetup(true);
+
+                                        setIsEditMode(true);
+                                    }}>
                                     Setup Now
                                 </Button>
                             </View>
@@ -165,107 +175,144 @@ const FormEditPage = () => {
                                     <View style={{flex: 1}}>
                                         <Text style={styles.subSectionTitle}>Form Setup</Text>
                                     </View>
-                                    <View style={{flexDirection: 'row'}}>
-                                        <TouchableRipple
-                                            style={{
-                                                width: 30,
-                                                height: 30,
-                                                borderRadius: 18,
-                                                marginBottom: 5,
-                                                marginRight:8
-                                            }}
-                                            borderless
-                                            rippleColor="rgba(0, 0, 0, .32)"
+                                    {!isEditMode ? (
+                                        <Button
+                                            mode="text"
                                             onPress={() => {
-                                                Alert.alert("Remove This Form", "Are you sure you want to remove this form? This action cannot be reverted.", [
-                                                    { text: "cancel" },
-                                                    {
-                                                        text: "remove form",
-                                                        onPress:()=>{
-  
-                                                        },
-                                                        style: 'destructive'
-                                                      }
-                                                  ]);
+                                                setIsEditMode(true);
                                             }}>
-                                            <View
+                                            Edit Form
+                                        </Button>
+                                    ) : (
+                                        <View style={{flexDirection: 'row'}}>
+                                            {providerInfo?.withAdditionalForm ? (
+                                                <TouchableRipple
+                                                    style={{
+                                                        width: 30,
+                                                        height: 30,
+                                                        borderRadius: 18,
+                                                        marginBottom: 5,
+                                                        marginRight: 8,
+                                                    }}
+                                                    borderless
+                                                    rippleColor="rgba(0, 0, 0, .32)"
+                                                    onPress={() => {
+                                                        Alert.alert(
+                                                            'Remove This Form',
+                                                            'Are you sure you want to remove this form? This action cannot be reverted.',
+                                                            [
+                                                                {text: 'cancel'},
+                                                                {
+                                                                    text: 'remove form',
+                                                                    onPress: () => {
+                                                                        var providerData = {
+                                                                            ...providerData,
+                                                                            withAdditionalForm: false,
+                                                                            additionalForm: [],
+                                                                        };
+
+                                                                        ProviderService.updateProviderData(providerData)
+                                                                            .then(data => {
+                                                                                ProviderService.fetchProviderDataToRedux()
+                                                                                    .then(data => {})
+                                                                                    .catch(err => {});
+                                                                            })
+                                                                            .catch(err => {});
+
+                                                                        setShowAdditionalInputFormSetup(false);
+                                                                    },
+                                                                    style: 'destructive',
+                                                                },
+                                                            ],
+                                                        );
+                                                    }}>
+                                                    <View
+                                                        style={{
+                                                            width: 30,
+                                                            height: 30,
+                                                            borderWidth: 2,
+                                                            borderColor: CustomColors.GRAY,
+                                                            borderRadius: 18,
+                                                            overflow: 'hidden',
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                        }}>
+                                                        <MaterialIcon
+                                                            name="delete-outline"
+                                                            size={20}
+                                                            color={CustomColors.GRAY}
+                                                        />
+                                                    </View>
+                                                </TouchableRipple>
+                                            ) : null}
+                                            <TouchableRipple
                                                 style={{
                                                     width: 30,
                                                     height: 30,
-                                                    borderWidth: 2,
-                                                    borderColor: CustomColors.GRAY,
                                                     borderRadius: 18,
-                                                    overflow: 'hidden',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                }}>
-                                                <MaterialIcon name="delete-outline" size={20} color={CustomColors.GRAY} />
-                                            </View>
-                                        </TouchableRipple>
-                                        <TouchableRipple
-                                            style={{
-                                                width: 30,
-                                                height: 30,
-                                                borderRadius: 18,
-                                                marginBottom: 5,
-                                            }}
-                                            borderless
-                                            rippleColor="rgba(0, 0, 0, .32)"
-                                            onPress={() => {
-                                                const newUserInput = {...userInput};
+                                                    marginBottom: 5,
+                                                }}
+                                                borderless
+                                                rippleColor="rgba(0, 0, 0, .32)"
+                                                onPress={() => {
+                                                    const newUserInput = {...userInput};
 
-                                                newUserInput.additionalFormSetup.push({
-                                                    id:
-                                                        userInput.additionalFormSetup[
-                                                            userInput.additionalFormSetup.length - 1
-                                                        ].id + 1,
-                                                    questionName: 'Untitled Question',
-                                                    questionType: Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER,
-                                                    options: [],
-                                                });
+                                                    newUserInput.additionalFormSetup.push({
+                                                        id:
+                                                            userInput.additionalFormSetup[
+                                                                userInput.additionalFormSetup.length - 1
+                                                            ].id + 1,
+                                                        questionName: 'Untitled Question',
+                                                        questionType: Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER,
+                                                        options: [],
+                                                    });
 
-                                                setUserInput(newUserInput);
-                                            }}>
-                                            <View
-                                                style={{
-                                                    width: 30,
-                                                    height: 30,
-                                                    borderWidth: 2,
-                                                    borderColor: CustomColors.GRAY,
-                                                    borderRadius: 18,
-                                                    overflow: 'hidden',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
+                                                    setUserInput(newUserInput);
                                                 }}>
-                                                <MaterialIcon name="add" size={20} color={CustomColors.GRAY} />
-                                            </View>
-                                        </TouchableRipple>
-                                    </View>
+                                                <View
+                                                    style={{
+                                                        width: 30,
+                                                        height: 30,
+                                                        borderWidth: 2,
+                                                        borderColor: CustomColors.GRAY,
+                                                        borderRadius: 18,
+                                                        overflow: 'hidden',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                    }}>
+                                                    <MaterialIcon name="add" size={20} color={CustomColors.GRAY} />
+                                                </View>
+                                            </TouchableRipple>
+                                        </View>
+                                    )}
                                 </View>
 
                                 {userInput.additionalFormSetup.map((currentQuestion, index) => (
                                     <View style={styles.questionSetupWrapper} key={currentQuestion.id}>
                                         <View style={{flexDirection: 'row', justifyContent: 'flex-end'}}>
                                             {userInput.additionalFormSetup.length > 1 ? (
-                                                <Button
-                                                    mode="text"
-                                                    color={CustomColors.GRAY_DARK}
-                                                    style={{
-                                                        fontSize: CustomTypography.FONT_SIZE_12,
-                                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                    }}
-                                                    onPress={() => {
-                                                        const newUserInput = {...userInput};
+                                                isEditMode ? (
+                                                    <Button
+                                                        mode="text"
+                                                        color={CustomColors.GRAY_DARK}
+                                                        style={{
+                                                            fontSize: CustomTypography.FONT_SIZE_12,
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                        }}
+                                                        onPress={() => {
+                                                            const newUserInput = {...userInput};
 
-                                                        newUserInput.additionalFormSetup.splice(index, 1);
+                                                            newUserInput.additionalFormSetup.splice(index, 1);
 
-                                                        setUserInput(newUserInput);
-                                                    }}>
-                                                    REMOVE THIS QUESTION
-                                                </Button>
+                                                            setUserInput(newUserInput);
+                                                        }}>
+                                                        REMOVE THIS QUESTION
+                                                    </Button>
+                                                ) : null
                                             ) : null}
                                         </View>
                                         <TextInput
+                                            disabled={!isEditMode}
                                             mode="outlined"
                                             label="Question"
                                             multiline
@@ -283,6 +330,7 @@ const FormEditPage = () => {
                                             Question Type
                                         </Text>
                                         <RNPickerSelect
+                                            disabled={!isEditMode}
                                             placeholder={{}}
                                             items={[
                                                 {
@@ -324,12 +372,19 @@ const FormEditPage = () => {
                                                     right: 12,
                                                 },
                                             }}
+                                            textInputProps={{
+                                                style: {
+                                                    ...pickerSelectStyles.inputAndroid,
+                                                    color: isEditMode ? CustomColors.GRAY_DARK : 'gray',
+                                                    borderColor: isEditMode ? CustomColors.GRAY_DARK : 'gray',
+                                                },
+                                            }}
                                             useNativeAndroidPickerStyle={false}
                                             Icon={() => (
                                                 <Ionicons
                                                     name="md-chevron-down"
                                                     size={20}
-                                                    fill={CustomColors.GRAY_DARK}
+                                                    color={isEditMode ? CustomColors.GRAY_DARK : 'gray'}
                                                 />
                                             )}
                                             value={currentQuestion.questionType}
@@ -354,6 +409,7 @@ const FormEditPage = () => {
                                                             <RadioButton status={'unchecked'} disabled />
                                                         ) : null}
                                                         <TextInput
+                                                            disabled={!isEditMode}
                                                             mode="flat"
                                                             label=""
                                                             placeholder="Option name"
@@ -391,6 +447,7 @@ const FormEditPage = () => {
                                                         />
                                                         {currentQuestion.options.length > 1 ? (
                                                             <TouchableRipple
+                                                                disabled={!isEditMode}
                                                                 style={{
                                                                     width: 30,
                                                                     height: 30,
@@ -413,7 +470,11 @@ const FormEditPage = () => {
                                                                 <MaterialIcon
                                                                     name="close"
                                                                     size={24}
-                                                                    color={CustomColors.GRAY_DARK}
+                                                                    color={
+                                                                        isEditMode
+                                                                            ? CustomColors.GRAY_DARK
+                                                                            : CustomColors.GRAY
+                                                                    }
                                                                 />
                                                             </TouchableRipple>
                                                         ) : (
@@ -436,6 +497,7 @@ const FormEditPage = () => {
                                                         <RadioButton status={'unchecked'} disabled />
                                                     ) : null}
                                                     <Button
+                                                        disabled={!isEditMode}
                                                         mode="text"
                                                         color={CustomColors.PRIMARY_BLUE}
                                                         uppercase={false}
@@ -474,17 +536,42 @@ const FormEditPage = () => {
                                         )}
                                     </View>
                                 ))}
-                                <Button
-                                    style={styles.actionBtn}
-                                    mode="contained"
-                                    contentStyle={{height: 50}}
-                                    color={CustomColors.PRIMARY_BLUE}
-                                    dark
-                                    onPress={() => {
-                                        finishSetup(true);
-                                    }}>
-                                    {providerInfo?.withAdditionalForm ? 'Edit Form' : 'Finish'}
-                                </Button>
+                                {isEditMode ? (
+                                    <>
+                                        <Button
+                                            style={[styles.actionBtn, {marginTop: 60}]}
+                                            mode="contained"
+                                            contentStyle={{height: 50}}
+                                            color={CustomColors.PRIMARY_BLUE}
+                                            dark
+                                            onPress={() => {
+                                                editOrCreateForm();
+                                            }}>
+                                            {providerInfo?.withAdditionalForm ? 'Edit Form' : 'Finish'}
+                                        </Button>
+                                        <Button
+                                            style={[styles.actionBtn, {marginTop: 0}]}
+                                            mode="contained"
+                                            contentStyle={{height: 50}}
+                                            color={'#b2b2b2'}
+                                            dark
+                                            onPress={() => {
+                                                console.log(providerInfo?.additionalForm);
+
+                                                if (!providerInfo?.withAdditionalForm) {
+                                                    setShowAdditionalInputFormSetup(false);
+                                                }
+
+                                                setUserInput({
+                                                    additionalFormSetup: cloneDeep(providerInfo?.additionalForm),
+                                                });
+
+                                                setIsEditMode(false);
+                                            }}>
+                                            Cancel
+                                        </Button>
+                                    </>
+                                ) : null}
                             </View>
                         ) : null}
                     </View>
