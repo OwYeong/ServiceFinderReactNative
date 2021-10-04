@@ -13,6 +13,7 @@ import PostEditCreatePage from '@pages/provider/PostEditCreatePage';
 import PostViewPage from '@pages/PostViewPage';
 import TestPage from '@pages/TestPage';
 import BusinessProfileEditPage from '@pages/provider/BusinessProfileEditPage';
+import FormEditPage from '@pages/provider/FormEditPage';
 
 const Stack = createStackNavigator();
 
@@ -106,6 +107,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="BusinessProfileEdit"
                                 component={BusinessProfileEditPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="FormEdit"
+                                component={FormEditPage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,

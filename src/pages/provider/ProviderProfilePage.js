@@ -671,7 +671,10 @@ const ProviderProfilePage = () => {
                     // bodyStyle={{backgroundColor:"red",flex:1}}
                     body={
                         <View style={{paddingVertical: 16}}>
-                            <TouchableOpacity onPress={() => {}}>
+                            <TouchableOpacity onPress={() => {
+                                serviceProviderProfileActionSheet.current.snapTo(0);
+                                navigation.navigate("FormEdit")
+                            }}>
                                 <View style={styles.actionButton}>
                                     <View
                                         style={{
@@ -727,7 +730,7 @@ const ProviderProfilePage = () => {
                             <TouchableOpacity
                                 onPress={() => {
                                     UserService.logOut().then(data => {
-                                        businessLogoActionSheet.current.snapTo(0);
+                                        serviceProviderProfileActionSheet.current.snapTo(0);
                                     });
                                 }}>
                                 <View style={styles.actionButton}>
