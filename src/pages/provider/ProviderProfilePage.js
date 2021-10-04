@@ -191,6 +191,9 @@ const ProviderProfilePage = () => {
                             <Text style={styles.serviceType}>
                                 {CommonFunction.getDisplayNameForServiceType(providerInfo?.serviceType)}
                             </Text>
+                            <Text style={styles.pricing}>
+                                Starting from RM{providerInfo?.priceStart} to RM{providerInfo?.priceEnd}
+                            </Text>
                             <View style={styles.actionBtnContainer}>
                                 <Button
                                     style={{
@@ -212,7 +215,9 @@ const ProviderProfilePage = () => {
                                     icon="mode-edit"
                                     mode="contained"
                                     uppercase={false}
-                                    onPress={() => console.log('Pressed')}>
+                                    onPress={() => {
+                                        navigation.navigate('BusinessProfileEdit');
+                                    }}>
                                     Edit Business Profile
                                 </Button>
                                 <IconButton
@@ -803,6 +808,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         textAlign: 'center',
         marginTop: -5,
+    },
+    pricing: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_14,
+        color: CustomColors.GRAY,
+        justifyContent: 'center',
+        textAlign: 'center',
     },
     actionBtnContainer: {
         flexDirection: 'row',

@@ -124,6 +124,7 @@ const ProviderService = {
     },
     updateProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
+            
             const serviceProvidersCollection = firestore().collection('serviceProviders');
 
             serviceProvidersCollection
@@ -132,6 +133,7 @@ const ProviderService = {
                     ...data,
                 })
                 .then(() => {
+                    console.log('Service Provider data successfully updated!')
                     resolve('Service Provider data successfully updated!');
                 })
                 .catch(err => {

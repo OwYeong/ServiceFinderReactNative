@@ -1,0 +1,58 @@
+[
+    {
+        "name": "Singapore",
+        "iso2": "sg",
+        "dialCode": "65",
+        "priority": 0,
+        "areaCodes": null
+    },
+    {
+        "name": "Malaysia",
+        "iso2": "my",
+        "dialCode": "60",
+        "priority": 0,
+        "areaCodes": null
+    },
+    {
+        "name": "Thailand (ไทย)",
+        "iso2": "th",
+        "dialCode": "66",
+        "priority": 0,
+        "areaCodes": null
+    },
+    {
+        "name": "United Kingdom",
+        "iso2": "gb",
+        "dialCode": "44",
+        "priority": 0,
+        "areaCodes": null
+    },
+    {
+        "name": "United States",
+        "iso2": "us",
+        "dialCode": "1",
+        "priority": 0,
+        "areaCodes": null
+    },
+    {
+        "name": "Vietnam (Việt Nam)",
+        "iso2": "vn",
+        "dialCode": "84",
+        "priority": 0,
+        "areaCodes": null
+    },
+    {
+        "name": "India (भारत)",
+        "iso2": "in",
+        "dialCode": "91",
+        "priority": 0,
+        "areaCodes": null
+    },
+    {
+        "name": "Indonesia",
+        "iso2": "id",
+        "dialCode": "62",
+        "priority": 0,
+        "areaCodes": null
+    }
+]
