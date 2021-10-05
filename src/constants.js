@@ -6,7 +6,7 @@ export const Constants = {
     //AccountType
     ACCOUNT_TYPE: {
         CONSUMER: 'consumer',
-        VENDOR: 'vendor'
+        VENDOR: 'vendor',
     },
     //Service Type,
     CAR_WASH_SERVICE: 'carWash',
@@ -37,6 +37,16 @@ export const Constants = {
         TEXT_ANSWER: 'textAnswer',
         MULTIPLE_CHOICE: 'multipleChoice',
         CHECK_BOX: 'checkBox',
-    }
-
+    },
+    //Service Status
+    REQUEST_STATUS: {
+        ACCEPTED: 'accepted',
+        REJECTED: 'rejected',
+        PENDING: 'pending',
+    },
+    SERVICE_STATUS: {
+        WAITING_FOR_SERVICE: 'waitingForService',
+        SERVICE_IN_PROGRESS: 'serviceInProgress',
+        SERVICE_COMPLETED: 'serviceCompleted',
+    },
 };

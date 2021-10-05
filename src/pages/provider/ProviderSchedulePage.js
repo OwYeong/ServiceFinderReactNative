@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Button, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {Avatar, IconButton, TouchableRipple} from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -8,9 +8,14 @@ import {ExpandableCalendar, Timeline, CalendarProvider} from 'react-native-calen
 import XDate from 'xdate';
 import {CustomColors, CustomTypography} from '@styles';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import RequestService from '@services/RequestService';
+import { Constants } from '~constants';
+
+import moment from 'moment';
 
 const EVENTS = [
     {
+        id: 'zzz',
         start: '2021-09-06 01:30:00',
         end: '2021-09-06 02:30:00',
         title: 'Dr. Mariana Joseph',
@@ -18,39 +23,28 @@ const EVENTS = [
         color: '#e6add8',
     },
     {
+        id: 'zzz',
         start: '2021-09-07 00:30:00',
         end: '2021-09-07 01:30:00',
         title: 'Visit Grand Mother',
         summary: 'Visit Grand Mother and bring some fruits.',
-        color: '#ade6d8',
+        color: CustomColors.GRAY_LIGHT,
     },
     {
+        id: 'zzz',
         start: '2021-09-07 00:30:00',
         end: '2021-09-07 01:30:00',
         title: 'haha',
         summary: 'testing.',
-        color: '#ade6d8',
+        color: '#95F985',
     },
     {
+        id: 'zzz',
         start: '2021-09-07 00:30:00',
         end: '2021-09-07 01:30:00',
         title: 'haha',
         summary: 'testing.',
-        color: '#ade6d8',
-    },
-    {
-        start: '2021-09-07 00:30:00',
-        end: '2021-09-07 01:30:00',
-        title: 'haha',
-        summary: 'testing.',
-        color: '#ade6d8',
-    },
-    {
-        start: '2021-09-07 02:30:00',
-        end: '2021-09-07 03:20:00',
-        title: 'Meeting with Prof. Behjet Zuhaira',
-        summary: 'Meeting with Prof. Behjet at 130 in her office.',
-        color: '#e6add8',
+        color: CustomColors.PRIMARY_LIGHT_BLUE,
     },
     {
         start: '2021-09-07 04:10:00',
@@ -106,6 +100,9 @@ const EVENTS = [
 
 const ProviderSchedulePage = () => {
     const [currentDate, setCurrentDate] = useState('2021-09-07');
+    const [allProviderRequest, setAllProviderRequest] = useState([]);
+    const [events, setEvents] = useState([]);
+
 
     const onDateChanged = date => {
         // console.warn('TimelineCalendarScreen onDateChanged: ', date, updateSource);
@@ -122,6 +119,47 @@ const ProviderSchedulePage = () => {
             a.getDate() === b.getDate()
         );
     };
+
+    useEffect(() => {
+        var unsubcriber = RequestService.getAllRequestByProvider(setAllProviderRequest);
+
+        return () => {
+            unsubcriber();
+        };
+    }, []);
+
+    useEffect(()=>{
+        console.log(allProviderRequest)
+        setEvents(allProviderRequest.map(request=>{
+            var event =  {
+                requestId: request.id,
+                start: moment(new Date(request.requestTimeSlot.start)).format('YYYY-MM-dd HH:mm:ss'),
+                end: moment(new Date(request.requestTimeSlot.end)).format('YYYY-MM-dd HH:mm:ss'),
+                title: 'Appointment With '+ request.customerInfo.firstName + ' ' + request.customerInfo.lastName,
+                summary: request.requestLocation.addressFullName,
+                color: CustomColors.GRAY_LIGHT,
+            };
+
+            if(request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS){
+                event = {
+                    ...event,
+                    color: CustomColors.PRIMARY_LIGHT_BLUE,
+                }
+            }
+
+            if(request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED){
+                event = {
+                    ...event,
+                    color:  '#95F985',
+                }
+            }
+
+            return event;
+
+
+        }))
+
+    },[allProviderRequest])
 
     return (
         <View style={{backgroundColor: 'white'}}>
@@ -164,13 +202,13 @@ const ProviderSchedulePage = () => {
                                 styles={{
                                     arrowImage: {tintColor: 'black'},
                                 }}
-                                renderArrow={direction => (
+                                renderArrow={direction =>
                                     direction == 'right' ? (
                                         <MaterialIcons name="chevron-right" size={24} color={CustomColors.GRAY_DARK} />
                                     ) : (
-                                        <MaterialIcons name="chevron-left" size={24} color={CustomColors.GRAY_DARK}  />
+                                        <MaterialIcons name="chevron-left" size={24} color={CustomColors.GRAY_DARK} />
                                     )
-                                )}
+                                }
                                 firstDay={1}
                                 markedDates={{
                                     '2021-09-06': {marked: true},
@@ -182,8 +220,10 @@ const ProviderSchedulePage = () => {
                         </View>
                         <Timeline
                             format24h={false}
-                            eventTapped={e => e}
-                            events={EVENTS.filter(event => sameDate(new XDate(event.start), new XDate(currentDate)))}
+                            eventTapped={e => {
+                                console.log(e);
+                            }}
+                            events={events.filter(event => sameDate(new XDate(event.start), new XDate(currentDate)))}
                             styles={{
                                 eventTitle: {
                                     fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
