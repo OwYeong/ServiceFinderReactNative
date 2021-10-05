@@ -25,6 +25,7 @@ module.exports = {
                 },
                 extensions: ['.ios.js', '.android.js', '.js', '.jsx', '.json', '.tsx', '.ts', '.native.js', '.svg'],
             },
+            
         ],
         [
             'module:react-native-dotenv',
@@ -34,5 +35,6 @@ module.exports = {
                 'allowUndefined': true
             },
         ],
+        'react-native-reanimated/plugin',
     ],
 };

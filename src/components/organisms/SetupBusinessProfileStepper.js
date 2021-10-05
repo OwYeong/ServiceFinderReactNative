@@ -511,8 +511,15 @@ const SetupBusinessProfileStepper = () => {
                     },
                     totalEarnings: 0,
                     averageRatings: 0,
-                    jobsCompleted: 0, 
+                    jobsCompleted: 0,
                     serviceCoverage: {...userInput.serviceCoverage},
+                    starStats: {
+                        numOf1Star: 0,
+                        numOf2Star: 0,
+                        numOf3Star: 0,
+                        numOf4Star: 0,
+                        numOf5Star: 0,
+                    },
                 };
 
                 if (isUserSetupCoverImage) {
@@ -549,7 +556,7 @@ const SetupBusinessProfileStepper = () => {
                     };
                 }
 
-                ProviderService.updateProviderData(providerData)
+                ProviderService.setProviderData(providerData)
                     .then(data => {
                         console.log('updating business Profile setup status');
                         UserService.updateIsBusinessProfileSetupStatus(auth().currentUser.uid, true)
@@ -591,7 +598,7 @@ const SetupBusinessProfileStepper = () => {
                         withAdditionalForm: false,
                     };
                 }
-                ProviderService.updateProviderData(providerData)
+                ProviderService.setProviderData(providerData)
                     .then(data => {
                         console.log('updating business Profile setup status');
                         UserService.updateIsBusinessProfileSetupStatus(auth().currentUser.uid, true)

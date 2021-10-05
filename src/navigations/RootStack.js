@@ -9,6 +9,11 @@ import {Constants} from '~constants';
 import ProviderStack from './ProviderStack';
 import IntroductionSliderPage from '@pages/IntroductionSliderPage';
 import SetupBusinessProfileWalkThrough from '@pages/provider/SetupBusinessProfileWalkthrough';
+import PostEditCreatePage from '@pages/provider/PostEditCreatePage';
+import PostViewPage from '@pages/PostViewPage';
+import TestPage from '@pages/TestPage';
+import BusinessProfileEditPage from '@pages/provider/BusinessProfileEditPage';
+import FormEditPage from '@pages/provider/FormEditPage';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +22,7 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
 
     return (
         <Stack.Navigator>
+            {/* <Stack.Screen name="test" component={TestPage} options={{headerShown: false}} /> */}
             {isLoading ? (
                 <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
             ) : null}
@@ -77,6 +83,38 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="Provider"
                                 component={ProviderStack}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="PostEditCreate"
+                                component={PostEditCreatePage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="PostView"
+                                component={PostViewPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="BusinessProfileEdit"
+                                component={BusinessProfileEditPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="FormEdit"
+                                component={FormEditPage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,
