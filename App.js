@@ -52,7 +52,7 @@ const theme = {
         accent: '#f1c40f',
         background: CustomColors.WHITE,
         surface: CustomColors.WHITE,
-        backdrop: 'white',
+        backdrop: 'rgba(0,0,0,0.5)',
         error: 'red',
     },
 };

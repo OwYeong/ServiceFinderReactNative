@@ -14,6 +14,7 @@ import PostViewPage from '@pages/PostViewPage';
 import TestPage from '@pages/TestPage';
 import BusinessProfileEditPage from '@pages/provider/BusinessProfileEditPage';
 import FormEditPage from '@pages/provider/FormEditPage';
+import JobRequestConfirmationPage from '@pages/provider/JobRequestConfirmationPage';
 
 const Stack = createStackNavigator();
 
@@ -115,6 +116,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="FormEdit"
                                 component={FormEditPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="JobRequestConfirmation"
+                                component={JobRequestConfirmationPage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,

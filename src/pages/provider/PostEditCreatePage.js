@@ -49,7 +49,7 @@ const PostEditCreatePage = ({route}) => {
                                 borderTopRightRadius: 8,
                                 overflow: 'hidden',
                                 elevation: 1,
-                            }}s>
+                            }}>
                             <Image
                                 style={[styles.postImage]}
                                 source={!!postData ? {uri: postData?.imageUrl} : {uri: chosenImage.path}}

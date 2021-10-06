@@ -9,9 +9,10 @@ import XDate from 'xdate';
 import {CustomColors, CustomTypography} from '@styles';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import RequestService from '@services/RequestService';
-import { Constants } from '~constants';
+import {Constants} from '~constants';
 
 import moment from 'moment';
+import { useNavigation } from '@react-navigation/core';
 
 const EVENTS = [
     {
@@ -102,7 +103,8 @@ const ProviderSchedulePage = () => {
     const [currentDate, setCurrentDate] = useState('2021-09-07');
     const [allProviderRequest, setAllProviderRequest] = useState([]);
     const [events, setEvents] = useState([]);
-
+    const [markedDates, setMarkedDates] = useState({});
+    const navigation = useNavigation();
 
     const onDateChanged = date => {
         // console.warn('TimelineCalendarScreen onDateChanged: ', date, updateSource);
@@ -128,38 +130,49 @@ const ProviderSchedulePage = () => {
         };
     }, []);
 
-    useEffect(()=>{
-        console.log(allProviderRequest)
-        setEvents(allProviderRequest.map(request=>{
-            var event =  {
+    useEffect(() => {
+        var events = allProviderRequest.map(request => {
+            var event = {
                 requestId: request.id,
-                start: moment(new Date(request.requestTimeSlot.start)).format('YYYY-MM-dd HH:mm:ss'),
-                end: moment(new Date(request.requestTimeSlot.end)).format('YYYY-MM-dd HH:mm:ss'),
-                title: 'Appointment With '+ request.customerInfo.firstName + ' ' + request.customerInfo.lastName,
+                start: moment(new Date(request.requestTimeSlot.start)).format('YYYY-MM-DD HH:mm:ss'),
+                end: moment(new Date(request.requestTimeSlot.end)).format('YYYY-MM-DD HH:mm:ss'),
+                title: 'Appointment With ' + request.customerInfo.firstName + ' ' + request.customerInfo.lastName,
                 summary: request.requestLocation.addressFullName,
                 color: CustomColors.GRAY_LIGHT,
             };
 
-            if(request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS){
+            if (request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS) {
                 event = {
                     ...event,
                     color: CustomColors.PRIMARY_LIGHT_BLUE,
-                }
+                };
             }
 
-            if(request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED){
+            if (request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED) {
                 event = {
                     ...event,
-                    color:  '#95F985',
-                }
+                    color: '#95F985',
+                };
             }
 
             return event;
+        });
 
+        setEvents(events);
 
-        }))
+        var datesWithJob = allProviderRequest.map(request => {
+            return moment(new Date(request.requestTimeSlot.start)).format('YYYY-MM-DD');
+        });
 
-    },[allProviderRequest])
+        datesWithJob = [...new Set(datesWithJob)]; // Make sure unique in dates
+
+        var markedDateObject = datesWithJob.reduce(
+            (previous, current) => ({...previous, [current]: {marked: true}}),
+            {},
+        );
+
+        setMarkedDates(markedDateObject);
+    }, [allProviderRequest]);
 
     return (
         <View style={{backgroundColor: 'white'}}>
@@ -181,7 +194,7 @@ const ProviderSchedulePage = () => {
                             color={CustomColors.GRAY_DARK}
                             size={24}
                             onPress={() => {
-                                serviceProviderProfileActionSheet.current?.snapTo(1);
+                                navigation.navigate('JobRequestConfirmation');
                             }}></IconButton>
                     </View>
                     <CalendarProvider
@@ -210,12 +223,7 @@ const ProviderSchedulePage = () => {
                                     )
                                 }
                                 firstDay={1}
-                                markedDates={{
-                                    '2021-09-06': {marked: true},
-                                    '2021-09-07': {marked: true},
-                                    '2021-09-08': {marked: true},
-                                    '2021-09-10': {marked: true},
-                                }}
+                                markedDates={markedDates}
                             />
                         </View>
                         <Timeline
@@ -244,6 +252,60 @@ const ProviderSchedulePage = () => {
                             // start={0}
                             // end={24}
                         />
+                        <View
+                            style={{
+                                position: 'absolute',
+                                bottom: 16,
+                                right: 16,
+                                padding: 16,
+                                borderRadius: 24,
+                                backgroundColor: 'rgba(0,180,255,0.1)',
+                                zIndex: 20,
+                            }}
+                            pointerEvents={'none'}>
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <View
+                                    style={{
+                                        width: 12,
+                                        height: 12,
+                                        backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
+                                    }}></View>
+                                <Text
+                                    style={{
+                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                        fontSize: CustomTypography.FONT_SIZE_12,
+                                        color: CustomColors.GRAY,
+                                        marginLeft: 8,
+                                    }}>
+                                    Jobs waiting to service
+                                </Text>
+                            </View>
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <View
+                                    style={{width: 12, height: 12, backgroundColor: CustomColors.PRIMARY_BLUE}}></View>
+                                <Text
+                                    style={{
+                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                        fontSize: CustomTypography.FONT_SIZE_12,
+                                        color: CustomColors.GRAY,
+                                        marginLeft: 8,
+                                    }}>
+                                    Jobs in progress
+                                </Text>
+                            </View>
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <View style={{width: 12, height: 12, backgroundColor: '#95F985'}}></View>
+                                <Text
+                                    style={{
+                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                        fontSize: CustomTypography.FONT_SIZE_12,
+                                        color: CustomColors.GRAY,
+                                        marginLeft: 8,
+                                    }}>
+                                    Jobs completed
+                                </Text>
+                            </View>
+                        </View>
                     </CalendarProvider>
                 </View>
             </SafeAreaView>
