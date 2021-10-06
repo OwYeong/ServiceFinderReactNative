@@ -69,6 +69,45 @@ const RequestService = {
                     callback(requests);
                 }
             });
+    },
+    rejectRequest: (documentId, rejectReason) => {
+        return new Promise((resolve, reject) => {
+            const requestsCollection = firestore().collection('requests');
+
+            requestsCollection
+                .doc(documentId)
+                .update({
+                    requestStatus: Constants.REQUEST_STATUS.REJECTED,
+                    rejectReason: rejectReason
+                })
+                .then(() => {
+                    resolve('Request successfully rejected!');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+
+    },    
+    acceptRequest: (documentId) => {
+        return new Promise((resolve, reject) => {
+            const requestsCollection = firestore().collection('requests');
+
+            requestsCollection
+                .doc(documentId)
+                .update({
+                    requestStatus: Constants.REQUEST_STATUS.ACCEPTED
+                })
+                .then(() => {
+                    resolve('Request successfully rejected!');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+
     }
 };
 
