@@ -12,7 +12,7 @@ import RequestService from '@services/RequestService';
 import {Constants} from '~constants';
 
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/core';
+import {useNavigation} from '@react-navigation/core';
 
 const EVENTS = [
     {
@@ -105,6 +105,7 @@ const ProviderSchedulePage = () => {
     const [events, setEvents] = useState([]);
     const [markedDates, setMarkedDates] = useState({});
     const navigation = useNavigation();
+    const [pendingRequests, setPendingRequests] = useState([]);
 
     const onDateChanged = date => {
         // console.warn('TimelineCalendarScreen onDateChanged: ', date, updateSource);
@@ -124,9 +125,11 @@ const ProviderSchedulePage = () => {
 
     useEffect(() => {
         var unsubcriber = RequestService.getAllRequestByProvider(setAllProviderRequest);
+        const pendingRequestUnsubscriber = RequestService.getPendingRequestByProvider(setPendingRequests);
 
         return () => {
             unsubcriber();
+            pendingRequestUnsubscriber();
         };
     }, []);
 
@@ -181,21 +184,56 @@ const ProviderSchedulePage = () => {
                 <View style={styles.bigContainer}>
                     <View style={styles.headerContainer}>
                         <Text style={styles.pageTitle}>Jobs Schedule</Text>
-                        <IconButton
-                            style={{
-                                backgroundColor: CustomColors.GRAY_LIGHT,
-                                borderRadius: 30,
-                                margin: 0,
-                                height: 60,
-                                width: 60,
-                                elevation: 1,
-                            }}
-                            icon="mail-outline"
-                            color={CustomColors.GRAY_DARK}
-                            size={24}
+                        <TouchableRipple
+                            style={{borderRadius: 30}}
+                            borderless
+                            rippleColor="rgba(0, 0, 0, .32)"
                             onPress={() => {
                                 navigation.navigate('JobRequestConfirmation');
-                            }}></IconButton>
+                            }}>
+                            <View
+                                style={{
+                                    backgroundColor: CustomColors.GRAY_LIGHT,
+                                    borderRadius: 30,
+                                    margin: 0,
+                                    height: 60,
+                                    width: 60,
+                                    elevation: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}>
+                                <MaterialIcons name="mail-outline" color={CustomColors.GRAY_DARK} size={24} />
+
+                                {pendingRequests.length > 0 ? (
+                                    <View
+                                        style={{
+                                            width: 20,
+                                            height: 20,
+                                            borderRadius: 20,
+                                            backgroundColor: 'rgba(255, 69, 56,1)',
+                                            position: 'absolute',
+                                            top: 9,
+                                            right: 9,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}>
+                                        <Text
+                                            style={{
+                                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                fontSize: 10,
+                                                color: CustomColors.WHITE,
+                                                textAlign: 'center',
+                                                marginTop: 2,
+                                            }}>
+                                            {pendingRequests.length > 9 ? '9+' : null}
+                                            {pendingRequests.length <= 9 && pendingRequests.length > 0
+                                                ? pendingRequests.length.toString()
+                                                : null}
+                                        </Text>
+                                    </View>
+                                ) : null}
+                            </View>
+                        </TouchableRipple>
                     </View>
                     <CalendarProvider
                         date={currentDate}

@@ -1,4 +1,5 @@
 import NewRequestDisplayComponent from '@organisms/NewRequestDisplayComponent';
+import RequestHistoryDisplayComponent from '@organisms/RequestHistoryDisplayComponent';
 import {useNavigation} from '@react-navigation/core';
 import ProviderService from '@services/ProviderService';
 import UserService from '@services/UserService';
@@ -53,7 +54,7 @@ const JobRequestConfirmationPage = () => {
                                     case 'newRequest':
                                         return <NewRequestDisplayComponent />;
                                     case 'history':
-                                        return <NewRequestDisplayComponent />;
+                                        return <RequestHistoryDisplayComponent />;
                                     default:
                                         return null;
                                 }

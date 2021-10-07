@@ -45,30 +45,74 @@ const RequestService = {
         return requestCollection
             .where('serviceProvider.userId', '==', providerUserId)
             .where('requestStatus', '==', Constants.REQUEST_STATUS.PENDING)
-            .onSnapshot(querySnapshot => {
-                if (querySnapshot.size > 0) {
-                    const requests = [];
+            .orderBy('dateTimeRequested', 'desc')
+            .onSnapshot(
+                querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const requests = [];
 
-                    querySnapshot.forEach(docSnapshot => {
-                        let request = {
-                            id: docSnapshot.id,
-                            ...docSnapshot.data(),
-                            requestTimeSlot: {
-                                start: docSnapshot.data().requestTimeSlot.start.toDate().toString(),
-                                end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
-                            },
-                            dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
-                        };
-                        requests.push(request);
-                    });
+                        querySnapshot.forEach(docSnapshot => {
+                            let request = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                                requestTimeSlot: {
+                                    start: docSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                    end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                                },
+                                dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+                            requests.push(request);
+                        });
 
-                    callback(requests);
-                } else {
-                    const requests = [];
+                        callback(requests);
+                    } else {
+                        const requests = [];
 
-                    callback(requests);
-                }
-            });
+                        callback(requests);
+                    }
+                },
+                error => {
+                    console.error(error);
+                },
+            );
+    },
+    getHistoryRequestByProvider: (callback, providerUserId = auth().currentUser.uid) => {
+        let requestCollection = firestore().collection('requests');
+
+        return requestCollection
+            .where('serviceProvider.userId', '==', providerUserId)
+            .where('requestStatus', 'in', [Constants.REQUEST_STATUS.ACCEPTED, Constants.REQUEST_STATUS.REJECTED])
+            .orderBy('dateTimeRequested', 'desc')
+            .onSnapshot(
+                querySnapshot => {
+                    console.log(querySnapshot);
+                    if (querySnapshot.size > 0) {
+                        const requests = [];
+
+                        querySnapshot.forEach(docSnapshot => {
+                            let request = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                                requestTimeSlot: {
+                                    start: docSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                    end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                                },
+                                dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+                            requests.push(request);
+                        });
+
+                        callback(requests);
+                    } else {
+                        const requests = [];
+
+                        callback(requests);
+                    }
+                },
+                error => {
+                    console.error(error);
+                },
+            );
     },
     rejectRequest: (documentId, rejectReason) => {
         return new Promise((resolve, reject) => {
@@ -78,7 +122,7 @@ const RequestService = {
                 .doc(documentId)
                 .update({
                     requestStatus: Constants.REQUEST_STATUS.REJECTED,
-                    rejectReason: rejectReason
+                    rejectReason: rejectReason,
                 })
                 .then(() => {
                     resolve('Request successfully rejected!');
@@ -88,16 +132,15 @@ const RequestService = {
                     reject('Some error occur');
                 });
         });
-
-    },    
-    acceptRequest: (documentId) => {
+    },
+    acceptRequest: documentId => {
         return new Promise((resolve, reject) => {
             const requestsCollection = firestore().collection('requests');
 
             requestsCollection
                 .doc(documentId)
                 .update({
-                    requestStatus: Constants.REQUEST_STATUS.ACCEPTED
+                    requestStatus: Constants.REQUEST_STATUS.ACCEPTED,
                 })
                 .then(() => {
                     resolve('Request successfully rejected!');
@@ -107,8 +150,7 @@ const RequestService = {
                     reject('Some error occur');
                 });
         });
-
-    }
+    },
 };
 
 export default RequestService;

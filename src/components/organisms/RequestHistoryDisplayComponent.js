@@ -20,10 +20,9 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 import {Constants} from '~constants';
 import {showMessage} from 'react-native-flash-message';
-import NoRequestIllustration from '@assets/images/no-new-request-illustration';
 
-const NewRequestDisplayComponent = () => {
-    const [pendingRequests, setPendingRequests] = useState([]);
+const RequestHistoryDisplayComponent = () => {
+    const [historyRequests, setHistoryRequests] = useState([]);
 
     const [googleMapRedirectDialog, setGoogleMapRedirectDialog] = useState({
         isVisible: false,
@@ -35,20 +34,8 @@ const NewRequestDisplayComponent = () => {
         customerFormResponse: [],
     });
 
-    const [acceptConfirmationDialog, setAcceptConfirmationDialog] = useState({
-        isVisible: false,
-        requestId: '',
-    });
-
-    const [rejectConfirmationDialog, setRejectConfirmationDialog] = useState({
-        isVisible: false,
-        requestId: '',
-    });
-
-    const [rejectReason, setRejectReason] = useState('Sorry, we are having some urgent issue here.');
-
     useEffect(() => {
-        const unsubscriber = RequestService.getPendingRequestByProvider(setPendingRequests);
+        const unsubscriber = RequestService.getHistoryRequestByProvider(setHistoryRequests);
 
         return () => {
             unsubscriber();
@@ -58,8 +45,8 @@ const NewRequestDisplayComponent = () => {
     return (
         <ScrollView contentContainerStyle={{flexGrow: 1}}>
             <View style={{flex: 1, width: '100%', padding: 16, backgroundColor: CustomColors.GRAY_EXTRA_LIGHT}}>
-                {pendingRequests.length > 0 ? (
-                    pendingRequests.map(request => (
+                {historyRequests.length > 0 ? (
+                    historyRequests.map(request => (
                         <Surface style={styles.requestContainer} key={request.id}>
                             <View style={{flexDirection: 'row'}}>
                                 <Avatar.Text
@@ -111,45 +98,67 @@ const NewRequestDisplayComponent = () => {
                                     View Customer Input
                                 </Button>
                             </View>
-                            <View style={{flexDirection: 'row', marginTop: 24}}>
-                                <Button
-                                    mode={'contained'}
-                                    dark
-                                    style={{flex: 1, marginRight: 8, borderRadius: 8}}
-                                    color={CustomColors.SUCCESS}
-                                    onPress={() => {
-                                        setAcceptConfirmationDialog({isVisible: true, requestId: request.id});
+                            <View
+                                style={{
+                                    width: '100%',
+                                    marginTop: 24,
+                                    padding: 12,
+                                    borderRadius: 10,
+                                    backgroundColor:
+                                        request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
+                                            ? CustomColors.SUCCESS
+                                            : CustomColors.ALERT,
+                                }}>
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        fontSize: CustomTypography.FONT_SIZE_16,
+                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                        color: CustomColors.WHITE,
                                     }}>
-                                    Accept
-                                </Button>
-                                <Button
-                                    mode={'contained'}
-                                    dark
-                                    style={{flex: 1, marginLeft: 8, borderRadius: 8}}
-                                    color={CustomColors.ALERT}
-                                    onPress={() => {
-                                        setRejectConfirmationDialog({isVisible: true, requestId: request.id});
-                                    }}>
-                                    Reject
-                                </Button>
+                                    {request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
+                                        ? 'REQUEST ACCEPTED'
+                                        : 'REQUEST REJECTED'}
+                                </Text>
+                                {request.requestStatus == Constants.REQUEST_STATUS.REJECTED ? (
+                                    <Text
+                                        style={{
+                                            borderTopWidth: 1,
+                                            borderColor: 'white',
+                                            padding: 12,
+                                            marginTop: 8,
+                                            textAlign: 'center',
+                                            fontSize: CustomTypography.FONT_SIZE_12,
+                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                            color: CustomColors.WHITE,
+                                        }}>
+                                        Reason: {request.rejectReason}
+                                    </Text>
+                                ) : null}
                             </View>
                         </Surface>
                     ))
                 ) : (
-                    <View style={{width: '100%', flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom:80}}>
-                        <View style={{}}>
-                            <View style={{width: 300, height: undefined, aspectRatio: 2885 / 1552}}>
-                                <NoRequestIllustration width="100%" height="100%" fill={'#fff'} />
-                            </View>
+                    <View
+                        style={{
+                            width: '100%',
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            paddingBottom: 140,
+                        }}>
+                        <View style={{alignItems: 'center'}}>
+                            <MaterialIcon name="history" size={100} color={CustomColors.GRAY} />
+
                             <Text
                                 style={{
                                     fontSize: CustomTypography.FONT_SIZE_16,
                                     fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
                                     color: CustomColors.GRAY,
-                                    textAlign:'center',
-                                    marginTop:8
+                                    textAlign: 'center',
+                                    marginTop: 8,
                                 }}>
-                                You have no new job request.
+                                You have no history yet.
                             </Text>
                         </View>
                     </View>
@@ -310,149 +319,12 @@ const NewRequestDisplayComponent = () => {
                         </Dialog.ScrollArea>
                     </Dialog>
                 </Portal>
-                <Portal>
-                    <Dialog
-                        visible={acceptConfirmationDialog.isVisible}
-                        onDismiss={() => {
-                            setAcceptConfirmationDialog({isVisible: false});
-                        }}>
-                        <Dialog.Title>Accept Confirmation</Dialog.Title>
-                        <Dialog.Content>
-                            <Text>Are you sure that you want to accept this job? This action cannot be reverted.</Text>
-                        </Dialog.Content>
-                        <Dialog.Actions>
-                            <Button
-                                style={{width: 80}}
-                                color={CustomColors.GRAY}
-                                onPress={() => {
-                                    setAcceptConfirmationDialog({isVisible: false});
-                                }}>
-                                No
-                            </Button>
-                            <Button
-                                color={CustomColors.SUCCESS}
-                                onPress={() => {
-                                    RequestService.acceptRequest(acceptConfirmationDialog.requestId)
-                                        .then(data => {
-                                            showMessage({
-                                                message: 'Request Successfully accepted.',
-                                                type: 'info',
-                                                position: 'center',
-                                                titleStyle: {marginTop: 5},
-                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                                color: 'white', // text color
-                                                hideOnPress: true,
-                                                autoHide: true,
-                                                duration: 1000,
-                                            });
-                                        })
-                                        .catch(err => {
-                                            showMessage({
-                                                message: 'Some error occured when accepting job.',
-                                                type: 'info',
-                                                position: 'center',
-                                                titleStyle: {marginTop: 5},
-                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                                color: 'white', // text color
-                                                hideOnPress: true,
-                                                autoHide: true,
-                                                duration: 1000,
-                                            });
-                                        });
-                                    setAcceptConfirmationDialog({isVisible: false});
-                                }}>
-                                Accept Job
-                            </Button>
-                        </Dialog.Actions>
-                    </Dialog>
-                </Portal>
-                <Portal>
-                    <Dialog
-                        visible={rejectConfirmationDialog.isVisible}
-                        onDismiss={() => {
-                            setRejectConfirmationDialog({isVisible: false});
-
-                            setRejectReason('Sorry, we are having some urgent issue here.');
-                        }}>
-                        <Dialog.Title>Reject Confirmation</Dialog.Title>
-                        <Dialog.Content>
-                            <Text>Are you sure that you want to reject this job? This action cannot be reverted.</Text>
-                            <TextInput
-                                mode="outlined"
-                                label="Reject reason"
-                                multiline
-                                placeholder="Please state the reason to reject job."
-                                style={[styles.inputPrompt]}
-                                value={rejectReason}
-                                onEndEditing={e => {
-                                    if (e.nativeEvent.text == '') {
-                                        setRejectReason('Sorry, we are having some urgent issue here.');
-                                    }
-                                }}
-                                onChangeText={text => {
-                                    setRejectReason(text);
-                                }}></TextInput>
-
-                            <HelperText type="error" style={styles.errorText} visible={rejectReason.length == 0}>
-                                Reject reason is mandatory
-                            </HelperText>
-                        </Dialog.Content>
-                        <Dialog.Actions>
-                            <Button
-                                style={{width: 80}}
-                                color={CustomColors.GRAY}
-                                onPress={() => {
-                                    setRejectConfirmationDialog({isVisible: false});
-                                    setRejectReason('Sorry, we are having some urgent issue here.');
-                                }}>
-                                No
-                            </Button>
-                            <Button
-                                color={CustomColors.ALERT}
-                                onPress={() => {
-                                    if (rejectReason.length == 0) return;
-
-                                    RequestService.rejectRequest(rejectConfirmationDialog.requestId, rejectReason)
-                                        .then(data => {
-                                            showMessage({
-                                                message: 'Request Successfully rejected.',
-                                                type: 'info',
-                                                position: 'center',
-                                                titleStyle: {marginTop: 5},
-                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                                color: 'white', // text color
-                                                hideOnPress: true,
-                                                autoHide: true,
-                                                duration: 1000,
-                                            });
-                                        })
-                                        .catch(err => {
-                                            showMessage({
-                                                message: 'Some error occured when rejecting job.',
-                                                type: 'info',
-                                                position: 'center',
-                                                titleStyle: {marginTop: 5},
-                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                                color: 'white', // text color
-                                                hideOnPress: true,
-                                                autoHide: true,
-                                                duration: 1000,
-                                            });
-                                        });
-
-                                    setRejectConfirmationDialog({isVisible: false});
-                                }}>
-                                Reject Job
-                            </Button>
-                        </Dialog.Actions>
-                    </Dialog>
-                </Portal>
             </View>
         </ScrollView>
     );
 };
 
-export default NewRequestDisplayComponent;
+export default RequestHistoryDisplayComponent;
 
 const styles = StyleSheet.create({
     requestContainer: {
