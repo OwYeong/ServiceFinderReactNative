@@ -41,6 +41,8 @@ import BottomSheet from 'react-native-bottomsheet-reanimated';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import { LocalNotification } from '~firebaseCloudMessaging/LocalPushController'
+import RemotePushController from '~firebaseCloudMessaging/RemotePushController';
 
 const Stack = createStackNavigator();
 const theme = {
@@ -80,6 +82,7 @@ const App: () => Node = () => {
         });
 
         const authenticationListener = auth().onAuthStateChanged(user => {
+            // LocalNotification()
             console.log('yoyo, authenticated');
             console.log(user);
             console.log(user?.providerData);
@@ -142,6 +145,7 @@ const App: () => Node = () => {
                                 fontSize: CustomTypography.FONT_SIZE_14,
                             }}
                         />
+                        <RemotePushController />
                     </PortalProvider>
                 </GestureHandlerRootView>
             </SafeAreaProvider>
