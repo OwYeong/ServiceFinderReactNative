@@ -108,7 +108,7 @@ const ProviderStack = () => {
                     name="ProviderSchedulePage"
                     component={ProviderSchedulePage}
                     options={{
-                        headerShown: true,
+                        headerShown: false,
                         tabBarLabel: ({focused, color}) => {
                             if (focused) {
                                 Animated.spring(tabIndicatorLeftPos, {

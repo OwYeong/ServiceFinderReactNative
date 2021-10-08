@@ -9,6 +9,7 @@ import {setUserInfo} from '@slices/loginSlice';
 import {setLoginBlock} from '@slices/appSlice';
 import store from '../../store';
 import firebase from '@react-native-firebase/app';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserService = {
     vendor: {
@@ -50,7 +51,10 @@ const UserService = {
 
                             return;
                         }
+                        const fcmToken = await AsyncStorage.getItem('fcmToken')
+                        console.log('fcmToken',fcmToken)
 
+                        await UserService.updateFcmTokenInUserData(fcmToken);
                         await UserService.fetchLoggedInUserDataToRedux();
 
                         store.dispatch(setLoginBlock(false));
@@ -243,7 +247,10 @@ const UserService = {
 
                             return;
                         }
+                        const fcmToken = await AsyncStorage.getItem('fcmToken')
+                        console.log('fcmToken',fcmToken)
 
+                        await UserService.updateFcmTokenInUserData(fcmToken);
                         await UserService.fetchLoggedInUserDataToRedux();
 
                         store.dispatch(setLoginBlock(false));
@@ -286,6 +293,10 @@ const UserService = {
                                 authUser.user.uid,
                             )
                                 .then(async data => {
+                                    const fcmToken = await AsyncStorage.getItem('fcmToken')
+                                    console.log('fcmToken',fcmToken)
+            
+                                    await UserService.updateFcmTokenInUserData(fcmToken);
                                     await UserService.fetchLoggedInUserDataToRedux();
                                     resolve('Success');
                                 })
@@ -348,6 +359,10 @@ const UserService = {
                                 authUser.user.uid,
                             )
                                 .then(async data => {
+                                    const fcmToken = await AsyncStorage.getItem('fcmToken')
+                                    console.log('fcmToken',fcmToken)
+            
+                                    await UserService.updateFcmTokenInUserData(fcmToken);
                                     await UserService.fetchLoggedInUserDataToRedux();
 
                                     resolve('success');
@@ -489,6 +504,9 @@ const UserService = {
                     return; //already sign out
                 }
                 
+                
+                await UserService.updateFcmTokenInUserData('');
+
                 if (auth().currentUser.providerData[0].providerId == Constants.LOGIN_PROVIDER_GOOGLE) {
                     console.log('google logout')
                     await GoogleSignin.revokeAccess();
@@ -497,11 +515,31 @@ const UserService = {
 
                 auth()
                     .signOut()
-                    .then(() => resolve('Logout success'));
+                    .then(() => {
+                        resolve('Logout success')
+                    });
             } catch (error) {
                 console.log(error);
                 reject('Some Error occurs');
             }
+        });
+    },
+    updateFcmTokenInUserData: async (fcmToken)=>{
+        return new Promise(async (resolve, reject) => {
+            const usersCollection = firestore().collection('users');
+
+            usersCollection
+                .doc(auth().currentUser.uid)
+                .update({
+                    fcmToken: fcmToken,
+                })
+                .then(() => {
+                    resolve('Successfully update fcm token');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur when updating fcm token');
+                });
         });
     },
     fetchLoggedInUserDataToRedux: () => {
@@ -536,6 +574,31 @@ const UserService = {
                 reject('Some Error occurs');
                 
             }
+        });
+    },
+    getUserInfo: (documentId) => {
+        return new Promise(async (resolve, reject) => {
+            let userCollections = firestore().collection('users');
+
+            userCollections
+                .doc(documentId)
+                .get()
+                .then(documentSnapshot => {
+                    if (documentSnapshot.exists) {
+                        let data = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                        };
+
+                        resolve(data);
+                    } else {
+                        reject('Document does not exist');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> UserService.getUserInfo\n');
+                    reject(error);
+                });
         });
     },
 };
