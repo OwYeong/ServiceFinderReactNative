@@ -576,6 +576,31 @@ const UserService = {
             }
         });
     },
+    getUserInfo: (documentId) => {
+        return new Promise(async (resolve, reject) => {
+            let userCollections = firestore().collection('users');
+
+            userCollections
+                .doc(documentId)
+                .get()
+                .then(documentSnapshot => {
+                    if (documentSnapshot.exists) {
+                        let data = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                        };
+
+                        resolve(data);
+                    } else {
+                        reject('Document does not exist');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> UserService.getUserInfo\n');
+                    reject(error);
+                });
+        });
+    },
 };
 
 export default UserService;

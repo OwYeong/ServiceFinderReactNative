@@ -6,6 +6,9 @@ import {setProviderInfo} from '@slices/loginSlice';
 import store from '../../store';
 import UserService from './UserService';
 import firebase from '@react-native-firebase/app';
+import {FCM_SERVER_TOKEN} from '@env';
+import axios from 'axios';
+import NotificationService from './NotificationService';
 
 const RequestService = {
     getAllRequestByProvider: (callback, providerUserId = auth().currentUser.uid) => {
@@ -114,7 +117,7 @@ const RequestService = {
                 },
             );
     },
-    rejectRequest: (documentId, rejectReason) => {
+    rejectRequest: (documentId, rejectReason, customerId) => {
         return new Promise((resolve, reject) => {
             const requestsCollection = firestore().collection('requests');
 
@@ -124,8 +127,18 @@ const RequestService = {
                     requestStatus: Constants.REQUEST_STATUS.REJECTED,
                     rejectReason: rejectReason,
                 })
-                .then(() => {
-                    resolve('Request successfully rejected!');
+                .then(async () => {
+                    try {
+                        const targetUserInfo = await UserService.getUserInfo(customerId);
+
+                        if (!!targetUserInfo.fcmToken) {
+                            await NotificationService.sendNotificationToDevice(targetUserInfo.fcmToken, `Your request has been rejected`, `${store.getState().loginState.providerInfo.businessName} has rejected your job request with the reason: ${rejectReason} `);
+                        }
+                        resolve('Request successfully rejected!');
+
+                    } catch (err) {
+                        console.log(err);
+                    }
                 })
                 .catch(err => {
                     console.log(err);
@@ -133,7 +146,7 @@ const RequestService = {
                 });
         });
     },
-    acceptRequest: documentId => {
+    acceptRequest: (documentId, customerId) => {
         return new Promise((resolve, reject) => {
             const requestsCollection = firestore().collection('requests');
 
@@ -142,8 +155,18 @@ const RequestService = {
                 .update({
                     requestStatus: Constants.REQUEST_STATUS.ACCEPTED,
                 })
-                .then(() => {
-                    resolve('Request successfully rejected!');
+                .then(async () => {
+                    try {
+                        const targetUserInfo = await UserService.getUserInfo(customerId);
+
+                        if (!!targetUserInfo.fcmToken) {
+                            await NotificationService.sendNotificationToDevice(targetUserInfo.fcmToken, `Your request has been accepted`, `${store.getState().loginState.providerInfo.businessName} has accepted Your job request. You may track the progess in the app.`);
+                        }
+                        resolve('Request successfully accepted!');
+
+                    } catch (err) {
+                        console.log(err);
+                    }
                 })
                 .catch(err => {
                     console.log(err);

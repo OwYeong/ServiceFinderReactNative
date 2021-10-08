@@ -37,12 +37,12 @@ const NewRequestDisplayComponent = () => {
 
     const [acceptConfirmationDialog, setAcceptConfirmationDialog] = useState({
         isVisible: false,
-        requestId: '',
+        requestInfo: {},
     });
 
     const [rejectConfirmationDialog, setRejectConfirmationDialog] = useState({
         isVisible: false,
-        requestId: '',
+        requestInfo: {},
     });
 
     const [rejectReason, setRejectReason] = useState('Sorry, we are having some urgent issue here.');
@@ -118,7 +118,7 @@ const NewRequestDisplayComponent = () => {
                                     style={{flex: 1, marginRight: 8, borderRadius: 8}}
                                     color={CustomColors.SUCCESS}
                                     onPress={() => {
-                                        setAcceptConfirmationDialog({isVisible: true, requestId: request.id});
+                                        setAcceptConfirmationDialog({isVisible: true, requestInfo: {...request}});
                                     }}>
                                     Accept
                                 </Button>
@@ -128,7 +128,7 @@ const NewRequestDisplayComponent = () => {
                                     style={{flex: 1, marginLeft: 8, borderRadius: 8}}
                                     color={CustomColors.ALERT}
                                     onPress={() => {
-                                        setRejectConfirmationDialog({isVisible: true, requestId: request.id});
+                                        setRejectConfirmationDialog({isVisible: true, requestInfo: {...request}});
                                     }}>
                                     Reject
                                 </Button>
@@ -332,7 +332,7 @@ const NewRequestDisplayComponent = () => {
                             <Button
                                 color={CustomColors.SUCCESS}
                                 onPress={() => {
-                                    RequestService.acceptRequest(acceptConfirmationDialog.requestId)
+                                    RequestService.acceptRequest(acceptConfirmationDialog.requestInfo.id, acceptConfirmationDialog.requestInfo.customerInfo.userId)
                                         .then(data => {
                                             showMessage({
                                                 message: 'Request Successfully accepted.',
@@ -412,7 +412,7 @@ const NewRequestDisplayComponent = () => {
                                 onPress={() => {
                                     if (rejectReason.length == 0) return;
 
-                                    RequestService.rejectRequest(rejectConfirmationDialog.requestId, rejectReason)
+                                    RequestService.rejectRequest(rejectConfirmationDialog.requestInfo.id, rejectReason, rejectConfirmationDialog.requestInfo.customerInfo.userId)
                                         .then(data => {
                                             showMessage({
                                                 message: 'Request Successfully rejected.',
