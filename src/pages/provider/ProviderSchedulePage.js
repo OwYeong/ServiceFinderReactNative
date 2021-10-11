@@ -269,6 +269,11 @@ const ProviderSchedulePage = () => {
                             eventTapped={e => {
                                 console.log(e);
                             }}
+                            eventTapped={e => {
+                                navigation.navigate('JobRequestControlDashboard', {
+                                    requestId: e.requestId
+                                });
+                            }}
                             events={events.filter(event => sameDate(new XDate(event.start), new XDate(currentDate)))}
                             styles={{
                                 eventTitle: {

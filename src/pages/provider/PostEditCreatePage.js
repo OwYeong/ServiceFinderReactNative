@@ -17,7 +17,7 @@ const PostEditCreatePage = ({route}) => {
     console.log(route);
 
     const [postTitle, setPostTitle] = useState(postData?.postTitle || 'My post title');
-
+    
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
