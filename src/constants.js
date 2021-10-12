@@ -48,5 +48,7 @@ export const Constants = {
         WAITING_FOR_SERVICE: 'waitingForService',
         SERVICE_IN_PROGRESS: 'serviceInProgress',
         SERVICE_COMPLETED: 'serviceCompleted',
+        CANCELLED_BY_VENDOR: 'cancelledByVendor',
+        CANCELLED_BY_CUSTOMER: 'cancelledByCustomer',
     },
 };

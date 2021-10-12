@@ -142,6 +142,19 @@ const ProviderService = {
                 });
         });
     },
+    updateProviderTotalEarningAndNumOfJobCompleted: (paymentReceived) => {
+        return new Promise((resolve, reject) => {
+            
+            ProviderService.updateProviderData({
+                totalEarnings: firebase.firestore.FieldValue.increment(paymentReceived),
+                jobsCompleted: firebase.firestore.FieldValue.increment(1),
+            }).then(data=>{
+                resolve('success');
+            }).catch(err=>{
+                reject('failed')
+            });
+        });
+    },
     uploadCoverImageToStorage: (userId, coverImagePath, mimeType) => {
         return new Promise((resolve, reject) => {
             var coverImageReference = null;

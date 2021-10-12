@@ -9,6 +9,7 @@ import firebase from '@react-native-firebase/app';
 import {FCM_SERVER_TOKEN} from '@env';
 import axios from 'axios';
 import NotificationService from './NotificationService';
+import ProviderService from './ProviderService';
 
 const RequestService = {
     getAllRequestByProvider: (callback, providerUserId = auth().currentUser.uid) => {
@@ -258,6 +259,75 @@ const RequestService = {
                 });
         });
     },
+    completeJobRequest: (documentId, customerId, paymentReceived) => {
+        return new Promise((resolve, reject) => {
+            const requestsCollection = firestore().collection('requests');
+
+            requestsCollection
+                .doc(documentId)
+                .update({
+                    serviceStatus: Constants.SERVICE_STATUS.SERVICE_COMPLETED,
+                    paymentReceived: paymentReceived
+                })
+                .then(async () => {
+                    try {
+                        const targetUserInfo = await UserService.getUserInfo(customerId);
+
+                        if (!!targetUserInfo.fcmToken) {
+                            await NotificationService.sendNotificationToDevice(
+                                targetUserInfo.fcmToken,
+                                `Service Provider has completed your job request.`,
+                                `Thank you for using ServiceFinder. Please leave a rating to ${
+                                    store.getState().loginState.providerInfo.businessName
+                                }.`,
+                            );
+                        }
+                        await ProviderService.updateProviderTotalEarningAndNumOfJobCompleted(paymentReceived)
+                        await ProviderService.fetchProviderDataToRedux();
+                        resolve('Request successfully started!');
+                    } catch (err) {
+                        console.log(err);
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
+    vendorCancelRequest: (documentId, customerId) => {
+        return new Promise((resolve, reject) => {
+            const requestsCollection = firestore().collection('requests');
+
+            requestsCollection
+                .doc(documentId)
+                .update({
+                    serviceStatus: Constants.SERVICE_STATUS.CANCELLED_BY_VENDOR,
+                })
+                .then(async () => {
+                    try {
+                        const targetUserInfo = await UserService.getUserInfo(customerId);
+
+                        if (!!targetUserInfo.fcmToken) {
+                            await NotificationService.sendNotificationToDevice(
+                                targetUserInfo.fcmToken,
+                                `Service Provider has cancelled your job request.`,
+                                `Your job request has been cancelled by ${
+                                    store.getState().loginState.providerInfo.businessName
+                                }. Refund will be done shortly.`,
+                            );
+                        }
+                        resolve('Request successfully started!');
+                    } catch (err) {
+                        console.log(err);
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    }
 };
 
 export default RequestService;
