@@ -135,8 +135,6 @@ const JobRequestControlDashboard = ({route}) => {
             if (!!realTimeLocationWatcher) Geolocation.clearWatch(realTimeLocationWatcher);
             setRealTimeLocation(null);
         }
-
-        
     }, [requestData]);
 
     return (
@@ -204,46 +202,52 @@ const JobRequestControlDashboard = ({route}) => {
                                 </View>
                                 <Button onPress={() => {}}>Chat</Button>
                             </View>
-                            <View
-                                style={{
-                                    width: '100%',
-                                    marginTop: 24,
-                                    padding: 8,
-                                    borderRadius: 10,
-                                    backgroundColor:
-                                        requestData?.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
-                                            ? '#a8a8a8'
-                                            : requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
-                                            ? '#70cbff'
-                                            : requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED
-                                            ? '#95F985'
-                                            : CustomColors.ALERT,
-                                }}>
-                                <Text
+                            {!!requestData ? (
+                                <View
                                     style={{
-                                        textAlign: 'center',
-                                        fontSize: CustomTypography.FONT_SIZE_16,
-                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                        color: CustomColors.WHITE,
+                                        width: '100%',
+                                        marginTop: 24,
+                                        padding: 8,
+                                        borderRadius: 10,
+                                        backgroundColor:
+                                            requestData?.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
+                                                ? '#a8a8a8'
+                                                : requestData?.serviceStatus ==
+                                                  Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
+                                                ? '#70cbff'
+                                                : requestData?.serviceStatus ==
+                                                  Constants.SERVICE_STATUS.SERVICE_COMPLETED
+                                                ? '#95F985'
+                                                : CustomColors.ALERT,
+                                        opacity: !requestData?.serviceStatus?0:1
                                     }}>
-                                    Status:{' '}
-                                    {requestData?.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
-                                        ? 'WAITING TO SERVICE'
-                                        : null}
-                                    {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
-                                        ? 'SERVICE IN PROGESSING'
-                                        : null}
-                                    {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED
-                                        ? 'SERVICE COMPLETED'
-                                        : null}
-                                    {requestData?.serviceStatus == Constants.SERVICE_STATUS.CANCELLED_BY_CUSTOMER
-                                        ? 'CANCELLED BY CUSTOMER'
-                                        : null}
-                                    {requestData?.serviceStatus == Constants.SERVICE_STATUS.CANCELLED_BY_VENDOR
-                                        ? 'CANCELLED BY VENDOR'
-                                        : null}
-                                </Text>
-                            </View>
+                                    <Text
+                                        style={{
+                                            textAlign: 'center',
+                                            fontSize: CustomTypography.FONT_SIZE_16,
+                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                            color: CustomColors.WHITE,
+                                        }}>
+                                        Status:{' '}
+                                        {requestData?.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
+                                            ? 'WAITING TO SERVICE'
+                                            : null}
+                                        {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
+                                            ? 'SERVICE IN PROGESSING'
+                                            : null}
+                                        {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED
+                                            ? 'SERVICE COMPLETED'
+                                            : null}
+                                        {requestData?.serviceStatus == Constants.SERVICE_STATUS.CANCELLED_BY_CUSTOMER
+                                            ? 'CANCELLED BY CUSTOMER'
+                                            : null}
+                                        {requestData?.serviceStatus == Constants.SERVICE_STATUS.CANCELLED_BY_VENDOR
+                                            ? 'CANCELLED BY VENDOR'
+                                            : null}
+                                    </Text>
+                                </View>
+                            ) : null}
+
                             {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED ? (
                                 <Surface
                                     style={{

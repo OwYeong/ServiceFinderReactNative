@@ -242,7 +242,7 @@ const RequestService = {
                         if (!!targetUserInfo.fcmToken) {
                             await NotificationService.sendNotificationToDevice(
                                 targetUserInfo.fcmToken,
-                                `Service Provider has started your job request.`,
+                                `Your job request has started.`,
                                 `${
                                     store.getState().loginState.providerInfo.businessName
                                 } has started to work on your job request. Service provider will arrive at your doorstep shortly.`,
@@ -267,7 +267,7 @@ const RequestService = {
                 .doc(documentId)
                 .update({
                     serviceStatus: Constants.SERVICE_STATUS.SERVICE_COMPLETED,
-                    paymentReceived: paymentReceived
+                    paymentReceived: paymentReceived,
                 })
                 .then(async () => {
                     try {
@@ -276,13 +276,15 @@ const RequestService = {
                         if (!!targetUserInfo.fcmToken) {
                             await NotificationService.sendNotificationToDevice(
                                 targetUserInfo.fcmToken,
-                                `Service Provider has completed your job request.`,
-                                `Thank you for using ServiceFinder. Please leave a rating to ${
+                                `Your job request has been completed.`,
+                                `${
+                                    store.getState().loginState.providerInfo.businessName
+                                } has completed your job request. Thank you for using ServiceFinder, please leave a rating to ${
                                     store.getState().loginState.providerInfo.businessName
                                 }.`,
                             );
                         }
-                        await ProviderService.updateProviderTotalEarningAndNumOfJobCompleted(paymentReceived)
+                        await ProviderService.updateProviderTotalEarningAndNumOfJobCompleted(paymentReceived);
                         await ProviderService.fetchProviderDataToRedux();
                         resolve('Request successfully started!');
                     } catch (err) {
@@ -311,10 +313,10 @@ const RequestService = {
                         if (!!targetUserInfo.fcmToken) {
                             await NotificationService.sendNotificationToDevice(
                                 targetUserInfo.fcmToken,
-                                `Service Provider has cancelled your job request.`,
-                                `Your job request has been cancelled by ${
+                                `Your job request has been cancelled.`,
+                                `${
                                     store.getState().loginState.providerInfo.businessName
-                                }. Refund will be done shortly.`,
+                                } has cancelled your job request. Refund will be done shortly.`,
                             );
                         }
                         resolve('Request successfully started!');
@@ -327,7 +329,7 @@ const RequestService = {
                     reject('Some error occur');
                 });
         });
-    }
+    },
 };
 
 export default RequestService;
