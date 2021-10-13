@@ -16,6 +16,7 @@ import BusinessProfileEditPage from '@pages/provider/BusinessProfileEditPage';
 import FormEditPage from '@pages/provider/FormEditPage';
 import JobRequestConfirmationPage from '@pages/provider/JobRequestConfirmationPage';
 import JobRequestControlDashboard from '@pages/provider/JobRequestControlDashboard';
+import BrowseVendorByCategory from '@pages/customer/BrowseVendorByCategory';
 
 const Stack = createStackNavigator();
 
@@ -65,6 +66,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                                 component={SearchServicePage}
                                 options={{
                                     animationEnabled: false,
+                                    headerShown: false,
+                                }}
+                            />
+                             <Stack.Screen
+                                name="BrowseVendorByCategory"
+                                component={BrowseVendorByCategory}
+                                options={{
+                                    animationEnabled: true,
                                     headerShown: false,
                                 }}
                             />
