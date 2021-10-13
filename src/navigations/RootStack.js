@@ -17,6 +17,7 @@ import FormEditPage from '@pages/provider/FormEditPage';
 import JobRequestConfirmationPage from '@pages/provider/JobRequestConfirmationPage';
 import JobRequestControlDashboard from '@pages/provider/JobRequestControlDashboard';
 import BrowseVendorByCategory from '@pages/customer/BrowseVendorByCategory';
+import LocationPicker from '@pages/customer/LocationPicker';
 
 const Stack = createStackNavigator();
 
@@ -72,6 +73,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                              <Stack.Screen
                                 name="BrowseVendorByCategory"
                                 component={BrowseVendorByCategory}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="LocationPicker"
+                                component={LocationPicker}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,

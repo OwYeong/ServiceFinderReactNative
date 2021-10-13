@@ -173,14 +173,19 @@ const CustomerHomepage = () => {
                                 start={{x: 0, y: 1}}
                                 end={{x: 1, y: 1}}
                                 style={styles.headerGradient}>
-                                <View style={styles.locationWrapper}>
-                                    <Text style={styles.serviceAt}>
-                                        SERVICE AT{'\n'}
-                                        <Text style={styles.serviceLocation}>
-                                            Home asdas <Icon name="caret-down" width={36} height={36} />
+                                <TouchableWithoutFeedback onPress={()=>{
+                                    console.log("haha")
+                                    navigation.navigate('LocationPicker');
+                                }}>
+                                    <View style={styles.locationWrapper}>
+                                        <Text style={styles.serviceAt}>
+                                            SERVICE AT{'\n'}
+                                            <Text style={styles.serviceLocation}>
+                                                Home asdas <Icon name="caret-down" width={36} height={36} />
+                                            </Text>
                                         </Text>
-                                    </Text>
-                                </View>
+                                    </View>
+                                </TouchableWithoutFeedback>
                                 <Text style={styles.slogan}>Book Service{'\n'}to your doorstep</Text>
                                 <TouchableWithoutFeedback
                                     onPress={() => {
@@ -357,7 +362,9 @@ const CustomerHomepage = () => {
                                                 }}
                                                 borderless
                                                 onPress={() => {
-                                                    navigation.navigate('BrowseVendorByCategory', {businessCategory: item.id})
+                                                    navigation.navigate('BrowseVendorByCategory', {
+                                                        businessCategory: item.id,
+                                                    });
                                                 }}
                                                 rippleColor="rgba(0, 0, 0, .2)">
                                                 <View style={styles.categoryButton}>

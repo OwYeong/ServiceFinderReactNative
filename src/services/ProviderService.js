@@ -455,4 +455,9 @@ const ProviderService = {
     },
 };
 
+// ~1 km of lat and lon in degrees
+//adopted from : https://stackoverflow.com/questions/4000886/gps-coordinates-1km-square-around-a-point
+// let lat = 0.008983
+// let lon = 0.015060
+
 export default ProviderService;
