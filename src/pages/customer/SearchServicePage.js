@@ -1,6 +1,6 @@
 import {useNavigation} from '@react-navigation/native';
 import {CustomColors, CustomTypography} from '@styles';
-import React, {useRef, useState} from 'react';
+import React, {useRef, useState,useEffect} from 'react';
 import {
     Button,
     Dimensions,
@@ -29,6 +29,7 @@ const SearchServicePage = ({route}) => {
     const {searchBarX, searchBarY} = route.params;
     const [serviceCategories, setServiceCategories] = useState([]);
     const [showClearIcon, setShowClearIcon] = useState(false);
+    const [searchInput, setSearchInput] = useState('');
 
     const searchBarAnimatedValue = useRef(new Animated.Value(0)).current;
 
@@ -68,7 +69,7 @@ const SearchServicePage = ({route}) => {
         }
     };
 
-    useState(() => {
+    useEffect(() => {
         Animated.timing(searchBarAnimatedValue, {
             toValue: 1,
             easing: Easing.linear(), // easing function
@@ -85,6 +86,10 @@ const SearchServicePage = ({route}) => {
             }
         }
     }, []);
+
+    useEffect(()=>{
+        console.log(searchInput)
+    },[searchInput])
 
     return (
         <View style={styles.bigContainer}>
@@ -113,14 +118,16 @@ const SearchServicePage = ({route}) => {
                                 transform: [{translateX: searchBarTransformX}, {translateY: searchBarTransformY}],
                             },
                         ]}
+                        onSubmitEditing={()=>console.log('Search softkey pressed!')}
                         onChangeText={text => {
                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                            setShowClearIcon(text.length > 0);
+                            setSearchInput(text);
                         }}
+                        value={searchInput}
                         inputStyle={{padding: 0, margin: 0, fontSize: 14}}
                         onFocus={() => {}}
                         icon={() => <FeatherIcon name="search" size={20} />}
-                        clearIcon={() => (showClearIcon ? <MaterialIcon name="cancel" size={20} /> : null)}
+                        clearIcon={() => <MaterialIcon name="cancel" size={20} />}
                         placeholder="Find your service"
                     />
                 </View>
@@ -152,7 +159,9 @@ const SearchServicePage = ({route}) => {
                                             titleStyle={styles.serviceTitle}
                                             key={i}
                                             onPress={() => {
-                                                console.log('haha');
+                                                navigation.navigate('BrowseVendorByCategory', {
+                                                    serviceType: service.serviceId,
+                                                });
                                             }}></List.Item>
                                     ))}
                                 </List.Accordion>

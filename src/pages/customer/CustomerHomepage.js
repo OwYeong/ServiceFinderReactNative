@@ -201,7 +201,6 @@ const CustomerHomepage = () => {
                                             style={styles.searchBar}
                                             editable={false}
                                             icon={() => <FeatherIcon name="search" size={20} />}
-                                            clearIcon={() => <MaterialIcon name="cancel" size={20} />}
                                             placeholder="Find your service"
                                         />
                                     </View>
@@ -256,6 +255,7 @@ const CustomerHomepage = () => {
                                         style={styles.popularServiceScrollView}
                                         scrollEnabled={popularServiceList.data.length > 0}
                                         horizontal={true}
+                                        showsHorizontalScrollIndicator={false}
                                         data={popularServiceList.data}
                                         renderItem={({index, item}) => {
                                             return (
@@ -356,7 +356,9 @@ const CustomerHomepage = () => {
                                                     borderRadius: 8,
                                                 }}
                                                 borderless
-                                                onPress={() => {}}
+                                                onPress={() => {
+                                                    navigation.navigate('BrowseVendorByCategory', {businessCategory: item.id})
+                                                }}
                                                 rippleColor="rgba(0, 0, 0, .2)">
                                                 <View style={styles.categoryButton}>
                                                     <View style={{width: 64, height: 64}}>

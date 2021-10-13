@@ -104,6 +104,84 @@ const ProviderService = {
                 });
         });
     },
+    getProviderByBusinessCategory: (businessCategory) => {
+        return new Promise((resolve, reject) => {
+            let providerCollection = firestore().collection('serviceProviders');
+
+            providerCollection
+                .where('businessCategory', '==', businessCategory)
+                .orderBy('businessName')
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const serviceProviders = [];
+
+                        querySnapshot.forEach(docSnapshot => {
+                            let service = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                            };
+                            serviceProviders.push(service);
+                        });
+
+                        const result = {
+                            data: serviceProviders,
+                        };
+
+                        resolve(result);
+                    } else {
+                        const result = {
+                            data: [],
+                        };
+
+                        resolve(result);
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getProviderByBusinessCategory\n');
+                    reject(error);
+                });
+        });
+    },
+    getProviderByServiceType: (serviceType) => {
+        return new Promise((resolve, reject) => {
+            let providerCollection = firestore().collection('serviceProviders');
+
+            providerCollection
+                .where('serviceType', '==', serviceType)
+                .orderBy('businessName')
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const serviceProviders = [];
+
+                        querySnapshot.forEach(docSnapshot => {
+                            let service = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                            };
+                            serviceProviders.push(service);
+                        });
+
+                        const result = {
+                            data: serviceProviders,
+                        };
+
+                        resolve(result);
+                    } else {
+                        const result = {
+                            data: [],
+                        };
+
+                        resolve(result);
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getProviderByServiceType\n');
+                    reject(error);
+                });
+        });
+    },
     setProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
             const serviceProvidersCollection = firestore().collection('serviceProviders');
