@@ -147,7 +147,7 @@ const ProviderSchedulePage = () => {
             if (request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS) {
                 event = {
                     ...event,
-                    color: CustomColors.PRIMARY_LIGHT_BLUE,
+                    color: '#70cbff',
                 };
             }
 
@@ -269,6 +269,11 @@ const ProviderSchedulePage = () => {
                             eventTapped={e => {
                                 console.log(e);
                             }}
+                            eventTapped={e => {
+                                navigation.navigate('JobRequestControlDashboard', {
+                                    requestId: e.requestId
+                                });
+                            }}
                             events={events.filter(event => sameDate(new XDate(event.start), new XDate(currentDate)))}
                             styles={{
                                 eventTitle: {
@@ -320,7 +325,7 @@ const ProviderSchedulePage = () => {
                             </View>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                 <View
-                                    style={{width: 12, height: 12, backgroundColor: CustomColors.PRIMARY_BLUE}}></View>
+                                    style={{width: 12, height: 12, backgroundColor: '#70cbff'}}></View>
                                 <Text
                                     style={{
                                         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,

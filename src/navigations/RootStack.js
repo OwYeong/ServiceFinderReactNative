@@ -15,6 +15,7 @@ import TestPage from '@pages/TestPage';
 import BusinessProfileEditPage from '@pages/provider/BusinessProfileEditPage';
 import FormEditPage from '@pages/provider/FormEditPage';
 import JobRequestConfirmationPage from '@pages/provider/JobRequestConfirmationPage';
+import JobRequestControlDashboard from '@pages/provider/JobRequestControlDashboard';
 
 const Stack = createStackNavigator();
 
@@ -124,6 +125,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="JobRequestConfirmation"
                                 component={JobRequestConfirmationPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="JobRequestControlDashboard"
+                                component={JobRequestControlDashboard}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,
