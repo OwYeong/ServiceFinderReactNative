@@ -51,8 +51,8 @@ const UserService = {
 
                             return;
                         }
-                        const fcmToken = await AsyncStorage.getItem('fcmToken')
-                        console.log('fcmToken',fcmToken)
+                        const fcmToken = await AsyncStorage.getItem('fcmToken');
+                        console.log('fcmToken', fcmToken);
 
                         await UserService.updateFcmTokenInUserData(fcmToken);
                         await UserService.fetchLoggedInUserDataToRedux();
@@ -90,7 +90,7 @@ const UserService = {
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                                 isFirstTimeUser: true,
                                 isBusinessProfileSetup: false,
-                                firstJoined: firebase.firestore.FieldValue.serverTimestamp()
+                                firstJoined: firebase.firestore.FieldValue.serverTimestamp(),
                             })
                             .then(() => {});
 
@@ -162,7 +162,7 @@ const UserService = {
                                 accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                                 isFirstTimeUser: true,
-                                firstJoined: firebase.firestore.FieldValue.serverTimestamp()
+                                firstJoined: firebase.firestore.FieldValue.serverTimestamp(),
                             })
                             .then(() => {});
 
@@ -247,8 +247,8 @@ const UserService = {
 
                             return;
                         }
-                        const fcmToken = await AsyncStorage.getItem('fcmToken')
-                        console.log('fcmToken',fcmToken)
+                        const fcmToken = await AsyncStorage.getItem('fcmToken');
+                        console.log('fcmToken', fcmToken);
 
                         await UserService.updateFcmTokenInUserData(fcmToken);
                         await UserService.fetchLoggedInUserDataToRedux();
@@ -288,14 +288,14 @@ const UserService = {
                                     accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                     loginProvider: Constants.LOGIN_PROVIDER_GOOGLE,
                                     isFirstTimeUser: true,
-                                    firstJoined: firebase.firestore.FieldValue.serverTimestamp()
+                                    firstJoined: firebase.firestore.FieldValue.serverTimestamp(),
                                 },
                                 authUser.user.uid,
                             )
                                 .then(async data => {
-                                    const fcmToken = await AsyncStorage.getItem('fcmToken')
-                                    console.log('fcmToken',fcmToken)
-            
+                                    const fcmToken = await AsyncStorage.getItem('fcmToken');
+                                    console.log('fcmToken', fcmToken);
+
                                     await UserService.updateFcmTokenInUserData(fcmToken);
                                     await UserService.fetchLoggedInUserDataToRedux();
                                     resolve('Success');
@@ -354,14 +354,14 @@ const UserService = {
                                     accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                     loginProvider: Constants.LOGIN_PROVIDER_FACEBOOK,
                                     isFirstTimeUser: true,
-                                    firstJoined: firebase.firestore.FieldValue.serverTimestamp()
+                                    firstJoined: firebase.firestore.FieldValue.serverTimestamp(),
                                 },
                                 authUser.user.uid,
                             )
                                 .then(async data => {
-                                    const fcmToken = await AsyncStorage.getItem('fcmToken')
-                                    console.log('fcmToken',fcmToken)
-            
+                                    const fcmToken = await AsyncStorage.getItem('fcmToken');
+                                    console.log('fcmToken', fcmToken);
+
                                     await UserService.updateFcmTokenInUserData(fcmToken);
                                     await UserService.fetchLoggedInUserDataToRedux();
 
@@ -421,7 +421,7 @@ const UserService = {
                 });
         });
     },
-    updateIsFirstTime:(documentId, isFirstTimeUser) => {
+    updateIsFirstTime: (documentId, isFirstTimeUser) => {
         return new Promise(async (resolve, reject) => {
             const usersCollection = firestore().collection('users');
 
@@ -439,12 +439,12 @@ const UserService = {
                 });
         });
     },
-    updateIsBusinessProfileSetupStatus:(documentId, isBusinessProfileSetup) => {
-        console.log('updateIsBusinessProfileSetupStatus')
+    updateIsBusinessProfileSetupStatus: (documentId, isBusinessProfileSetup) => {
+        console.log('updateIsBusinessProfileSetupStatus');
         return new Promise((resolve, reject) => {
-            console.log('updateIsBusinessProfileSetupStatus')
+            console.log('updateIsBusinessProfileSetupStatus');
             const usersCollection = firestore().collection('users');
-            
+
             usersCollection
                 .doc(documentId)
                 .update({
@@ -503,12 +503,11 @@ const UserService = {
                 if (auth().currentUser == null) {
                     return; //already sign out
                 }
-                
-                
+
                 await UserService.updateFcmTokenInUserData('');
 
                 if (auth().currentUser.providerData[0].providerId == Constants.LOGIN_PROVIDER_GOOGLE) {
-                    console.log('google logout')
+                    console.log('google logout');
                     await GoogleSignin.revokeAccess();
                     await GoogleSignin.signOut();
                 }
@@ -516,7 +515,7 @@ const UserService = {
                 auth()
                     .signOut()
                     .then(() => {
-                        resolve('Logout success')
+                        resolve('Logout success');
                     });
             } catch (error) {
                 console.log(error);
@@ -524,7 +523,7 @@ const UserService = {
             }
         });
     },
-    updateFcmTokenInUserData: async (fcmToken)=>{
+    updateFcmTokenInUserData: async fcmToken => {
         return new Promise(async (resolve, reject) => {
             const usersCollection = firestore().collection('users');
 
@@ -542,6 +541,30 @@ const UserService = {
                 });
         });
     },
+    updateServiceAddress: serviceAddress => {
+        return new Promise(async (resolve, reject) => {
+            const usersCollection = firestore().collection('users');
+
+            usersCollection
+                .doc(auth().currentUser.uid)
+                .update({
+                    serviceAddress: serviceAddress,
+                })
+                .then(() => {
+                    UserService.fetchLoggedInUserDataToRedux()
+                        .then(data => {
+                            resolve('Successfully update service address');
+                        })
+                        .catch(err => {
+                            reject('Some error occur when updating service address');
+                        });
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur when updating service address');
+                });
+        });
+    },
     fetchLoggedInUserDataToRedux: () => {
         return new Promise(async (resolve, reject) => {
             try {
@@ -551,8 +574,8 @@ const UserService = {
                 }
 
                 const currentUserEmail = auth().currentUser.email;
-                
-                console.log(auth().currentUser.uid)
+
+                console.log(auth().currentUser.uid);
                 const currentUser = await firestore().collection('users').doc(auth().currentUser.uid).get();
 
                 if (!currentUser.exists) {
@@ -572,11 +595,10 @@ const UserService = {
                 console.log(error);
                 UserService.logOut();
                 reject('Some Error occurs');
-                
             }
         });
     },
-    getUserInfo: (documentId) => {
+    getUserInfo: documentId => {
         return new Promise(async (resolve, reject) => {
             let userCollections = firestore().collection('users');
 

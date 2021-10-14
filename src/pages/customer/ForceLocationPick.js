@@ -10,7 +10,7 @@ import {showMessage} from 'react-native-flash-message';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
+import ForceLocationIllustration from '@assets/images/service-address-required-illustration';
 const ForceLocationPick = () => {
     const navigation = useNavigation();
 
@@ -19,47 +19,24 @@ const ForceLocationPick = () => {
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
                 <View style={styles.bigContainer}>
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: -16}}>
-                            <IconButton
-                                icon="arrow-back"
-                                color={CustomColors.GRAY_DARK}
-                                size={CustomTypography.ICON_SMALL}
-                                onPress={() => {
-                                    navigation.goBack();
-                                }}
-                            />
-                            <Text
-                                style={{
-                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                    fontSize: CustomTypography.FONT_SIZE_16,
-                                }}>
-                                Post
-                            </Text>
-                        </View>
-                        <View>
-                            <IconButton
-                                icon="more-vert"
-                                color={CustomColors.GRAY_DARK}
-                                size={CustomTypography.ICON_SMALL}
-                                style={styles.backIcon}
-                                onPress={() => {
-                                    businessLogoActionSheet.current.snapTo(1);
-                                }}
-                            />
-                        </View>
+                    <Text style={styles.header}>Welcome to ServiceFinder. Input your address to proceed.</Text>
+                    <Text style={styles.desc}>
+                        Please input your address before you could purchase a service. The address will be used as the place for the actual delivery of service.
+                    </Text>
+                    <View style={{width: '90%', height: undefined, aspectRatio: 676 / 370, marginTop: 60}}>
+                        <ForceLocationIllustration fill="#fff" />
                     </View>
-                    <View
-                        style={{
-                            marginTop: 16,
-                            borderTopLeftRadius: 8,
-                            borderTopRightRadius: 8,
-                            overflow: 'hidden',
-                            elevation: 1,
+                    <Button
+                        style={styles.actionBtn}
+                        mode="contained"
+                        contentStyle={{height: 50}}
+                        color={CustomColors.PRIMARY_BLUE}
+                        dark
+                        onPress={() => {
+                            navigation.navigate('LocationPicker')
                         }}>
-                        <Image style={[styles.postImage]} source={{uri: postData?.imageUrl}} resizeMode="cover" />
-                    </View>
-                    <Text style={styles.inputStyle}>{postData?.postTitle}</Text>
+                        Pick a location
+                    </Button>
                 </View>
             </SafeAreaView>
         </View>
@@ -68,4 +45,40 @@ const ForceLocationPick = () => {
 
 export default ForceLocationPick;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+    bigContainer: {
+        width: '100%',
+        height: '100%',
+        flex: 1,
+        backgroundColor: CustomColors.WHITE,
+        padding: 16,
+        paddingVertical: 24,
+    },
+    header: {
+        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+        fontSize: CustomTypography.FONT_SIZE_24,
+        color: CustomColors.GRAY_DARK,
+        marginTop: 24,
+    },
+    desc: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_14,
+        color: CustomColors.GRAY,
+        marginTop: 12,
+    },
+
+    actionBtnContainer: {
+        position: 'absolute',
+        bottom: 16,
+        left: 16,
+        right: 16,
+    },
+    actionBtn: {
+        marginTop: 40,
+        width: '100%',
+        borderRadius: 8,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        justifyContent: 'center',
+    },
+});

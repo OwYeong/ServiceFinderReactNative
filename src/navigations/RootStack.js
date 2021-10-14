@@ -18,6 +18,7 @@ import JobRequestConfirmationPage from '@pages/provider/JobRequestConfirmationPa
 import JobRequestControlDashboard from '@pages/provider/JobRequestControlDashboard';
 import BrowseVendorByCategory from '@pages/customer/BrowseVendorByCategory';
 import LocationPicker from '@pages/customer/LocationPicker';
+import ForceLocationPick from '@pages/customer/ForceLocationPick';
 
 const Stack = createStackNavigator();
 
@@ -52,6 +53,17 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                         </Stack.Screen>
                     ) : null}
 
+                    {!userInfo.serviceAddress ? (
+                        <Stack.Screen
+                            name="ForceLocationPick"
+                            component={ForceLocationPick}
+                            options={{
+                                animationEnabled: true,
+                                headerShown: false,
+                            }}
+                        />
+                    ) : null}
+
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.CONSUMER ? (
                         <>
                             <Stack.Screen
@@ -70,7 +82,7 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                                     headerShown: false,
                                 }}
                             />
-                             <Stack.Screen
+                            <Stack.Screen
                                 name="BrowseVendorByCategory"
                                 component={BrowseVendorByCategory}
                                 options={{

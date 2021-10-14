@@ -7,48 +7,108 @@ import store from '../../store';
 import UserService from './UserService';
 import firebase from '@react-native-firebase/app';
 
+// ~1 km of lat and lon in degrees (not 100% accurate, approximately only)
+//adopted from : https://stackoverflow.com/questions/4000886/gps-coordinates-1km-square-around-a-point
+let latDegreeFor1Km = 0.008983;
+let lonDegreeFor1Km = 0.01506;
+
 const ProviderService = {
     getPopularServiceOfTheMonthWithPagination: (lastVisibleDocument = null) => {
         return new Promise((resolve, reject) => {
             let popularService = null;
+            // Firebase does not support query that uses a fieldvalue.
+            // In our case, we need serviceCoverage field value when querying the service providers within the area of customer doorstep
+            // Its is best to be done using firebaseCloud function or a custom backend server with firebase admin SDK.
+            // Since, firebaseCloud function required payment option and we do not have a custome backend application
+            // We will temperory do the location filter in frontend.
 
-            if (!!lastVisibleDocument) {
-                popularService = firestore()
-                    .collection('serviceProviders')
-                    .limit(10)
-                    // Filter results
-                    .orderBy('popularity.AUG_2021', 'desc')
-                    .startAfter(lastVisibleDocument);
-            } else {
-                popularService = firestore()
-                    .collection('serviceProviders')
-                    .limit(10)
-                    // Filter results
-                    .orderBy('popularity.AUG_2021', 'desc');
-            }
+            // if (!!lastVisibleDocument) {
+            //     popularService = firestore()
+            //         .collection('serviceProviders')
+            //         .limit(10)
+            //         // Filter results
+            //         .orderBy('popularity.AUG_2021', 'desc')
+            //         .startAfter(lastVisibleDocument);
+            // } else {
+            //     popularService = firestore()
+            //         .collection('serviceProviders')
+            //         .limit(10)
+            //         // Filter results
+            //         .orderBy('popularity.AUG_2021', 'desc');
+            // }
 
-            popularService
+            var serviceProviderCollection = firestore()
+                .collection('serviceProviders')
+                .orderBy('popularity.AUG_2021', 'desc');
+
+            var providerWithinAreaOfCustomerLocation = [];
+
+            serviceProviderCollection
                 .get()
                 .then(querySnapshot => {
                     if (querySnapshot.size > 0) {
-                        const newLastVisibleDocument = querySnapshot.docs[querySnapshot.docs.length - 1];
                         console.log('last visible document');
-                        console.log(newLastVisibleDocument.data());
-                        const popularServices = [];
+                        console.log(lastVisibleDocument);
+                        try {
+                            var popularServices = [];
 
-                        querySnapshot.forEach(docSnapshot => {
-                            let service = {
-                                id: docSnapshot.id,
-                                ...docSnapshot.data(),
-                            };
-                            popularServices.push(service);
-                        });
+                            querySnapshot.forEach(docSnapshot => {
+                                let provider = {
+                                    id: docSnapshot.id,
+                                    ...docSnapshot.data(),
+                                };
+                                let providerCoverageDistance = provider.serviceCoverage.coverageDistance;
+                                let providerCoor = provider.serviceCoverage.addressCoor;
 
-                        const result = {
-                            lastVisibleDocument: newLastVisibleDocument,
-                            data: popularServices,
-                        };
+                                let userCoor = store.getState().loginState.userInfo.serviceAddress.addressCoor;
 
+                                let lowLatThreshold = userCoor.latitude - latDegreeFor1Km * providerCoverageDistance;
+                                let lowLonThreshold = userCoor.longitude - lonDegreeFor1Km * providerCoverageDistance;
+
+                                let highLatThreshold = userCoor.latitude + latDegreeFor1Km * providerCoverageDistance;
+                                let highLonThreshold = userCoor.longitude + lonDegreeFor1Km * providerCoverageDistance;
+
+                                console.log(providerCoor.latitude + ',' + providerCoor.longitude);
+                                //Location Filter, Temperatory here.
+                                if (
+                                    providerCoor.latitude > lowLatThreshold &&
+                                    providerCoor.latitude < highLatThreshold &&
+                                    providerCoor.longitude > lowLonThreshold &&
+                                    providerCoor.longitude < highLonThreshold
+                                )
+                                    providerWithinAreaOfCustomerLocation.push(provider);
+                            });
+
+                            const paginationLimit = 10;
+
+                            if (!!lastVisibleDocument) {
+                                lastVisibleDocumentIndex = providerWithinAreaOfCustomerLocation.findIndex(element => {
+                                    return element.id == lastVisibleDocument.id;
+                                });
+
+                                popularServices = providerWithinAreaOfCustomerLocation.slice(
+                                    lastVisibleDocumentIndex + 1,
+                                    lastVisibleDocumentIndex + 1 + paginationLimit,
+                                );
+                            } else {
+                                popularServices = providerWithinAreaOfCustomerLocation.slice(0, paginationLimit);
+                            }
+                            var result = {};
+
+                            if (popularServices.length > 0) {
+                                result = {
+                                    lastVisibleDocument: popularServices[popularServices.length - 1],
+                                    data: popularServices,
+                                };
+                            } else {
+                                result = {
+                                    lastVisibleDocument: lastVisibleDocument,
+                                    data: [],
+                                };
+                            }
+                        } catch (err) {
+                            console.log(err);
+                        }
                         resolve(result);
                     } else {
                         const result = {
@@ -104,7 +164,7 @@ const ProviderService = {
                 });
         });
     },
-    getProviderByBusinessCategory: (businessCategory) => {
+    getProviderByBusinessCategory: businessCategory => {
         return new Promise((resolve, reject) => {
             let providerCollection = firestore().collection('serviceProviders');
 
@@ -117,11 +177,29 @@ const ProviderService = {
                         const serviceProviders = [];
 
                         querySnapshot.forEach(docSnapshot => {
-                            let service = {
+                            let provider = {
                                 id: docSnapshot.id,
                                 ...docSnapshot.data(),
                             };
-                            serviceProviders.push(service);
+                            let providerCoverageDistance = provider.serviceCoverage.coverageDistance;
+                            let providerCoor = provider.serviceCoverage.addressCoor;
+
+                            let userCoor = store.getState().loginState.userInfo.serviceAddress.addressCoor;
+
+                            let lowLatThreshold = userCoor.latitude - latDegreeFor1Km * providerCoverageDistance;
+                            let lowLonThreshold = userCoor.longitude - lonDegreeFor1Km * providerCoverageDistance;
+
+                            let highLatThreshold = userCoor.latitude + latDegreeFor1Km * providerCoverageDistance;
+                            let highLonThreshold = userCoor.longitude + lonDegreeFor1Km * providerCoverageDistance;
+
+                            //Location Filter, Temperatory here.
+                            if (
+                                providerCoor.latitude > lowLatThreshold &&
+                                providerCoor.latitude < highLatThreshold &&
+                                providerCoor.longitude > lowLonThreshold &&
+                                providerCoor.longitude < highLonThreshold
+                            )
+                                serviceProviders.push(provider);
                         });
 
                         const result = {
@@ -143,7 +221,7 @@ const ProviderService = {
                 });
         });
     },
-    getProviderByServiceType: (serviceType) => {
+    getProviderByServiceType: serviceType => {
         return new Promise((resolve, reject) => {
             let providerCollection = firestore().collection('serviceProviders');
 
@@ -156,11 +234,42 @@ const ProviderService = {
                         const serviceProviders = [];
 
                         querySnapshot.forEach(docSnapshot => {
-                            let service = {
+                            let provider = {
                                 id: docSnapshot.id,
                                 ...docSnapshot.data(),
                             };
-                            serviceProviders.push(service);
+                            let providerCoverageDistance = provider.serviceCoverage.coverageDistance;
+                            let providerCoor = provider.serviceCoverage.addressCoor;
+
+                            let userCoor = store.getState().loginState.userInfo.serviceAddress.addressCoor;
+
+                            let lowLatThreshold = userCoor.latitude - latDegreeFor1Km * providerCoverageDistance;
+                            let lowLonThreshold = userCoor.longitude - lonDegreeFor1Km * providerCoverageDistance;
+
+                            let highLatThreshold = userCoor.latitude + latDegreeFor1Km * providerCoverageDistance;
+                            let highLonThreshold = userCoor.longitude + lonDegreeFor1Km * providerCoverageDistance;
+
+                            console.log(
+                                providerCoor.latitude +
+                                    ',' +
+                                    providerCoor.longitude +
+                                    '<<PRovider     low>>' +
+                                    lowLatThreshold +
+                                    ',' +
+                                    lowLonThreshold +
+                                    '   high>>' +
+                                    highLatThreshold +
+                                    ',' +
+                                    highLonThreshold,
+                            );
+                            //Location Filter
+                            if (
+                                providerCoor.latitude > lowLatThreshold &&
+                                providerCoor.latitude < highLatThreshold &&
+                                providerCoor.longitude > lowLonThreshold &&
+                                providerCoor.longitude < highLonThreshold
+                            )
+                                serviceProviders.push(provider);
                         });
 
                         const result = {
@@ -202,7 +311,6 @@ const ProviderService = {
     },
     updateProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
-            
             const serviceProvidersCollection = firestore().collection('serviceProviders');
 
             serviceProvidersCollection
@@ -211,7 +319,7 @@ const ProviderService = {
                     ...data,
                 })
                 .then(() => {
-                    console.log('Service Provider data successfully updated!')
+                    console.log('Service Provider data successfully updated!');
                     resolve('Service Provider data successfully updated!');
                 })
                 .catch(err => {
@@ -220,17 +328,18 @@ const ProviderService = {
                 });
         });
     },
-    updateProviderTotalEarningAndNumOfJobCompleted: (paymentReceived) => {
+    updateProviderTotalEarningAndNumOfJobCompleted: paymentReceived => {
         return new Promise((resolve, reject) => {
-            
             ProviderService.updateProviderData({
                 totalEarnings: firebase.firestore.FieldValue.increment(paymentReceived),
                 jobsCompleted: firebase.firestore.FieldValue.increment(1),
-            }).then(data=>{
-                resolve('success');
-            }).catch(err=>{
-                reject('failed')
-            });
+            })
+                .then(data => {
+                    resolve('success');
+                })
+                .catch(err => {
+                    reject('failed');
+                });
         });
     },
     uploadCoverImageToStorage: (userId, coverImagePath, mimeType) => {
@@ -331,7 +440,7 @@ const ProviderService = {
                 });
         });
     },
-    getPost: (documentId) => {
+    getPost: documentId => {
         return new Promise((resolve, reject) => {
             let postCollections = firestore().collection('posts');
 
@@ -405,10 +514,10 @@ const ProviderService = {
                 });
         });
     },
-    deletePost: (documentId) => {
+    deletePost: documentId => {
         return new Promise((resolve, reject) => {
             const postsCollection = firestore().collection('posts');
-            
+
             postsCollection
                 .doc(documentId)
                 .delete()
@@ -454,10 +563,5 @@ const ProviderService = {
         });
     },
 };
-
-// ~1 km of lat and lon in degrees
-//adopted from : https://stackoverflow.com/questions/4000886/gps-coordinates-1km-square-around-a-point
-// let lat = 0.008983
-// let lon = 0.015060
 
 export default ProviderService;

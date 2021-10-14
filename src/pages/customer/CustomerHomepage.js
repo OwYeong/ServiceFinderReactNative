@@ -34,6 +34,8 @@ import {SvgCssUri} from 'react-native-svg';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import PopularServiceDisplaySkeleton from '@organisms/PopularServiceDisplaySkeleton';
 import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import _ from 'lodash';
 
 const moveCloud = {
     0: {
@@ -61,6 +63,7 @@ const moveCloudReverse = {
 
 const CustomerHomepage = () => {
     const navigation = useNavigation();
+    const userInfo = useSelector(state => state.loginState.userInfo);
 
     const [popularServiceList, setPopularServiceList] = useState({isLoadingMoreData: false, data: []});
     const [popularServiceFetchBlock, setPopularServiceFetchBlock] = useState(false);
@@ -173,15 +176,17 @@ const CustomerHomepage = () => {
                                 start={{x: 0, y: 1}}
                                 end={{x: 1, y: 1}}
                                 style={styles.headerGradient}>
-                                <TouchableWithoutFeedback onPress={()=>{
-                                    console.log("haha")
-                                    navigation.navigate('LocationPicker');
-                                }}>
+                                <TouchableWithoutFeedback
+                                    onPress={() => {
+                                        console.log('haha');
+                                        navigation.navigate('LocationPicker');
+                                    }}>
                                     <View style={styles.locationWrapper}>
                                         <Text style={styles.serviceAt}>
                                             SERVICE AT{'\n'}
                                             <Text style={styles.serviceLocation}>
-                                                Home asdas <Icon name="caret-down" width={36} height={36} />
+                                                {_.truncate(userInfo?.serviceAddress?.addressFullName, {length:48})}{' '}
+                                                <Icon name="caret-down" width={36} height={36} />
                                             </Text>
                                         </Text>
                                     </View>
