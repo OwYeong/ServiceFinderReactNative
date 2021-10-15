@@ -2,7 +2,7 @@ import {useNavigation} from '@react-navigation/core';
 import {CustomColors, CustomTypography} from '@styles';
 import CommonFunction from '@utils/CommonFunction';
 import React, {useEffect, useState} from 'react';
-import {ScrollView, StatusBar, StyleSheet, Text, View, Image} from 'react-native';
+import {ScrollView, StatusBar, StyleSheet, Text, View, Image, UIManager, LayoutAnimation} from 'react-native';
 import {IconButton, TouchableRipple} from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import NoResultIllustration from '@assets/images/no-result-found-illustration';
@@ -27,7 +27,8 @@ const BrowseVendorByCategory = ({route}) => {
                 .then(res => {
                     setMatchedServiceProviders(res.data);
 
-                    setTimeout(() => {
+                    setTimeout(() => {                        
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                         setIsFetchingData(false);
                     }, 1000);
                     console.log(res.data);
@@ -38,15 +39,24 @@ const BrowseVendorByCategory = ({route}) => {
         if (!!serviceType)
             ProviderService.getProviderByServiceType(serviceType)
                 .then(res => {
+
                     setMatchedServiceProviders(res.data);
                     setTimeout(() => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                         setIsFetchingData(false);
                     }, 1000);
                 })
                 .catch(err => {
                     console.log(err);
                 });
+
+        if (Platform.OS === 'android') {
+            if (UIManager.setLayoutAnimationEnabledExperimental) {
+                UIManager.setLayoutAnimationEnabledExperimental(true);
+            }
+        }
     }, []);
+
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
@@ -112,7 +122,13 @@ const BrowseVendorByCategory = ({route}) => {
                                             key={providerInfo.id}>
                                             <View
                                                 elevation={2}
-                                                style={{width: 108, height:108, borderRadius: 8, overflow: 'hidden',backgroundColor: CustomColors.GRAY}}>
+                                                style={{
+                                                    width: 108,
+                                                    height: 108,
+                                                    borderRadius: 8,
+                                                    overflow: 'hidden',
+                                                    backgroundColor: CustomColors.GRAY,
+                                                }}>
                                                 <Image
                                                     style={{
                                                         width: 108,

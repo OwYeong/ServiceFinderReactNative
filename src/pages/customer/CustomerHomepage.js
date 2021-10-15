@@ -34,6 +34,8 @@ import {SvgCssUri} from 'react-native-svg';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import PopularServiceDisplaySkeleton from '@organisms/PopularServiceDisplaySkeleton';
 import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import _ from 'lodash';
 
 const moveCloud = {
     0: {
@@ -61,9 +63,12 @@ const moveCloudReverse = {
 
 const CustomerHomepage = () => {
     const navigation = useNavigation();
+    const userInfo = useSelector(state => state.loginState.userInfo);
 
     const [popularServiceList, setPopularServiceList] = useState({isLoadingMoreData: false, data: []});
     const [popularServiceFetchBlock, setPopularServiceFetchBlock] = useState(false);
+    const [isFetchingPopularService, setIsFetchingPopularService] = useState(true);
+
     const [serviceCategories, setServiceCategories] = useState([]);
     const [statusBarColor, setStatusBarColor] = useState('transparent');
 
@@ -77,6 +82,8 @@ const CustomerHomepage = () => {
         try {
             const popularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination();
             console.log(popularServices);
+
+            setIsFetchingPopularService(false);
             setPopularServiceList({
                 ...popularServiceList,
                 lastDocumentInList: popularServices.lastVisibleDocument,
@@ -173,14 +180,21 @@ const CustomerHomepage = () => {
                                 start={{x: 0, y: 1}}
                                 end={{x: 1, y: 1}}
                                 style={styles.headerGradient}>
-                                <View style={styles.locationWrapper}>
-                                    <Text style={styles.serviceAt}>
-                                        SERVICE AT{'\n'}
-                                        <Text style={styles.serviceLocation}>
-                                            Home asdas <Icon name="caret-down" width={36} height={36} />
+                                <TouchableWithoutFeedback
+                                    onPress={() => {
+                                        console.log('haha');
+                                        navigation.navigate('LocationPicker');
+                                    }}>
+                                    <View style={styles.locationWrapper}>
+                                        <Text style={styles.serviceAt}>
+                                            SERVICE AT{'\n'}
+                                            <Text style={styles.serviceLocation}>
+                                                {_.truncate(userInfo?.serviceAddress?.addressFullName, {length: 48})}{' '}
+                                                <Icon name="caret-down" width={36} height={36} />
+                                            </Text>
                                         </Text>
-                                    </Text>
-                                </View>
+                                    </View>
+                                </TouchableWithoutFeedback>
                                 <Text style={styles.slogan}>Book Service{'\n'}to your doorstep</Text>
                                 <TouchableWithoutFeedback
                                     onPress={() => {
@@ -279,7 +293,7 @@ const CustomerHomepage = () => {
                                         }}
                                         keyExtractor={item => item.id}
                                         ListHeaderComponent={() => {
-                                            return popularServiceList.data.length > 0 ? null : (
+                                            return isFetchingPopularService ? (
                                                 <>
                                                     <View style={styles.popularServiceWrapper}>
                                                         <PopularServiceDisplaySkeleton style={{}} />
@@ -287,6 +301,14 @@ const CustomerHomepage = () => {
                                                         <PopularServiceDisplaySkeleton style={{}} />
                                                     </View>
                                                 </>
+                                            ) : popularServiceList.data.length > 0 ? null : (
+                                                <View style={{padding:20}}>
+                                                    <View style={{width: 250, height: 100,justifyContent:'center'}}>
+                                                        <Text style={{textAlign: 'left', fontFamily: CustomTypography.FONT_FAMILY_REGULAR, color: CustomColors.GRAY, fontSize: CustomTypography.FONT_SIZE_12}}>
+                                                            Sorry, there are no popular service at your area currently
+                                                        </Text>
+                                                    </View>
+                                                </View>
                                             );
                                         }}
                                         ListFooterComponent={() => {
@@ -357,7 +379,9 @@ const CustomerHomepage = () => {
                                                 }}
                                                 borderless
                                                 onPress={() => {
-                                                    navigation.navigate('BrowseVendorByCategory', {businessCategory: item.id})
+                                                    navigation.navigate('BrowseVendorByCategory', {
+                                                        businessCategory: item.id,
+                                                    });
                                                 }}
                                                 rippleColor="rgba(0, 0, 0, .2)">
                                                 <View style={styles.categoryButton}>
