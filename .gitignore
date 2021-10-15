@@ -57,3 +57,6 @@ buck-out/
 
 # CocoaPods
 /ios/Pods/
+
+#firebase privatekey
+firebase_admin_private_key.json
