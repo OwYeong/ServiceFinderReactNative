@@ -36,6 +36,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Car Wash
@@ -123,6 +125,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
         'providerInfo': {
+            'phoneNumber': '+0312345678',
+            'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Car Washing
@@ -210,6 +214,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Wind Screen replacement
@@ -271,6 +277,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Computer Repair
@@ -333,6 +341,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Phone Repair
@@ -394,6 +404,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Personal Fitness Train
@@ -455,6 +467,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Chinese Lesson
@@ -518,6 +532,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Halal Catering Services
@@ -580,6 +596,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Cameraman Service
@@ -642,6 +660,8 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678'
      },
      'providerInfo': {
+         'phoneNumber': '+0312345678',
+         'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
          We provide services such as :
             - Wedding Makeup
@@ -716,8 +736,10 @@ database = firestore.client()
 # col_ref is CollectionReference
 
 for provider in service_provider_dummies:
-    database.collection('users').document(provider['uid']).set(provider["userInfo"])
-    database.collection('serviceProviders').document(provider['uid']).set(provider["providerInfo"])
+    database.collection('users').document(
+        provider['uid']).set(provider["userInfo"])
+    database.collection('serviceProviders').document(
+        provider['uid']).set(provider["providerInfo"])
 
     print("setting for " + provider["uid"])
 
