@@ -19,6 +19,7 @@ import JobRequestControlDashboard from '@pages/provider/JobRequestControlDashboa
 import BrowseVendorByCategory from '@pages/customer/BrowseVendorByCategory';
 import LocationPicker from '@pages/customer/LocationPicker';
 import ForceLocationPick from '@pages/customer/ForceLocationPick';
+import ViewServiceProvider from '@pages/customer/ViewServiceProvider';
 
 const Stack = createStackNavigator();
 
@@ -93,6 +94,24 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="LocationPicker"
                                 component={LocationPicker}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            
+                            <Stack.Screen
+                                name="ViewServiceProvider"
+                                component={ViewServiceProvider}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            
+                            <Stack.Screen
+                                name="PostView"
+                                component={PostViewPage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,

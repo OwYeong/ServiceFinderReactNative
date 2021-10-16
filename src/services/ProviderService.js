@@ -291,6 +291,25 @@ const ProviderService = {
                 });
         });
     },
+    getProviderById: (callback, documentId) => {
+        let serviceProviderCollections = firestore().collection('serviceProviders');
+
+        return serviceProviderCollections
+            .doc(documentId)
+            .onSnapshot(docSnapshot => {
+                if (docSnapshot.exists) {
+                    let providerData = {
+                        id: docSnapshot.id,
+                        ...docSnapshot.data(),
+                        firstJoined: docSnapshot.data().firstJoined.toDate().toString(),
+                    };
+
+                    callback(providerData);
+                } else {
+                    callback(null);
+                }
+            });
+    },
     setProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
             const serviceProvidersCollection = firestore().collection('serviceProviders');
@@ -527,6 +546,24 @@ const ProviderService = {
                 .catch(error => {
                     reject('error occurs');
                     console.log('some error occur when deleting post');
+                });
+        });
+    },
+    updatePhoneNumber: (documentId, phoneNumber) => {
+        return new Promise(async (resolve, reject) => {
+            const usersCollection = firestore().collection('serviceProviders');
+
+            usersCollection
+                .doc(documentId)
+                .update({
+                    phoneNumber: phoneNumber,
+                })
+                .then(() => {
+                    resolve('Successfully updated');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
                 });
         });
     },

@@ -291,6 +291,12 @@ const PhoneVerification = () => {
                         .then(data => {})
                         .catch(err => {});
 
+                    if (userInfo.accType == Constants.ACCOUNT_TYPE.VENDOR){
+                        UserService.updatePhoneNumber(auth().currentUser.uid, phoneNumInputted)
+                        .then(data => {})
+                        .catch(err => {});
+                    }
+
                     console.log('verificationSuccess');
 
                     return firebaseAuthWorker.signOut().catch(err => {});

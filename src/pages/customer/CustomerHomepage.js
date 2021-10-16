@@ -281,13 +281,18 @@ const CustomerHomepage = () => {
                                                         styles.popularServiceWrapper,
                                                         {paddingLeft: index > 0 ? 0 : 20},
                                                     ]}>
-                                                    <PopularServiceDisplay
-                                                        serviceType={item.serviceType}
-                                                        appointmentInCurrentMonth={item.popularity.AUG_2021}
-                                                        businessName={item.businessName}
-                                                        profileImgUrl={item.businessLogoUrl}
-                                                        coverImageUrl={item.coverImgUrl}
-                                                    />
+                                                    <TouchableRipple
+                                                        onPress={() => {
+                                                            navigation.navigate('ViewServiceProvider', {providerId: item.id});
+                                                        }}>
+                                                        <PopularServiceDisplay
+                                                            serviceType={item.serviceType}
+                                                            appointmentInCurrentMonth={item.popularity.AUG_2021}
+                                                            businessName={item.businessName}
+                                                            profileImgUrl={item.businessLogoUrl}
+                                                            coverImageUrl={item.coverImgUrl}
+                                                        />
+                                                    </TouchableRipple>
                                                 </Animatable.View>
                                             );
                                         }}
@@ -302,9 +307,15 @@ const CustomerHomepage = () => {
                                                     </View>
                                                 </>
                                             ) : popularServiceList.data.length > 0 ? null : (
-                                                <View style={{padding:20}}>
-                                                    <View style={{width: 250, height: 100,justifyContent:'center'}}>
-                                                        <Text style={{textAlign: 'left', fontFamily: CustomTypography.FONT_FAMILY_REGULAR, color: CustomColors.GRAY, fontSize: CustomTypography.FONT_SIZE_12}}>
+                                                <View style={{padding: 20}}>
+                                                    <View style={{width: 250, height: 100, justifyContent: 'center'}}>
+                                                        <Text
+                                                            style={{
+                                                                textAlign: 'left',
+                                                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                                color: CustomColors.GRAY,
+                                                                fontSize: CustomTypography.FONT_SIZE_12,
+                                                            }}>
                                                             Sorry, there are no popular service at your area currently
                                                         </Text>
                                                     </View>

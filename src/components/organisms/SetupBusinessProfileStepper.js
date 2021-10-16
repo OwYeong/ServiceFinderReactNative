@@ -66,6 +66,7 @@ import {Constants} from '~constants';
 import ProviderService from '@services/ProviderService';
 import moment from 'moment';
 import UserService from '@services/UserService';
+import { useSelector } from 'react-redux';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -176,6 +177,9 @@ const SetupBusinessProfileStepper = () => {
             backgroundColor: 'transparent', // change the color to "rgba(1,0,0,0)"
         },
     };
+    
+    const userInfo = useSelector(state => state.loginState.userInfo);
+
     const [userInput, setUserInput] = useState({
         serviceCoverage: {
             coverageDistance: '5',
@@ -520,6 +524,7 @@ const SetupBusinessProfileStepper = () => {
                         numOf4Star: 0,
                         numOf5Star: 0,
                     },
+                    firstJoined: userInfo.firstJoined
                 };
 
                 if (isUserSetupCoverImage) {
