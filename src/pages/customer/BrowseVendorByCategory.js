@@ -118,6 +118,7 @@ const BrowseVendorByCategory = ({route}) => {
                                     <TouchableRipple
                                         onPress={() => {
                                             navigation.navigate('ViewServiceProvider', {providerId: providerInfo.id});
+                                            
                                         }}
                                         key={providerInfo.id}>
                                         <View

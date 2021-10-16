@@ -325,7 +325,8 @@ const ViewServiceProvider = ({route}) => {
                                     dark
                                     mode="contained"
                                     onPress={() => {
-                                        navigation.navigate('BusinessProfileEdit');
+                                        navigation.navigate('BookServicePage');
+                                        
                                     }}>
                                     Book Now
                                 </Button>

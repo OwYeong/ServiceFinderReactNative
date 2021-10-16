@@ -20,6 +20,7 @@ import BrowseVendorByCategory from '@pages/customer/BrowseVendorByCategory';
 import LocationPicker from '@pages/customer/LocationPicker';
 import ForceLocationPick from '@pages/customer/ForceLocationPick';
 import ViewServiceProvider from '@pages/customer/ViewServiceProvider';
+import BookServicePage from '@pages/customer/BookServicePage';
 
 const Stack = createStackNavigator();
 
@@ -112,6 +113,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="PostView"
                                 component={PostViewPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="BookServicePage"
+                                component={BookServicePage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,
