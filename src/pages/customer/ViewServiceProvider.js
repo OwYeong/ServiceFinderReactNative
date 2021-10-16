@@ -56,6 +56,7 @@ const ViewServiceProvider = ({route}) => {
     const [photosList, setPhotosList] = useState([]);
     const [reviewList, setReviewList] = useState([]);
     const [statusBarContent, setStatusBarContent] = useState('light-content');
+    const [isFetchingData, setIsFetchingData] = useState(true);
 
     const [navigationState, setNavigationState] = useState({
         index: 0,
@@ -69,7 +70,13 @@ const ViewServiceProvider = ({route}) => {
     const [isPhotoListingScrollable, setIsPhotoListingScrollable] = useState(false);
 
     useEffect(() => {
-        const unsubscriber = ProviderService.getProviderById(setProviderInfo, providerId);
+        const unsubscriber = ProviderService.getProviderById(data => {
+            setProviderInfo(data);
+
+            setTimeout(() => {
+                setIsFetchingData(false);
+            }, 1000);
+        }, providerId);
 
         ProviderService.getAllPost(providerId)
             .then(data => {
@@ -97,19 +104,15 @@ const ViewServiceProvider = ({route}) => {
 
     return (
         <View style={{backgroundColor: 'transparent'}}>
-            <StatusBar
-                barStyle={statusBarContent}
-                backgroundColor={'transparent'}
-                translucent
-            />
+            <StatusBar barStyle={statusBarContent} backgroundColor={'transparent'} translucent />
             <SafeAreaView style={{width: '100%', height: '100%'}} edges={['right', 'bottom', 'left']}>
                 <ScrollView
                     style={{flex: 1}}
                     onScroll={event => {
-                        console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY-30);
-                        if (event.nativeEvent.contentOffset.y > tabBarOffsetY -30) {
+                        console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY - 30);
+                        if (event.nativeEvent.contentOffset.y > tabBarOffsetY - 30) {
                             setIsPhotoListingScrollable(true);
-                            
+
                             setStatusBarContent('dark-content');
                         } else {
                             setIsPhotoListingScrollable(false);
@@ -131,10 +134,10 @@ const ViewServiceProvider = ({route}) => {
                                         }}></View>
                                 </SkeletonPlaceholder>
 
-                                {!!providerInfo ? (
+                                {!isFetchingData ? (
                                     <View style={{width: '100%', position: 'absolute', top: 0, left: 0}}>
                                         <ImageBackground
-                                            style={[styles.coverImage, {opacity: isCoverImgLoading ? 0 : 1}]}
+                                            style={[styles.coverImage]}
                                             source={
                                                 !!providerInfo?.coverImgUrl
                                                     ? {uri: providerInfo?.coverImgUrl}
@@ -153,8 +156,8 @@ const ViewServiceProvider = ({route}) => {
                                         <View
                                             style={{
                                                 position: 'absolute',
-                                                left: 16,
-                                                right: 16,
+                                                left: 6,
+                                                right: 6,
                                                 top: 24,
                                                 zIndex: 100,
                                             }}>
@@ -163,7 +166,6 @@ const ViewServiceProvider = ({route}) => {
                                                     style={{
                                                         flexDirection: 'row',
                                                         alignItems: 'center',
-                                                        marginLeft: -16,
                                                     }}>
                                                     <IconButton
                                                         icon="arrow-back"
@@ -186,7 +188,7 @@ const ViewServiceProvider = ({route}) => {
                                                         providerInfo?.serviceType,
                                                     )}
                                                 </Text>
-                                                <View style={{marginRight: -12}}>
+                                                <View style={{}}>
                                                     <IconButton
                                                         icon={() => (
                                                             <Ionicons
@@ -201,7 +203,7 @@ const ViewServiceProvider = ({route}) => {
                                                     />
                                                 </View>
                                             </View>
-                                            <View>
+                                            <View style={{marginTop: -16}}>
                                                 {Object.values(providerInfo.starStats).reduce((a, b) => a + b) == 0 ? (
                                                     <Text
                                                         style={{
@@ -215,9 +217,9 @@ const ViewServiceProvider = ({route}) => {
                                                 ) : (
                                                     <Stars
                                                         display={providerInfo?.averageRatings}
-                                                        spacing={5}
+                                                        spacing={2}
                                                         count={5}
-                                                        starSize={30}
+                                                        starSize={25}
                                                         fullStar={require('@assets/images/full-star.png')}
                                                         halfStar={require('@assets/images/half-star.png')}
                                                         emptyStar={require('@assets/images/empty-star.png')}
@@ -250,60 +252,91 @@ const ViewServiceProvider = ({route}) => {
                                                 overflow: 'hidden',
                                             }}></View>
                                     </SkeletonPlaceholder>
-                                    <Image
-                                        style={[styles.businessProfileImage, {opacity: isBusinessLogoLoading ? 0 : 1}]}
-                                        onLoadStart={() => {
-                                            console.log('image load start');
-                                            setIsBusinessLogoLoading(true);
-                                        }}
-                                        onLoadEnd={() => {
-                                            console.log('image load end');
-                                            setIsBusinessLogoLoading(false);
-                                        }}
-                                        source={
-                                            !!providerInfo?.businessLogoUrl
-                                                ? {uri: providerInfo?.businessLogoUrl}
-                                                : require('@assets/images/default-profileImage.png')
-                                        }
-                                    />
+                                    {!isFetchingData ? (
+                                        <Image
+                                            style={[styles.businessProfileImage]}
+                                            onLoadStart={() => {
+                                                console.log('image load start');
+                                                setIsBusinessLogoLoading(true);
+                                            }}
+                                            onLoadEnd={() => {
+                                                console.log('image load end');
+                                                setIsBusinessLogoLoading(false);
+                                            }}
+                                            source={
+                                                !!providerInfo?.businessLogoUrl
+                                                    ? {uri: providerInfo?.businessLogoUrl}
+                                                    : require('@assets/images/default-profileImage.png')
+                                            }
+                                        />
+                                    ) : null}
                                 </View>
                             </View>
                         </View>
-                        <Text style={styles.businessName}>{providerInfo?.businessName}</Text>
-                        <Text style={styles.pricing}>
-                            Starting from RM{providerInfo?.priceStart} to RM{providerInfo?.priceEnd}
-                        </Text>
-                        <View style={styles.actionBtnContainer}>
-                            <Button
-                                style={{
-                                    flex: 1,
-                                    marginRight: 8,
-                                    borderRadius: 8,
-                                    backgroundColor: CustomColors.PRIMARY_BLUE,
 
-                                    elevation: 1,
-                                }}
-                                contentStyle={{
-                                    height: 40,
-                                }}
-                                labelStyle={{
-                                    fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-                                }}
-                                dark
-                                mode="contained"
-                                onPress={() => {
-                                    navigation.navigate('BusinessProfileEdit');
-                                }}>
-                                Book Now
-                            </Button>
-                        </View>
+                        {isFetchingData ? (
+                            <SkeletonPlaceholder>
+                                <View
+                                    style={{
+                                        width: '80%',
+                                        height: 26,
+                                        marginHorizontal: '10%',
+                                        overflow: 'hidden',
+                                    }}></View>
+                            </SkeletonPlaceholder>
+                        ) : (
+                            <Text style={styles.businessName}>{providerInfo?.businessName}</Text>
+                        )}
+
+                        {isFetchingData ? (
+                            <SkeletonPlaceholder>
+                                <View
+                                    style={{
+                                        marginTop: 8,
+                                        width: '60%',
+                                        height: 16,
+                                        marginHorizontal: '20%',
+                                        overflow: 'hidden',
+                                    }}></View>
+                            </SkeletonPlaceholder>
+                        ) : (
+                            <Text style={styles.pricing}>
+                                Starting from RM{providerInfo?.priceStart} to RM{providerInfo?.priceEnd}
+                            </Text>
+                        )}
+
+                        {isFetchingData ? null : (
+                            <View style={styles.actionBtnContainer}>
+                                <Button
+                                    style={{
+                                        flex: 1,
+                                        marginRight: 8,
+                                        borderRadius: 8,
+                                        backgroundColor: CustomColors.PRIMARY_BLUE,
+
+                                        elevation: 1,
+                                    }}
+                                    contentStyle={{
+                                        height: 40,
+                                    }}
+                                    labelStyle={{
+                                        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                    }}
+                                    dark
+                                    mode="contained"
+                                    onPress={() => {
+                                        navigation.navigate('BusinessProfileEdit');
+                                    }}>
+                                    Book Now
+                                </Button>
+                            </View>
+                        )}
 
                         <View
                             style={{
-                                height:36,
+                                height: 36,
                             }}
                         />
-                        
 
                         <View
                             onLayout={event => {
@@ -311,8 +344,20 @@ const ViewServiceProvider = ({route}) => {
 
                                 setTabBarOffsetY(y);
                             }}></View>
+                        
+                        {isFetchingData ? (
+                            <SkeletonPlaceholder>
+                                <View
+                                    style={{
+                                        marginTop: 8,
+                                        width: '100%',
+                                        height: Dimensions.get('window').height,
+                                        overflow: 'hidden',
+                                    }}></View>
+                            </SkeletonPlaceholder>
+                        ) : (
                         <TabView
-                            style={{height: Dimensions.get('window').height+2}}
+                            style={{height: Dimensions.get('window').height + 2}}
                             navigationState={navigationState}
                             renderScene={({route}) => {
                                 switch (route.key) {
@@ -374,6 +419,7 @@ const ViewServiceProvider = ({route}) => {
                                 height: Dimensions.get('window').height - 64 - 50,
                             }}
                         />
+                        )}
                     </View>
                 </ScrollView>
             </SafeAreaView>

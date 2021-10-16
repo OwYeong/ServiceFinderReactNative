@@ -1,4 +1,5 @@
-import { useNavigation } from '@react-navigation/core';
+import {useNavigation} from '@react-navigation/core';
+import { CustomColors, CustomTypography } from '@styles';
 import React, {useEffect, useState} from 'react';
 import {
     Dimensions,
@@ -12,6 +13,7 @@ import {
     View,
     LogBox,
 } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const PhotoListingComponent = ({dataList, isScrollEnabled = true}) => {
     const navigation = useNavigation();
@@ -24,37 +26,44 @@ const PhotoListingComponent = ({dataList, isScrollEnabled = true}) => {
 
     return (
         <View>
-            <FlatList
-                showsVerticalScrollIndicator={false}
-                scrollEnabled={isScrollEnabled}
-                nestedScrollEnabled={true}
-                data={dataList}
-                removeClippedSubviews={true}
-                renderItem={({item, index}) => (
-                    <TouchableHighlight
-                        style={{
-                            flex: 1 / 3,
-                            borderWidth: 1,
-                            borderColor: 'white',
-                        }}
-                        onPress={() => {
-                            navigation.navigate('PostView', {
-                                postData: {
-                                    ...item,
-                                },
-                            });
-                        }}
-                        activeOpacity={0.6}
-                        underlayColor="#000000">
-                        <View>
-                            <Image style={styles.imageThumbnail} source={{uri: item.imageUrl}} />
-                        </View>
-                    </TouchableHighlight>
-                )}
-                //Setting the number of column
-                numColumns={3}
-                keyExtractor={(item, index) => index}
-            />
+            {dataList.length > 0 ? (
+                <FlatList
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={isScrollEnabled}
+                    nestedScrollEnabled={true}
+                    data={dataList}
+                    removeClippedSubviews={true}
+                    renderItem={({item, index}) => (
+                        <TouchableHighlight
+                            style={{
+                                flex: 1 / 3,
+                                borderWidth: 1,
+                                borderColor: 'white',
+                            }}
+                            onPress={() => {
+                                navigation.navigate('PostView', {
+                                    postData: {
+                                        ...item,
+                                    },
+                                });
+                            }}
+                            activeOpacity={0.6}
+                            underlayColor="#000000">
+                            <View>
+                                <Image style={styles.imageThumbnail} source={{uri: item.imageUrl}} />
+                            </View>
+                        </TouchableHighlight>
+                    )}
+                    //Setting the number of column
+                    numColumns={3}
+                    keyExtractor={(item, index) => index}
+                />
+            ) : (
+                <View style={{padding:16, paddingVertical:160,  alignItems:'center'  }}>
+                    <FontAwesome size={70} color={CustomColors.GRAY} name="picture-o" />
+                    <Text style={{marginTop: 16,fontFamily: CustomTypography.FONT_FAMILY_MEDIUM, fontSize: CustomTypography.FONT_SIZE_24, color:CustomColors.GRAY}}>No Post Yet</Text>
+                </View>
+            )}
         </View>
     );
 };

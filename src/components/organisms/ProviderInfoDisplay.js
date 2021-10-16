@@ -1,6 +1,7 @@
 import {CustomTypography, CustomColors} from '@styles';
 import React, {useEffect} from 'react';
 import {LogBox, ScrollView, StyleSheet, Text, View} from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const ProviderInfoDisplay = ({providerInfo, isScrollEnabled}) => {
     useEffect(() => {
@@ -11,9 +12,18 @@ const ProviderInfoDisplay = ({providerInfo, isScrollEnabled}) => {
     }, []);
 
     return (
-        <View style={{width:'100%', height:'100%', paddingHorizontal: 16}}>
-            <ScrollView scrollEnabled={isScrollEnabled} style={{flex: 1}} contentContainerStyle={{flexGrow: 1}} nestedScrollEnabled={true}>
-                <View style={{flex:1}}>
+        <View style={{width: '100%', height: '100%', paddingHorizontal: 16}}>
+            <ScrollView
+                scrollEnabled={isScrollEnabled}
+                showsVerticalScrollIndicator={false}
+                style={{flex: 1}}
+                contentContainerStyle={{flexGrow: 1}}
+                nestedScrollEnabled={true}>
+                <View style={{flex: 1}}>
+                    <View style={{flexDirection:'row', marginTop:24}}>
+                        <MaterialIcons name="phone" size={20} color={CustomColors.GRAY_DARK} />
+                        <Text style={[styles.desc, {marginLeft:12}]}>{providerInfo?.phoneNumber.split('').join('\u200A'.repeat(1))}</Text>
+                    </View>
                     <Text style={styles.title}>Business description</Text>
                     <Text style={styles.desc}>{providerInfo?.businessDesc}</Text>
                     <Text style={styles.title}>Service Description</Text>

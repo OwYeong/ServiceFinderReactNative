@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     noReviewText: {
         fontSize: CustomTypography.FONT_SIZE_16,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-        color: CustomColors.GRAY_DARK,
+        color: CustomColors.GRAY,
         marginTop: 16
     }
 });

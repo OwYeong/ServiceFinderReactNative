@@ -27,7 +27,7 @@ const BrowseVendorByCategory = ({route}) => {
                 .then(res => {
                     setMatchedServiceProviders(res.data);
 
-                    setTimeout(() => {                        
+                    setTimeout(() => {
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                         setIsFetchingData(false);
                     }, 1000);
@@ -39,7 +39,6 @@ const BrowseVendorByCategory = ({route}) => {
         if (!!serviceType)
             ProviderService.getProviderByServiceType(serviceType)
                 .then(res => {
-
                     setMatchedServiceProviders(res.data);
                     setTimeout(() => {
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -116,7 +115,11 @@ const BrowseVendorByCategory = ({route}) => {
 
                             {!isFetchingData &&
                                 matchedServiceProviders.map(providerInfo => (
-                                    <TouchableRipple onPress={() => {}} key={providerInfo.id}>
+                                    <TouchableRipple
+                                        onPress={() => {
+                                            navigation.navigate('ViewServiceProvider', {providerId: providerInfo.id});
+                                        }}
+                                        key={providerInfo.id}>
                                         <View
                                             style={{flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 16}}
                                             key={providerInfo.id}>
