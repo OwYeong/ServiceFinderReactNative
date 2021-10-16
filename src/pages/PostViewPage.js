@@ -10,11 +10,12 @@ import {showMessage} from 'react-native-flash-message';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import auth from '@react-native-firebase/auth';
 
 const PostViewPage = ({route}) => {
     const postDataParam = route.params.postData;
 
-    const [postData,setPostData] = useState(postDataParam);
+    const [postData, setPostData] = useState(postDataParam);
 
     const navigation = useNavigation();
 
@@ -26,8 +27,8 @@ const PostViewPage = ({route}) => {
             ProviderService.getPost(postData.id).then(data => {
                 setPostData(data);
             });
-        }, [])
-      )
+        }, []),
+    );
 
     return (
         <View style={{backgroundColor: 'white'}}>
@@ -54,15 +55,17 @@ const PostViewPage = ({route}) => {
                                 </Text>
                             </View>
                             <View>
-                                <IconButton
-                                    icon="more-vert"
-                                    color={CustomColors.GRAY_DARK}
-                                    size={CustomTypography.ICON_SMALL}
-                                    style={styles.backIcon}
-                                    onPress={() => {
-                                        businessLogoActionSheet.current.snapTo(1);
-                                    }}
-                                />
+                                {postData?.userId == auth().currentUser.uid ? (
+                                    <IconButton
+                                        icon="more-vert"
+                                        color={CustomColors.GRAY_DARK}
+                                        size={CustomTypography.ICON_SMALL}
+                                        style={styles.backIcon}
+                                        onPress={() => {
+                                            businessLogoActionSheet.current.snapTo(1);
+                                        }}
+                                    />
+                                ) : null}
                             </View>
                         </View>
                         <View
@@ -79,7 +82,7 @@ const PostViewPage = ({route}) => {
                     </View>
                 </ScrollView>
             </SafeAreaView>
-
+            {postData?.userId == auth().currentUser.uid ? (
             <BottomSheet
                 ref={businessLogoActionSheet}
                 bottomSheerColor="#FFFFFF"
@@ -152,6 +155,7 @@ const PostViewPage = ({route}) => {
                     </View>
                 }
             />
+            ):null}
         </View>
     );
 };

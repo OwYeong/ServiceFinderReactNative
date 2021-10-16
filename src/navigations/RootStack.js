@@ -108,6 +108,15 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                                     headerShown: false,
                                 }}
                             />
+                            
+                            <Stack.Screen
+                                name="PostView"
+                                component={PostViewPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
                         </>
                     ) : null}
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.VENDOR ? (

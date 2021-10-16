@@ -4,6 +4,7 @@ import {
     ActivityIndicator,
     Dimensions,
     Image,
+    ImageBackground,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -30,12 +31,17 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Portal} from '@gorhom/portal';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesignIcons from 'react-native-vector-icons/AntDesign';
 import {showMessage} from 'react-native-flash-message';
 import auth from '@react-native-firebase/auth';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import {useFocusEffect, useNavigation} from '@react-navigation/core';
 import ReviewDisplayComponent from '@organisms/ReviewDisplayComponent';
+import Stars from 'react-native-stars';
+
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import ProviderInfoDisplay from '@organisms/ProviderInfoDisplay';
 
 const ViewServiceProvider = ({route}) => {
     const navigation = useNavigation();
@@ -47,8 +53,42 @@ const ViewServiceProvider = ({route}) => {
     const [isBusinessLogoLoading, setIsBusinessLogoLoading] = useState(false);
     const [isCoverImgLoading, setIsCoverImgLoading] = useState(false);
 
+    const [photosList, setPhotosList] = useState([]);
+    const [reviewList, setReviewList] = useState([]);
+    const [statusBarContent, setStatusBarContent] = useState('light-content');
+
+    const [navigationState, setNavigationState] = useState({
+        index: 0,
+        routes: [
+            {key: 'about', title: 'About Us'},
+            {key: 'photos', title: 'Posts'},
+            {key: 'reviews', title: 'Reviews'},
+        ],
+    });
+    const [tabBarOffsetY, setTabBarOffsetY] = useState(0);
+    const [isPhotoListingScrollable, setIsPhotoListingScrollable] = useState(false);
+
     useEffect(() => {
         const unsubscriber = ProviderService.getProviderById(setProviderInfo, providerId);
+
+        ProviderService.getAllPost(providerId)
+            .then(data => {
+                setPhotosList(data.data);
+                console.log(data.data);
+                // <PhotoListingComponent dataList={photosList} />
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        ReviewService.getAllReview(providerId)
+            .then(data => {
+                setReviewList(data.data);
+                console.log(data.data);
+                // <PhotoListingComponent dataList={photosList} />
+            })
+            .catch(err => {
+                console.log(err);
+            });
 
         return () => {
             unsubscriber();
@@ -57,17 +97,24 @@ const ViewServiceProvider = ({route}) => {
 
     return (
         <View style={{backgroundColor: 'transparent'}}>
-            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} barStyle={"light-content"} translucent />
-            <SafeAreaView style={{width: '100%', height: '100%'}} edges={['right', 'bottom', 'left',]}>
+            <StatusBar
+                barStyle={statusBarContent}
+                backgroundColor={'transparent'}
+                translucent
+            />
+            <SafeAreaView style={{width: '100%', height: '100%'}} edges={['right', 'bottom', 'left']}>
                 <ScrollView
                     style={{flex: 1}}
                     onScroll={event => {
-                        // console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY);
-                        // if (event.nativeEvent.contentOffset.y > tabBarOffsetY) {
-                        //     setIsPhotoListingScrollable(true);
-                        // } else {
-                        //     setIsPhotoListingScrollable(false);
-                        // }
+                        console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY-30);
+                        if (event.nativeEvent.contentOffset.y > tabBarOffsetY -30) {
+                            setIsPhotoListingScrollable(true);
+                            
+                            setStatusBarContent('dark-content');
+                        } else {
+                            setIsPhotoListingScrollable(false);
+                            setStatusBarContent('light-content');
+                        }
                     }}
                     contentContainerStyle={{flexGrow: 1}}
                     nestedScrollEnabled={true}>
@@ -78,36 +125,119 @@ const ViewServiceProvider = ({route}) => {
                                     <View
                                         style={{
                                             width: '100%',
-                                            aspectRatio: 3.5 / 2,
+                                            aspectRatio: 3 / 2,
                                             height: undefined,
                                             overflow: 'hidden',
                                         }}></View>
                                 </SkeletonPlaceholder>
-                                <Image
-                                    style={[styles.coverImage, {opacity: isCoverImgLoading ? 0 : 1}]}
-                                    source={
-                                        !!providerInfo?.coverImgUrl
-                                            ? {uri: providerInfo?.coverImgUrl}
-                                            : require('@assets/images/default-coverImage.png')
-                                    }
-                                    onLoadStart={() => {
-                                        console.log('image load start');
-                                        setIsCoverImgLoading(true);
-                                    }}
-                                    onLoadEnd={() => {
-                                        console.log('image load end');
-                                        setIsCoverImgLoading(false);
-                                    }}
-                                    resizeMode="cover"
-                                />
+
+                                {!!providerInfo ? (
+                                    <View style={{width: '100%', position: 'absolute', top: 0, left: 0}}>
+                                        <ImageBackground
+                                            style={[styles.coverImage, {opacity: isCoverImgLoading ? 0 : 1}]}
+                                            source={
+                                                !!providerInfo?.coverImgUrl
+                                                    ? {uri: providerInfo?.coverImgUrl}
+                                                    : require('@assets/images/default-coverImage.png')
+                                            }
+                                            onLoadStart={() => {
+                                                console.log('image load start');
+                                                setIsCoverImgLoading(true);
+                                            }}
+                                            onLoadEnd={() => {
+                                                console.log('image load end');
+                                                setIsCoverImgLoading(false);
+                                            }}
+                                            resizeMode="cover"
+                                        />
+                                        <View
+                                            style={{
+                                                position: 'absolute',
+                                                left: 16,
+                                                right: 16,
+                                                top: 24,
+                                                zIndex: 100,
+                                            }}>
+                                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                                <View
+                                                    style={{
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        marginLeft: -16,
+                                                    }}>
+                                                    <IconButton
+                                                        icon="arrow-back"
+                                                        color={CustomColors.WHITE}
+                                                        size={CustomTypography.ICON_SMALL}
+                                                        onPress={() => {
+                                                            navigation.goBack();
+                                                        }}
+                                                    />
+                                                </View>
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        color: 'white',
+                                                        textAlign: 'center',
+                                                        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                        fontSize: CustomTypography.FONT_SIZE_16,
+                                                    }}>
+                                                    {CommonFunction.getDisplayNameForServiceType(
+                                                        providerInfo?.serviceType,
+                                                    )}
+                                                </Text>
+                                                <View style={{marginRight: -12}}>
+                                                    <IconButton
+                                                        icon={() => (
+                                                            <Ionicons
+                                                                name="chatbubble-ellipses"
+                                                                size={30}
+                                                                color={CustomColors.WHITE}
+                                                            />
+                                                        )}
+                                                        color={CustomColors.WHITE}
+                                                        size={30}
+                                                        onPress={() => {}}
+                                                    />
+                                                </View>
+                                            </View>
+                                            <View>
+                                                {Object.values(providerInfo.starStats).reduce((a, b) => a + b) == 0 ? (
+                                                    <Text
+                                                        style={{
+                                                            color: CustomColors.GRAY_LIGHT,
+                                                            textAlign: 'center',
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                            fontSize: CustomTypography.FONT_SIZE_12,
+                                                        }}>
+                                                        No ratings Yet
+                                                    </Text>
+                                                ) : (
+                                                    <Stars
+                                                        display={providerInfo?.averageRatings}
+                                                        spacing={5}
+                                                        count={5}
+                                                        starSize={30}
+                                                        fullStar={require('@assets/images/full-star.png')}
+                                                        halfStar={require('@assets/images/half-star.png')}
+                                                        emptyStar={require('@assets/images/empty-star.png')}
+                                                    />
+                                                )}
+                                            </View>
+                                        </View>
+                                        <View
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                            }}></View>
+                                    </View>
+                                ) : null}
                             </View>
-                            <TouchableHighlight
-                                style={[styles.businessProfileImageWrapper]}
-                                onPress={() => {
-                                    businessLogoActionSheet.current?.snapTo(1);
-                                }}
-                                activeOpacity={0.6}
-                                underlayColor="#FFFFFF">
+                            <View style={[styles.businessProfileImageWrapper]}>
                                 <View>
                                     <SkeletonPlaceholder>
                                         <View
@@ -137,12 +267,9 @@ const ViewServiceProvider = ({route}) => {
                                         }
                                     />
                                 </View>
-                            </TouchableHighlight>
+                            </View>
                         </View>
                         <Text style={styles.businessName}>{providerInfo?.businessName}</Text>
-                        <Text style={styles.serviceType}>
-                            {CommonFunction.getDisplayNameForServiceType(providerInfo?.serviceType)}
-                        </Text>
                         <Text style={styles.pricing}>
                             Starting from RM{providerInfo?.priceStart} to RM{providerInfo?.priceEnd}
                         </Text>
@@ -152,7 +279,7 @@ const ViewServiceProvider = ({route}) => {
                                     flex: 1,
                                     marginRight: 8,
                                     borderRadius: 8,
-                                    backgroundColor: CustomColors.GRAY_LIGHT,
+                                    backgroundColor: CustomColors.PRIMARY_BLUE,
 
                                     elevation: 1,
                                 }}
@@ -161,67 +288,41 @@ const ViewServiceProvider = ({route}) => {
                                 }}
                                 labelStyle={{
                                     fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-                                    marginTop: 10,
-                                    color: CustomColors.GRAY_DARK,
                                 }}
-                                icon="mode-edit"
+                                dark
                                 mode="contained"
-                                uppercase={false}
                                 onPress={() => {
                                     navigation.navigate('BusinessProfileEdit');
                                 }}>
-                                Edit Business Profile
+                                Book Now
                             </Button>
-                            <IconButton
-                                style={{
-                                    backgroundColor: CustomColors.GRAY_LIGHT,
-                                    borderRadius: 8,
-                                    margin: 0,
-                                    height: 40,
-                                    width: 60,
-                                    elevation: 1,
-                                }}
-                                icon="more-horiz"
-                                color={CustomColors.GRAY_DARK}
-                                size={24}
-                                onPress={() => {
-                                    serviceProviderProfileActionSheet.current?.snapTo(1);
-                                }}
-                            />
                         </View>
 
                         <View
                             style={{
-                                marginTop: 24,
-                                borderBottomColor: CustomColors.GRAY_LIGHT,
-                                borderBottomWidth: 2,
+                                height:36,
                             }}
                         />
-                        <View style={styles.businessInfoContainer}>
-                            <Text style={styles.title}>Business description</Text>
-                            <Text style={styles.desc}>{providerInfo?.businessDesc}</Text>
-                            <Text style={styles.title}>Service Description</Text>
-                            <Text style={styles.desc}>{providerInfo?.businessServiceDesc}</Text>
-                        </View>
+                        
 
-                        {/* <Button
-                                onPress={async () => {
-                                    UserService.logOut();
-                                }}
-                                title="LogOut">
-                                logout  
-                            </Button> */}
                         <View
                             onLayout={event => {
                                 var {x, y, width, height} = event.nativeEvent.layout;
 
-                                // setTabBarOffsetY(y);
+                                setTabBarOffsetY(y);
                             }}></View>
-                        {/* <TabView
-                            style={{height: Dimensions.get('window').height - 64 - 24}}
+                        <TabView
+                            style={{height: Dimensions.get('window').height+2}}
                             navigationState={navigationState}
                             renderScene={({route}) => {
                                 switch (route.key) {
+                                    case 'about':
+                                        return (
+                                            <ProviderInfoDisplay
+                                                providerInfo={providerInfo}
+                                                isScrollEnabled={isPhotoListingScrollable}
+                                            />
+                                        );
                                     case 'photos':
                                         return (
                                             <PhotoListingComponent
@@ -233,8 +334,16 @@ const ViewServiceProvider = ({route}) => {
                                         return (
                                             <ReviewDisplayComponent
                                                 dataList={reviewList}
-                                                averageRating={providerInfo?.averageRatings}
-                                                starStats={providerInfo?.starStats}
+                                                averageRating={providerInfo?.averageRatings || 0}
+                                                starStats={
+                                                    providerInfo?.starStats || {
+                                                        numOf1Star: 0,
+                                                        numOf2Star: 0,
+                                                        numOf3Star: 0,
+                                                        numOf4Star: 0,
+                                                        numOf5Star: 0,
+                                                    }
+                                                }
                                             />
                                         );
                                     default:
@@ -264,7 +373,7 @@ const ViewServiceProvider = ({route}) => {
                                 width: Dimensions.get('window').width,
                                 height: Dimensions.get('window').height - 64 - 50,
                             }}
-                        /> */}
+                        />
                     </View>
                 </ScrollView>
             </SafeAreaView>
@@ -289,17 +398,15 @@ const styles = StyleSheet.create({
     coverImage: {
         width: '100%',
         height: undefined,
-        aspectRatio: 3.5 / 2,
+        aspectRatio: 3 / 2,
         backgroundColor: 'white',
-        position: 'absolute',
-        top: 0,
-        left: 0,
     },
     businessProfileImage: {
         width: '100%',
         height: undefined,
         aspectRatio: 1,
         marginTop: -175,
+        backgroundColor: 'white',
     },
     businessProfileImageWrapper: {
         width: 180,
@@ -337,6 +444,7 @@ const styles = StyleSheet.create({
     actionBtnContainer: {
         flexDirection: 'row',
         marginTop: 16,
+        paddingHorizontal: 16,
     },
     title: {
         fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
@@ -362,5 +470,8 @@ const styles = StyleSheet.create({
         fontSize: CustomTypography.FONT_SIZE_14,
         color: CustomColors.GRAY_DARK,
         marginHorizontal: 16,
+    },
+    backIcon: {
+        marginLeft: -8,
     },
 });
