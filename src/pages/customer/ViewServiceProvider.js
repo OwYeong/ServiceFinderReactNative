@@ -325,7 +325,7 @@ const ViewServiceProvider = ({route}) => {
                                     dark
                                     mode="contained"
                                     onPress={() => {
-                                        navigation.navigate('BookServicePage');
+                                        navigation.navigate('BookServicePage', {providerId: providerId});
                                         
                                     }}>
                                     Book Now
