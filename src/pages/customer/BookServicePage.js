@@ -15,6 +15,7 @@ import {
     Dimensions,
 } from 'react-native';
 import {
+    ActivityIndicator,
     Button,
     Checkbox,
     HelperText,
@@ -76,7 +77,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const BookServicePage = ({route}) => {
     const navigation = useNavigation();
     const providerId = route.params.providerId;
-    const stepIndicatorList = [
+    const [stepIndicatorList, setStepIndicatorList] = useState([
         {
             label: 'Service\nDate / Time',
             icon: (position, stepStatus) =>
@@ -112,7 +113,7 @@ const BookServicePage = ({route}) => {
                     <MaterialIcons name="payment" size={stepStatus == 'current' ? 24 : 20} color={CustomColors.WHITE} />
                 ),
         },
-    ];
+    ]);
     const stepIndicatorCustomStyles = {
         stepIndicatorSize: 40,
         currentStepIndicatorSize: 45,
@@ -153,19 +154,58 @@ const BookServicePage = ({route}) => {
     const [currentSwiperIndex, setCurrentSwiperIndex] = useState(0);
     const [bookType, setBookType] = useState('now');
 
-    const [selectedDateTime, setSelectedDateTime] = useState(new Date());
-    const [dateTimePickerMode, setDateTimePickerMode] = useState('date');
-    const [showDateTimePicker, setShowDateTimePicker] = useState(false);
+    const [selectedDateTime, setSelectedDateTime] = useState(moment().minutes(0).seconds(0).milliseconds(0).toDate());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [providerOffDay, setProviderOffDay] = useState(false);
 
-    const [selectedTime, setSelectedTime] = useState(new Date());
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [providerNotAvailableAtHisHour, setProviderNotAvailableAtHisHour] = useState(false);
+    const [providerNotAvailableAtDateSelected, setProviderNotAvailableAtDateSelected] = useState(false);
+    const [formResponse, setFormResponse] = useState([]);
 
     const [providerInfo, setProviderInfo] = useState(null);
     const [isFetchingData, setIsFetchingData] = useState(true);
     const [bookNowNotAvailable, setBookNowNotAvailable] = useState(false);
 
     const swiperRef = useRef(null);
+
+    const submitServiceDateTime = () => {
+        console.log(bookType);
+        console.log(providerOffDay + '  ' + bookNowNotAvailable);
+        if (bookType == 'now' && (bookNowNotAvailable || providerOffDay)) {
+            showMessage({
+                message: 'Book now not available.',
+                type: 'info',
+                position: 'center',
+                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                color: 'white', // text color
+                titleStyle: {marginTop: 5},
+                hideOnPress: true,
+                autoHide: true,
+                duration: 2000,
+            });
+            return;
+        }
+
+        if (bookType == 'later' && (providerNotAvailableAtHisHour || providerNotAvailableAtDateSelected)) {
+            showMessage({
+                message: 'Please pick a valid date and time.',
+                type: 'info',
+                position: 'center',
+                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                color: 'white', // text color
+                titleStyle: {marginTop: 5},
+                hideOnPress: true,
+                autoHide: true,
+                duration: 2000,
+            });
+            return;
+        }
+
+        swiperRef.current.scrollBy(1);
+    };
+
+    const serviceDateTimeSubmitCallback = debounce(submitServiceDateTime.bind(this), 500);
 
     const renderStepIndicator = ({position, stepStatus}) => {
         return stepIndicatorList[position].icon(position, stepStatus);
@@ -185,75 +225,108 @@ const BookServicePage = ({route}) => {
         }, providerId);
     }, []);
 
-    useEffect(()=>{
+    useEffect(() => {
         if (!isFetchingData) {
             if (
-                !!providerInfo?.workingHours &&
-                moment(new Date()).isAfter(
-                    moment(new Date()).set({
-                        hour: providerInfo.workingHours.endHour,
-                        minute: 0,
-                        second: 0,
-                        millisecond: 0,
-                    }),
-                ) ||
+                (!!providerInfo?.workingHours &&
+                    moment(new Date()).isAfter(
+                        moment(new Date()).set({
+                            hour: providerInfo?.workingHours?.endHour,
+                            minute: 0,
+                            second: 0,
+                            millisecond: 0,
+                        }),
+                    )) ||
                 moment(new Date()).isBefore(
                     moment(new Date()).set({
-                        hour: providerInfo.workingHours.startHour,
+                        hour: providerInfo?.workingHours?.startHour,
                         minute: 0,
                         second: 0,
                         millisecond: 0,
                     }),
                 )
             ) {
-                setSelectedDateTime(
-                    moment()
-                        .add(1, 'day')
-                        .startOf('day')
-                        .set({hour: providerInfo.workingHours.startHour, minute: 0, second: 0, millisecond: 0})
-                        .toDate(),
-                );
-                setSelectedTime(
-                    moment()
-                        .add(1, 'day')
-                        .startOf('day')
-                        .set({hour: providerInfo.workingHours.startHour, minute: 0, second: 0, millisecond: 0})
-                        .toDate(),
-                );
-
                 setBookNowNotAvailable(true);
             }
-        }
-    },[selectedDateTime])
 
-    useEffect(() => {
-        if (!!providerInfo?.workingHours) {
+            if (!!providerInfo?.workingHours) {
+                console.log('hehehe');
+                if (
+                    moment(selectedDateTime).hours() < providerInfo?.workingHours?.startHour ||
+                    moment(selectedDateTime).hours() >= providerInfo?.workingHours?.endHour
+                ) {
+                    setProviderNotAvailableAtHisHour(true);
+                } else {
+                    setProviderNotAvailableAtHisHour(false);
+                }
+            }
+
             if (
-                moment(selectedTime).hours() < providerInfo.workingHours.startHour ||
-                moment(selectedTime).hours() >= providerInfo.workingHours.endHour
+                bookType == 'later' &&
+                providerInfo?.dateNotAvailable.indexOf(moment(selectedDateTime).format('YYYY-MM-DD')) !== -1
             ) {
-                setProviderNotAvailableAtHisHour(true);
+                setProviderNotAvailableAtDateSelected(true);
             } else {
-                setProviderNotAvailableAtHisHour(false);
+                setProviderNotAvailableAtDateSelected(false);
             }
         }
-    }, [selectedTime]);
+    }, [selectedDateTime]);
 
     useEffect(() => {
         if (!isFetchingData) {
+            if (!providerInfo?.withAdditionalForm) {
+                setStepIndicatorList([
+                    {
+                        label: 'Service\nDate / Time',
+                        icon: (position, stepStatus) =>
+                            stepStatus == 'finished' ? (
+                                <FontAwesome5 name="calendar-check" size={20} color={CustomColors.PRIMARY_BLUE} />
+                            ) : (
+                                <FontAwesome5
+                                    name="calendar-alt"
+                                    size={stepStatus == 'current' ? 24 : 20}
+                                    color={CustomColors.WHITE}
+                                />
+                            ),
+                    },
+                    {
+                        label: 'Payment\nDetail',
+                        icon: (position, stepStatus) =>
+                            stepStatus == 'finished' ? (
+                                <MaterialIcons name="payment" size={20} color={CustomColors.PRIMARY_BLUE} />
+                            ) : (
+                                <MaterialIcons
+                                    name="payment"
+                                    size={stepStatus == 'current' ? 24 : 20}
+                                    color={CustomColors.WHITE}
+                                />
+                            ),
+                    },
+                ]);
+            } else {
+                setFormResponse([...providerInfo?.additionalForm]);
+            }
+
             if (
-                !!providerInfo?.workingHours &&
-                moment(new Date()).isAfter(
-                    moment(new Date()).set({
-                        hour: providerInfo.workingHours.endHour,
-                        minute: 0,
-                        second: 0,
-                        millisecond: 0,
-                    }),
-                ) ||
+                !!providerInfo?.dateNotAvailable &&
+                providerInfo?.dateNotAvailable.indexOf(moment().format('YYYY-MM-DD')) !== -1
+            ) {
+                setProviderOffDay(true);
+            }
+
+            if (
+                (!!providerInfo?.workingHours &&
+                    moment(new Date()).isAfter(
+                        moment(new Date()).set({
+                            hour: providerInfo?.workingHours?.endHour,
+                            minute: 0,
+                            second: 0,
+                            millisecond: 0,
+                        }),
+                    )) ||
                 moment(new Date()).isBefore(
                     moment(new Date()).set({
-                        hour: providerInfo.workingHours.startHour,
+                        hour: providerInfo?.workingHours?.startHour,
                         minute: 0,
                         second: 0,
                         millisecond: 0,
@@ -264,22 +337,23 @@ const BookServicePage = ({route}) => {
                     moment()
                         .add(1, 'day')
                         .startOf('day')
-                        .set({hour: providerInfo.workingHours.startHour, minute: 0, second: 0, millisecond: 0})
+                        .set({hour: providerInfo?.workingHours?.startHour, minute: 0, second: 0, millisecond: 0})
                         .toDate(),
                 );
-                setSelectedTime(
-                    moment()
-                        .add(1, 'day')
-                        .startOf('day')
-                        .set({hour: providerInfo.workingHours.startHour, minute: 0, second: 0, millisecond: 0})
-                        .toDate(),
-                );
-
                 setBookNowNotAvailable(true);
             }
         }
     }, [isFetchingData]);
 
+    useEffect(() => {
+        if (bookType == 'later') {
+            if (providerInfo?.dateNotAvailable.indexOf(moment(selectedDateTime).format('YYYY-MM-DD')) !== -1) {
+                setProviderNotAvailableAtDateSelected(true);
+            } else {
+                setProviderNotAvailableAtDateSelected(false);
+            }
+        }
+    }, [bookType]);
     return (
         <View style={{backgroundColor: CustomColors.PRIMARY_BLUE}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
@@ -297,192 +371,309 @@ const BookServicePage = ({route}) => {
                             />
                             <Text style={styles.headerTitle}>Book Service</Text>
                         </View>
-                        <StepIndicator
-                            style={{marginTop: 30}}
-                            renderStepIndicator={renderStepIndicator}
-                            customStyles={stepIndicatorCustomStyles}
-                            currentPosition={currentSwiperIndex}
-                            stepCount={3}
-                            labels={stepIndicatorList.map(e => e.label)}
-                        />
+                        {!isFetchingData ? (
+                            <StepIndicator
+                                style={{marginTop: 30}}
+                                renderStepIndicator={renderStepIndicator}
+                                customStyles={stepIndicatorCustomStyles}
+                                currentPosition={currentSwiperIndex}
+                                stepCount={!!providerInfo?.withAdditionalForm ? 3 : 2}
+                                labels={stepIndicatorList.map(e => e.label)}
+                            />
+                        ) : null}
                     </View>
 
                     <View style={styles.contentContainer}>
-                        <Swiper
-                            ref={swiperRef}
-                            showsButtons={false}
-                            showsPagination={false}
-                            scrollEnabled={false}
-                            onIndexChanged={index => {
-                                setCurrentSwiperIndex(index);
-                            }}
-                            keyboardShouldPersistTaps="handled"
-                            loop={false}>
-                            <View style={{width: '100%', flex: 1, padding: 20}}>
-                                <Text style={styles.sectionTitle}>Pick Service Date And Time</Text>
-                                <View style={{marginTop: 24}}>
-                                    <RNPickerSelect
-                                        placeholder={{}}
-                                        items={[
-                                            {
-                                                label: 'Book Service For Now',
-                                                value: 'now',
-                                            },
-                                            {
-                                                label: 'Book Service For Later',
-                                                value: 'later',
-                                            },
-                                        ]}
-                                        onValueChange={value => {
-                                            setBookType(value || '');
-                                        }}
-                                        style={{
-                                            ...pickerSelectStyles,
-                                            iconContainer: {
-                                                top: 13,
-                                                right: 12,
-                                            },
-                                        }}
-                                        useNativeAndroidPickerStyle={false}
-                                        Icon={() => (
-                                            <Ionicons name="md-chevron-down" size={20} fill={CustomColors.GRAY_DARK} />
-                                        )}
-                                        value={bookType}
-                                    />
-                                </View>
-                                {bookType == 'later' ? (
-                                    <View
-                                        style={{
-                                            marginTop: 24,
-                                        }}>
+                        {!isFetchingData ? (
+                            <Swiper
+                                ref={swiperRef}
+                                showsButtons={false}
+                                showsPagination={false}
+                                scrollEnabled={false}
+                                onIndexChanged={index => {
+                                    setCurrentSwiperIndex(index);
+                                }}
+                                keyboardShouldPersistTaps="handled"
+                                loop={false}>
+                                <View style={{width: '100%', flex: 1, padding: 20}}>
+                                    <Text style={styles.sectionTitle}>Pick Service Date And Time</Text>
+                                    <View style={{marginTop: 24}}>
+                                        <RNPickerSelect
+                                            placeholder={{}}
+                                            items={[
+                                                {
+                                                    label: 'Book Service For Now',
+                                                    value: 'now',
+                                                },
+                                                {
+                                                    label: 'Book Service For Later',
+                                                    value: 'later',
+                                                },
+                                            ]}
+                                            onValueChange={value => {
+                                                console.log('value change' + value);
+                                                setBookType(value);
+                                            }}
+                                            style={{
+                                                ...pickerSelectStyles,
+                                                iconContainer: {
+                                                    top: 13,
+                                                    right: 12,
+                                                },
+                                            }}
+                                            useNativeAndroidPickerStyle={false}
+                                            Icon={() => (
+                                                <Ionicons
+                                                    name="md-chevron-down"
+                                                    size={20}
+                                                    fill={CustomColors.GRAY_DARK}
+                                                />
+                                            )}
+                                            value={bookType}
+                                        />
+                                    </View>
+                                    {bookType == 'later' ? (
                                         <View
                                             style={{
-                                                width: '100%',
-                                                height: 1,
-                                                backgroundColor: CustomColors.GRAY,
-                                            }}></View>
-                                        <TouchableRipple
-                                            style={{
                                                 marginTop: 24,
-                                            }}
-                                            onPress={() => {
-                                                setShowDateTimePicker(true);
-                                                setDateTimePickerMode('date');
                                             }}>
                                             <View
                                                 style={{
-                                                    padding: 16,
-                                                    paddingVertical: 12,
-                                                    borderRadius: 8,
-
-                                                    borderWidth: 1,
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
-                                                    backgroundColor: 'white',
-                                                }}>
-                                                <MaterialCommunityIcons
-                                                    name="calendar-month"
-                                                    size={24}
-                                                    color={CustomColors.GRAY}
-                                                />
-                                                <Text
-                                                    style={{
-                                                        marginLeft: 12,
-                                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                        fontSize: CustomTypography.FONT_SIZE_16,
-                                                        color: CustomColors.GRAY_MEDIUM,
-                                                    }}>
-                                                    {moment(selectedDateTime).format('DD MMM YYYY')}
-                                                </Text>
-                                            </View>
-                                        </TouchableRipple>
-                                        <TouchableRipple
-                                            style={{
-                                                marginTop: 12,
-                                            }}
-                                            onPress={() => {
-                                                setShowTimePicker(true);
-                                            }}>
-                                            <View
+                                                    width: '100%',
+                                                    height: 1,
+                                                    backgroundColor: CustomColors.GRAY,
+                                                }}></View>
+                                            <TouchableRipple
                                                 style={{
-                                                    padding: 16,
-                                                    paddingVertical: 12,
-                                                    borderRadius: 8,
-                                                    borderWidth: 1,
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
+                                                    marginTop: 24,
+                                                }}
+                                                onPress={() => {
+                                                    setShowDatePicker(true);
                                                 }}>
-                                                <MaterialCommunityIcons
-                                                    name="clock-time-three-outline"
-                                                    size={24}
-                                                    color={CustomColors.GRAY}
-                                                />
-                                                <Text
+                                                <View
                                                     style={{
-                                                        marginLeft: 12,
-                                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                        fontSize: CustomTypography.FONT_SIZE_16,
-                                                        color: CustomColors.GRAY_MEDIUM,
-                                                    }}>
-                                                    {moment(selectedTime).format('hh: mm A')}
-                                                </Text>
-                                            </View>
-                                        </TouchableRipple>
+                                                        padding: 16,
+                                                        paddingVertical: 12,
+                                                        borderRadius: 8,
 
-                                        {providerNotAvailableAtHisHour ? (
-                                            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 12}}>
-                                                <MaterialCommunityIcons
-                                                    name="alert-circle-outline"
-                                                    size={24}
-                                                    color={CustomColors.ALERT}
-                                                />
-                                                <Text
+                                                        borderWidth: 1,
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        backgroundColor: 'white',
+                                                    }}>
+                                                    <MaterialCommunityIcons
+                                                        name="calendar-month"
+                                                        size={24}
+                                                        color={CustomColors.GRAY}
+                                                    />
+                                                    <Text
+                                                        style={{
+                                                            marginLeft: 12,
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                            fontSize: CustomTypography.FONT_SIZE_16,
+                                                            color: CustomColors.GRAY_MEDIUM,
+                                                        }}>
+                                                        {moment(selectedDateTime).format('DD MMM YYYY')}
+                                                    </Text>
+                                                </View>
+                                            </TouchableRipple>
+                                            <TouchableRipple
+                                                style={{
+                                                    marginTop: 12,
+                                                }}
+                                                onPress={() => {
+                                                    setShowTimePicker(true);
+                                                }}>
+                                                <View
                                                     style={{
-                                                        marginLeft: 8,
-                                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                        fontSize: CustomTypography.FONT_SIZE_12,
-                                                        color: CustomColors.ALERT,
+                                                        padding: 16,
+                                                        paddingVertical: 12,
+                                                        borderRadius: 8,
+                                                        borderWidth: 1,
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
                                                     }}>
-                                                    Provider not avaialbe at this hour
-                                                </Text>
-                                            </View>
-                                        ) : null}
-                                    </View>
-                                ) : null}
+                                                    <MaterialCommunityIcons
+                                                        name="clock-time-three-outline"
+                                                        size={24}
+                                                        color={CustomColors.GRAY}
+                                                    />
+                                                    <Text
+                                                        style={{
+                                                            marginLeft: 12,
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                            fontSize: CustomTypography.FONT_SIZE_16,
+                                                            color: CustomColors.GRAY_MEDIUM,
+                                                        }}>
+                                                        {moment(selectedDateTime).format('hh: mm A')}
+                                                    </Text>
+                                                </View>
+                                            </TouchableRipple>
 
-                                {bookType=='now' && bookNowNotAvailable ? (
-                                    <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 12}}>
-                                        <MaterialCommunityIcons
-                                            name="alert-circle-outline"
-                                            size={24}
-                                            color={CustomColors.ALERT}
-                                        />
-                                        <Text
-                                            style={{
-                                                marginLeft: 8,
-                                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                fontSize: CustomTypography.FONT_SIZE_12,
-                                                color: CustomColors.ALERT,
-                                            }}>
-                                            Book now is not available for this provider.{'\n'}Try book for later
-                                            instead.
-                                        </Text>
+                                            {providerNotAvailableAtHisHour ? (
+                                                <View
+                                                    style={{flexDirection: 'row', alignItems: 'center', marginTop: 12}}>
+                                                    <MaterialCommunityIcons
+                                                        name="alert-circle-outline"
+                                                        size={24}
+                                                        color={CustomColors.ALERT}
+                                                    />
+                                                    <Text
+                                                        style={{
+                                                            marginLeft: 8,
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                            fontSize: CustomTypography.FONT_SIZE_12,
+                                                            color: CustomColors.ALERT,
+                                                        }}>
+                                                        Service provider not available at this hour. You can only
+                                                        schedule the service request within the the service provider
+                                                        business hours (
+                                                        {moment(providerInfo?.workingHours?.startHour || '1', [
+                                                            'HH',
+                                                        ]).format('h A')}{' '}
+                                                        to{' '}
+                                                        {moment(providerInfo?.workingHours?.endHour || '1', [
+                                                            'HH',
+                                                        ]).format('h A')}
+                                                        )
+                                                    </Text>
+                                                </View>
+                                            ) : null}
+                                            {providerNotAvailableAtDateSelected ? (
+                                                <View
+                                                    style={{flexDirection: 'row', alignItems: 'center', marginTop: 12}}>
+                                                    <MaterialCommunityIcons
+                                                        name="alert-circle-outline"
+                                                        size={24}
+                                                        color={CustomColors.ALERT}
+                                                    />
+                                                    <Text
+                                                        style={{
+                                                            marginLeft: 8,
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                            fontSize: CustomTypography.FONT_SIZE_12,
+                                                            color: CustomColors.ALERT,
+                                                        }}>
+                                                        This service provider is not operating on{' '}
+                                                        {moment(selectedDateTime).format('DD MMM YYYY')}
+                                                    </Text>
+                                                </View>
+                                            ) : null}
+                                        </View>
+                                    ) : null}
+
+                                    {bookType == 'now' && bookNowNotAvailable ? (
+                                        <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 12}}>
+                                            <MaterialCommunityIcons
+                                                name="alert-circle-outline"
+                                                size={24}
+                                                color={CustomColors.ALERT}
+                                            />
+                                            <Text
+                                                style={{
+                                                    marginLeft: 8,
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    fontSize: CustomTypography.FONT_SIZE_12,
+                                                    color: CustomColors.ALERT,
+                                                }}>
+                                                Book now is only available between service provider's business hour (
+                                                {moment(providerInfo?.workingHours?.startHour || '1', ['HH']).format(
+                                                    'h A',
+                                                )}{' '}
+                                                to{' '}
+                                                {moment(providerInfo?.workingHours?.endHour || '1', ['HH']).format(
+                                                    'h A',
+                                                )}
+                                                )
+                                            </Text>
+                                        </View>
+                                    ) : null}
+
+                                    {bookType == 'now' && providerOffDay ? (
+                                        <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 12}}>
+                                            <MaterialCommunityIcons
+                                                name="alert-circle-outline"
+                                                size={24}
+                                                color={CustomColors.ALERT}
+                                            />
+                                            <Text
+                                                style={{
+                                                    marginLeft: 8,
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    fontSize: CustomTypography.FONT_SIZE_12,
+                                                    color: CustomColors.ALERT,
+                                                }}>
+                                                This Service Provider is not operating today.
+                                            </Text>
+                                        </View>
+                                    ) : null}
+
+                                    <View style={styles.actionBtnContainer}>
+                                        <Button
+                                            style={styles.actionBtn}
+                                            mode="contained"
+                                            contentStyle={{height: 50}}
+                                            color={CustomColors.PRIMARY_BLUE}
+                                            dark
+                                            onPress={serviceDateTimeSubmitCallback}>
+                                            NEXT
+                                        </Button>
                                     </View>
-                                ) : null}
-                            </View>
-                            <ScrollView contentContainerStyle={{flexGrow: 1}}>
-                                <View style={styles.serviceLocationSetupContainer}>
-                                    <Text style={styles.sectionTitle}>Pick Service Date Time</Text>
-                                    <Text style={styles.sectionDesc}>
-                                        Please specify your service location and coverage. Only customer who are in your
-                                        area of service could see your service.{' '}
-                                    </Text>
                                 </View>
-                            </ScrollView>
-                            <ScrollView contentContainerStyle={{flexGrow: 1}}>
-                                <View style={styles.additionalInputSetupContainer}></View>
-                            </ScrollView>
-                        </Swiper>
+                                {providerInfo?.withAdditionalForm ? (
+                                    <ScrollView contentContainerStyle={{flexGrow: 1}}>
+                                        <View style={{flex: 1, width: '100%', padding: 20}}>
+                                            <Text style={styles.sectionTitle}>Fill in the form below</Text>
+                                            <Text style={styles.sectionDesc}>
+                                                Please fill in the form below. The following details are required by
+                                                service provider.
+                                                {formResponse.length}
+                                            </Text>
+                                            {formResponse.map(question => {
+                                                switch (question.questionType) {
+                                                    case Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER:
+                                                        return (
+                                                            <View style={{width: '100%', marginTop: 24}}>
+                                                                <Text style={styles.questionTitle}>
+                                                                    {question.questionName}
+                                                                </Text>
+                                                                <TextInput
+                                                                    label="Your Answer"
+                                                                    mode="outlined"
+                                                                    style={styles.inputPrompt}
+                                                                    placeholder="Enter your answer"
+                                                                    multiline></TextInput>
+                                                            </View>
+                                                        );
+                                                    case Constants.QUESTIONNAIRE_TYPE.CHECK_BOX:
+                                                        return (
+                                                            <View style={{width: '100%', marginTop: 24}}>
+                                                                <Text style={styles.questionTitle}>
+                                                                    {question.questionName}
+                                                                </Text>
+                                                                <View>
+                                                                    <Checkbox.Item label="Item" status="checked" />
+                                                                </View>
+                                                                <TextInput
+                                                                    label="Your Answer"
+                                                                    mode="outlined"
+                                                                    style={styles.inputPrompt}
+                                                                    placeholder="Enter your answer"
+                                                                    multiline></TextInput>
+                                                            </View>
+                                                        );
+                                                    case Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE:
+                                                }
+                                            })}
+                                        </View>
+                                    </ScrollView>
+                                ) : null}
+
+                                <ScrollView contentContainerStyle={{flexGrow: 1}}>
+                                    <View style={styles.additionalInputSetupContainer}></View>
+                                </ScrollView>
+                            </Swiper>
+                        ) : null}
                     </View>
 
                     <LoadingModal
@@ -493,19 +684,19 @@ const BookServicePage = ({route}) => {
                         modalTitle={loadingModal.modalTitle}
                         statusBarTranslucent={true}
                         useNativeDriver={true}></LoadingModal>
-                    {showDateTimePicker && (
+                    {showDatePicker && (
                         <DateTimePicker
                             testID="dateTimePicker"
                             value={selectedDateTime}
-                            mode={dateTimePickerMode}
+                            mode={'date'}
                             is24Hour={false}
-                            minimumDate={new Date()}
-                            maximumDate={new Date().setDate(new Date().getDate() + 2)}
+                            minimumDate={new Date().setDate(new Date().getDate() + 1)}
+                            maximumDate={new Date().setDate(new Date().getDate() + 3)}
                             minuteInterval={30}
                             display="default"
                             onChange={(event, selectedDate) => {
                                 const currentDate = selectedDate || selectedDateTime;
-                                setShowDateTimePicker(Platform.OS === 'ios');
+                                setShowDatePicker(Platform.OS === 'ios');
                                 setSelectedDateTime(currentDate);
                             }}
                         />
@@ -513,20 +704,36 @@ const BookServicePage = ({route}) => {
                     {showTimePicker && (
                         <DateTimePicker
                             testID="timePicker"
-                            value={selectedTime}
+                            value={selectedDateTime}
                             mode={'time'}
                             is24Hour={false}
                             minuteInterval={30}
                             display="spinner"
                             onChange={(event, selectedDate) => {
-                                const currentTime = selectedDate || selectedTime;
+                                const currentTime = selectedDate || selectedDateTime;
                                 setShowTimePicker(Platform.OS === 'ios');
-                                setSelectedTime(currentTime);
+                                setSelectedDateTime(currentTime);
                             }}
                         />
                     )}
                 </View>
             </SafeAreaView>
+            {isFetchingData ? (
+                <View
+                    style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        zIndex: 1000,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                    }}>
+                    <ActivityIndicator animating={true} color={CustomColors.WHITE} />
+                </View>
+            ) : null}
         </View>
     );
 };
@@ -574,6 +781,30 @@ const styles = StyleSheet.create({
     sectionDesc: {
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         fontSize: CustomTypography.FONT_SIZE_18,
+        color: CustomColors.GRAY_MEDIUM,
+    },
+    actionBtnContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+    },
+    actionBtn: {
+        marginTop: 40,
+        width: '100%',
+        borderRadius: 8,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        justifyContent: 'center',
+    },
+
+    inputPrompt: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        borderRadius: 12,
+        paddingVertical: 2,
+    },
+    questionTitle: {
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_16,
         color: CustomColors.GRAY_MEDIUM,
     },
 });
