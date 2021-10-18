@@ -41,8 +41,11 @@ import BottomSheet from 'react-native-bottomsheet-reanimated';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import { LocalNotification } from '~firebaseCloudMessaging/LocalPushController'
+import {LocalNotification} from '~firebaseCloudMessaging/LocalPushController';
 import RemotePushController from '~firebaseCloudMessaging/RemotePushController';
+import {StripeProvider} from '@stripe/stripe-react-native';
+import PaymentService from '@services/PaymentService';
+import {PUBLISHABLE_KEY} from '@env';
 
 const Stack = createStackNavigator();
 const theme = {
@@ -67,10 +70,24 @@ const App: () => Node = () => {
     const dispatch = useDispatch();
     const loginBlock = useSelector(state => state.appState.loginBlock);
     const userInfo = useSelector(state => state.loginState.userInfo);
+    const [publishableKey, setPublishableKey] = useState('');
+
     const backgroundStyle = {
         backgroundColor: 'blue',
     };
     var autoFetchLocked = false;
+
+    const fetchPublishableKey = async () => {
+        const key = await PaymentService.fetchPublishableKey();
+
+        console.log('MY KEY IS')
+        console.log(key)
+        if(!!key){
+            setPublishableKey(key);
+        } else {
+            setPublishableKey(PUBLISHABLE_KEY);
+        }
+    };
 
     console.log('hahaha');
 
@@ -82,6 +99,7 @@ const App: () => Node = () => {
         });
 
         const authenticationListener = auth().onAuthStateChanged(user => {
+            fetchPublishableKey();
             // LocalNotification()
             console.log('yoyo, authenticated');
             console.log(user);
@@ -106,6 +124,7 @@ const App: () => Node = () => {
             }
         });
 
+
         return authenticationListener;
     }, []);
 
@@ -123,32 +142,34 @@ const App: () => Node = () => {
                 icon: props => <Icon {...props} />,
             }}
             theme={theme}>
-            <SafeAreaProvider>
-                <GestureHandlerRootView style={{width: '100%', height: '100%', flex: 1}}>
-                    <PortalProvider>
-                        <NavigationContainer>
-                            <RootStack
-                                isAuth={isAuth}
-                                isLoading={isLoading}
-                                loginBlock={loginBlock}
-                                loggedInAcctype={loggedInAcctype}></RootStack>
-                            {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
+            <StripeProvider publishableKey={publishableKey}>
+                <SafeAreaProvider>
+                    <GestureHandlerRootView style={{width: '100%', height: '100%', flex: 1}}>
+                        <PortalProvider>
+                            <NavigationContainer>
+                                <RootStack
+                                    isAuth={isAuth}
+                                    isLoading={isLoading}
+                                    loginBlock={loginBlock}
+                                    loggedInAcctype={loggedInAcctype}></RootStack>
+                                {/* <Stack.Navigator screenOptions={{unmountInactiveRoutes: true, unmountOnBlur: true}}>
                         <Stack.Screen name="SplashPage" component={SplashPage} options={{headerShown: false}} />
                         <Stack.Screen name="LoginPage" component={LoginPage} options={{headerShown: false}} />
                         <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
                     </Stack.Navigator> */}
-                        </NavigationContainer>
+                            </NavigationContainer>
 
-                        <FlashMessage
-                            textStyle={{
-                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                fontSize: CustomTypography.FONT_SIZE_14,
-                            }}
-                        />
-                        <RemotePushController />
-                    </PortalProvider>
-                </GestureHandlerRootView>
-            </SafeAreaProvider>
+                            <FlashMessage
+                                textStyle={{
+                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                    fontSize: CustomTypography.FONT_SIZE_14,
+                                }}
+                            />
+                            <RemotePushController />
+                        </PortalProvider>
+                    </GestureHandlerRootView>
+                </SafeAreaProvider>
+            </StripeProvider>
         </PaperProvider>
     );
 };

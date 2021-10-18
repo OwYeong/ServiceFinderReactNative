@@ -73,9 +73,13 @@ import UserService from '@services/UserService';
 import {useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/core';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import {CardField, useConfirmPayment} from '@stripe/stripe-react-native';
+import PaymentService from '@services/PaymentService';
 
 const BookServicePage = ({route}) => {
     const navigation = useNavigation();
+    const {confirmPayment, loading} = useConfirmPayment();
+
     const providerId = route.params.providerId;
     const [stepIndicatorList, setStepIndicatorList] = useState([
         {
@@ -154,7 +158,9 @@ const BookServicePage = ({route}) => {
     const [currentSwiperIndex, setCurrentSwiperIndex] = useState(0);
     const [bookType, setBookType] = useState('now');
 
-    const [selectedDateTime, setSelectedDateTime] = useState(moment().minutes(0).seconds(0).milliseconds(0).toDate());
+    const [selectedDateTime, setSelectedDateTime] = useState(
+        moment().add(1, 'day').minutes(0).seconds(0).milliseconds(0).toDate(),
+    );
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [providerOffDay, setProviderOffDay] = useState(false);
 
@@ -162,6 +168,7 @@ const BookServicePage = ({route}) => {
     const [providerNotAvailableAtHisHour, setProviderNotAvailableAtHisHour] = useState(false);
     const [providerNotAvailableAtDateSelected, setProviderNotAvailableAtDateSelected] = useState(false);
     const [formResponse, setFormResponse] = useState([]);
+    const [cardHolderName, setCardHolderName] = useState('');
 
     const [providerInfo, setProviderInfo] = useState(null);
     const [isFetchingData, setIsFetchingData] = useState(true);
@@ -205,7 +212,45 @@ const BookServicePage = ({route}) => {
         swiperRef.current.scrollBy(1);
     };
 
+    const submitFormResponse = () => {
+        swiperRef.current.scrollBy(1);
+    };
+
+    const payAndProceed = async () => {
+        // 1. fetch Intent Client Secret from backend
+        const clientSecret = await PaymentService.fetchPaymentIntentClientSecret(10.0);
+
+        // 2. Gather customer billing information (ex. email)
+        const billingDetails = {
+            name: cardHolderName,
+        };
+
+        const {error, paymentIntent} = await confirmPayment(clientSecret, {
+            type: 'Card',
+            billingDetails,
+        });
+        console.log(error)
+        if (error || cardHolderName=="") {
+            showMessage({
+                message: 'Payment Details is incomplete.',
+                type: 'info',
+                position: 'center',
+                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                color: 'white', // text color
+                titleStyle: {marginTop: 5},
+                hideOnPress: true,
+                autoHide: true,
+                duration: 2000,
+            });
+        } else if (paymentIntent) {
+            Alert.alert('Success', `The payment was confirmed successfully! currency: ${paymentIntent.currency}`);
+            console.log('Success from promise', paymentIntent);
+        }
+    };
+
     const serviceDateTimeSubmitCallback = debounce(submitServiceDateTime.bind(this), 500);
+    const formResponseSubmitCallback = debounce(submitFormResponse.bind(this), 500);
+    const payAndProceedCallback = debounce(payAndProceed.bind(this), 500);
 
     const renderStepIndicator = ({position, stepStatus}) => {
         return stepIndicatorList[position].icon(position, stepStatus);
@@ -304,7 +349,23 @@ const BookServicePage = ({route}) => {
                     },
                 ]);
             } else {
-                setFormResponse([...providerInfo?.additionalForm]);
+                setFormResponse([
+                    ...providerInfo?.additionalForm.map(ques => {
+                        switch (ques.questionType) {
+                            case Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER:
+                                ques.response = 'Your Answer';
+                                break;
+                            case Constants.QUESTIONNAIRE_TYPE.CHECK_BOX:
+                                ques.response = [ques.options[0].optionId];
+                                break;
+                            case Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE:
+                                ques.response = ques.options[0].optionId;
+                                break;
+                        }
+
+                        return ques;
+                    }),
+                ]);
             }
 
             if (
@@ -627,13 +688,14 @@ const BookServicePage = ({route}) => {
                                             <Text style={styles.sectionDesc}>
                                                 Please fill in the form below. The following details are required by
                                                 service provider.
-                                                {formResponse.length}
                                             </Text>
-                                            {formResponse.map(question => {
+                                            {formResponse.map((question, i) => {
                                                 switch (question.questionType) {
                                                     case Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER:
                                                         return (
-                                                            <View style={{width: '100%', marginTop: 24}}>
+                                                            <View
+                                                                style={{width: '100%', marginTop: 36}}
+                                                                key={question.id}>
                                                                 <Text style={styles.questionTitle}>
                                                                     {question.questionName}
                                                                 </Text>
@@ -642,35 +704,198 @@ const BookServicePage = ({route}) => {
                                                                     mode="outlined"
                                                                     style={styles.inputPrompt}
                                                                     placeholder="Enter your answer"
+                                                                    onEndEditing={e => {
+                                                                        if (e.nativeEvent.text == '') {
+                                                                            const newFormResponse = [...formResponse];
+
+                                                                            newFormResponse[i].response = 'Your Answer';
+
+                                                                            setFormResponse(newFormResponse);
+                                                                        }
+                                                                    }}
+                                                                    onChangeText={text => {
+                                                                        const newFormResponse = [...formResponse];
+
+                                                                        newFormResponse[i].response = text;
+
+                                                                        setFormResponse(newFormResponse);
+                                                                    }}
+                                                                    value={question.response}
                                                                     multiline></TextInput>
                                                             </View>
                                                         );
                                                     case Constants.QUESTIONNAIRE_TYPE.CHECK_BOX:
                                                         return (
-                                                            <View style={{width: '100%', marginTop: 24}}>
+                                                            <View
+                                                                style={{width: '100%', marginTop: 36}}
+                                                                key={question.id}>
                                                                 <Text style={styles.questionTitle}>
                                                                     {question.questionName}
                                                                 </Text>
                                                                 <View>
-                                                                    <Checkbox.Item label="Item" status="checked" />
+                                                                    {question.options.map(option => (
+                                                                        <Checkbox.Item
+                                                                            key={option.optionId}
+                                                                            color={CustomColors.PRIMARY_BLUE_SATURATED}
+                                                                            style={{paddingHorizontal: 0}}
+                                                                            onPress={() => {
+                                                                                const newFormResponse = [
+                                                                                    ...formResponse,
+                                                                                ];
+                                                                                const response =
+                                                                                    [...formResponse[i].response] || [];
+
+                                                                                if (
+                                                                                    response.indexOf(option.optionId) !=
+                                                                                    -1
+                                                                                ) {
+                                                                                    if (response.length == 1) {
+                                                                                        return;
+                                                                                    }
+                                                                                    response.splice(
+                                                                                        response.indexOf(
+                                                                                            option.optionId,
+                                                                                        ),
+                                                                                        1,
+                                                                                    );
+                                                                                } else {
+                                                                                    response.push(option.optionId);
+                                                                                }
+                                                                                newFormResponse[i].response = response;
+
+                                                                                setFormResponse(newFormResponse);
+                                                                            }}
+                                                                            label={option.optionName}
+                                                                            status={
+                                                                                formResponse[i].response.indexOf(
+                                                                                    option.optionId,
+                                                                                ) != -1
+                                                                                    ? 'checked'
+                                                                                    : 'unchecked'
+                                                                            }
+                                                                        />
+                                                                    ))}
                                                                 </View>
-                                                                <TextInput
-                                                                    label="Your Answer"
-                                                                    mode="outlined"
-                                                                    style={styles.inputPrompt}
-                                                                    placeholder="Enter your answer"
-                                                                    multiline></TextInput>
                                                             </View>
                                                         );
                                                     case Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE:
+                                                        return (
+                                                            <View
+                                                                style={{width: '100%', marginTop: 36}}
+                                                                key={question.id}>
+                                                                <Text style={styles.questionTitle}>
+                                                                    {question.questionName}
+                                                                </Text>
+                                                                <View>
+                                                                    {question.options.map(option => (
+                                                                        <RadioButton.Item
+                                                                            key={option.optionId}
+                                                                            color={CustomColors.PRIMARY_BLUE_SATURATED}
+                                                                            style={{paddingHorizontal: 0}}
+                                                                            onPress={() => {
+                                                                                const newFormResponse = [
+                                                                                    ...formResponse,
+                                                                                ];
+
+                                                                                newFormResponse[i].response =
+                                                                                    option.optionId;
+
+                                                                                setFormResponse(newFormResponse);
+                                                                            }}
+                                                                            label={option.optionName}
+                                                                            status={
+                                                                                formResponse[i].response ==
+                                                                                option.optionId
+                                                                                    ? 'checked'
+                                                                                    : 'unchecked'
+                                                                            }
+                                                                        />
+                                                                    ))}
+                                                                </View>
+                                                            </View>
+                                                        );
                                                 }
                                             })}
+                                            <View style={styles.actionBtnContainer}>
+                                                <Button
+                                                    style={styles.actionBtn}
+                                                    mode="contained"
+                                                    contentStyle={{height: 50}}
+                                                    color={CustomColors.PRIMARY_BLUE}
+                                                    dark
+                                                    onPress={formResponseSubmitCallback}>
+                                                    NEXT
+                                                </Button>
+                                            </View>
                                         </View>
                                     </ScrollView>
                                 ) : null}
 
                                 <ScrollView contentContainerStyle={{flexGrow: 1}}>
-                                    <View style={styles.additionalInputSetupContainer}></View>
+                                    <View style={{flex: 1, width: '100%', padding: 20}}>
+                                        <Text style={styles.sectionTitle}>
+                                            Make Payment Now and{'\n'}Place Your Service Request
+                                        </Text>
+                                        <Text style={styles.sectionDesc}>
+                                            Please make a payment for the doorstep service fee ( RM 10 ). Please note
+                                            that this payment will act as a deposit to the service request, hence this
+                                            funds will not be return if you cancel the service request later.
+                                        </Text>
+
+                                        <View style={{padding:12,backgroundColor: CustomColors.GRAY_EXTRA_LIGHT, borderRadius: 12, elevation:1, marginTop:24}}>
+                                            <Text
+                                                style={{
+                                                    fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                    fontSize: CustomTypography.FONT_SIZE_16,
+                                                    color: CustomColors.GRAY_MEDIUM,
+                                                }}>
+                                                Payment Details
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    fontSize: CustomTypography.FONT_SIZE_16,
+                                                    color: CustomColors.GRAY_MEDIUM,
+                                                }}>
+                                                Doorstep service fee ( deposit ): {'\n'}RM 10.00
+                                            </Text>
+                                            <TextInput
+                                                mode={'outlined'}
+                                                style={[
+                                                    styles.inputPrompt,
+                                                    {marginTop: 20, height: 50, borderRadius: 34},
+                                                ]}
+                                                onChangeText={text => {
+                                                    setCardHolderName(text);
+                                                }}
+                                                label="CardHolder Name"
+                                                value={cardHolderName}
+                                            />
+                                            <CardField
+                                                placeholder={{
+                                                    number: '4242 4242 4242 4242',
+                                                }}
+                                                onCardChange={cardDetails => {
+                                                    console.log('cardDetails', cardDetails);
+                                                }}
+                                                onFocus={focusedField => {
+                                                    console.log('focusField', focusedField);
+                                                }}
+                                                cardStyle={inputStyles}
+                                                style={styles.cardField}></CardField>
+                                        </View>
+                                        <View style={styles.actionBtnContainer}>
+                                            <Button
+                                                style={styles.actionBtn}
+                                                mode="contained"
+                                                contentStyle={{height: 50}}
+                                                color={CustomColors.PRIMARY_BLUE}
+                                                dark
+                                                onPress={payAndProceedCallback}>
+                                                Make Payment and proceed
+                                            </Button>
+                                        </View>
+                                    </View>
                                 </ScrollView>
                             </Swiper>
                         ) : null}
@@ -807,6 +1032,12 @@ const styles = StyleSheet.create({
         fontSize: CustomTypography.FONT_SIZE_16,
         color: CustomColors.GRAY_MEDIUM,
     },
+    cardField: {
+        width: '100%',
+        height: 50,
+        justifyContent: 'center',
+        marginVertical: 12,
+    },
 });
 
 const pickerSelectStyles = StyleSheet.create({
@@ -842,3 +1073,15 @@ const pickerSelectStyles = StyleSheet.create({
         padding: 0,
     },
 });
+
+const inputStyles = {
+    marginTop: 12,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#000000',
+    paddingVertical: 24,
+    borderRadius: 8,
+    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+    fontSize: 14,
+    placeholderColor: '#999999',
+};
