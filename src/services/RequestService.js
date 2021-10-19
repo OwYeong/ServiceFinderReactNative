@@ -172,6 +172,8 @@ const RequestService = {
                     if (querySnapshot.size > 0) {
                         const requests = [];
                         querySnapshot.forEach(docSnapshot => {
+                            
+                            console.log(docSnapshot.data());
                             let request = {
                                 id: docSnapshot.id,
                                 ...docSnapshot.data(),
@@ -179,10 +181,12 @@ const RequestService = {
                                     start: docSnapshot.data().requestTimeSlot.start.toDate().toString(),
                                     end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
                                 },
-                                dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
                             };
+                            if(!!docSnapshot.data().dateTimeRequested){
+                                request = {...request, 
+                                    dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),}
+                            }
 
-                            console.log(docSnapshot.data());
                             requests.push(request);
                         });
 
@@ -203,7 +207,7 @@ const RequestService = {
 
         return requestCollection
             .where('customerInfo.userId', '==', customerUserId)
-            .where('requestStatus', '==', [Constants.REQUEST_STATUS.ACCEPTED, Constants.REQUEST_STATUS.REJECTED])
+            .where('requestStatus', 'in', [Constants.REQUEST_STATUS.ACCEPTED, Constants.REQUEST_STATUS.REJECTED])
             .orderBy('dateTimeRequested', 'desc')
             .onSnapshot(
                 querySnapshot => {
@@ -222,7 +226,6 @@ const RequestService = {
 
                             console.log(docSnapshot.data());
                             if (request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED) {
-
                                 if (
                                     [
                                         Constants.SERVICE_STATUS.CANCELLED_BY_CUSTOMER,
@@ -230,9 +233,9 @@ const RequestService = {
                                         Constants.SERVICE_STATUS.SERVICE_COMPLETED,
                                     ].indexOf(request.serviceStatus) != -1
                                 ) {
+                                    
                                     requests.push(request);
                                 }
-
                             } else {
                                 requests.push(request);
                             }
@@ -490,6 +493,41 @@ const RequestService = {
                                 `${
                                     store.getState().loginState.providerInfo.businessName
                                 } has cancelled your job request. Refund will be done shortly.`,
+                            );
+                        }
+                        resolve('Request successfully started!');
+                    } catch (err) {
+                        console.log(err);
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
+    customerCancelRequest: (documentId, providerId) => {
+        return new Promise((resolve, reject) => {
+            const requestsCollection = firestore().collection('requests');
+
+            requestsCollection
+                .doc(documentId)
+                .update({
+                    serviceStatus: Constants.SERVICE_STATUS.CANCELLED_BY_CUSTOMER,
+                })
+                .then(async () => {
+                    try {
+                        const targetUserInfo = await UserService.getUserInfo(providerId);
+
+                        if (!!targetUserInfo.fcmToken) {
+                            await NotificationService.sendNotificationToDevice(
+                                targetUserInfo.fcmToken,
+                                `Your job request has been cancelled.`,
+                                `${
+                                    store.getState().loginState.userInfo.firstName +
+                                    ' ' +
+                                    store.getState().loginState.userInfo.lastName
+                                } has cancelled your job request.`,
                             );
                         }
                         resolve('Request successfully started!');

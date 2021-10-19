@@ -304,15 +304,16 @@ const ServiceHistoryListing = () => {
                                                                     <Checkbox
                                                                         style={{marginTop: 5}}
                                                                         status={
-                                                                            currentQuestion.response.includes(
-                                                                                option.optionId.toString(),
-                                                                            )
+                                                                            currentQuestion.response.indexOf(
+                                                                                option.optionId,
+                                                                            ) != -1
                                                                                 ? 'checked'
                                                                                 : 'unchecked'
                                                                         }
                                                                         disabled
                                                                     />
                                                                 ) : null}
+                                                                
                                                                 {currentQuestion.questionType ==
                                                                 Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ? (
                                                                     <RadioButton

@@ -30,6 +30,7 @@ import {
     TouchableRipple,
     HelperText,
     Surface,
+    ActivityIndicator,
 } from 'react-native-paper';
 import {Portal} from '@gorhom/portal';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -48,18 +49,40 @@ import ServiceProviderMarkerSvg from '@assets/images/service-provider-marker';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 import CommonFunction from '@utils/CommonFunction';
 import WaitingForServiceIllustration from '@assets/images/waiting-for-service-illustration';
+import PendingResponseIllustration from '@assets/images/pending-response-from-vendor-illustration';
 
 const ViewRequest = ({route}) => {
     const navigation = useNavigation();
     const requestId = route.params.requestId;
 
     const [requestData, setRequestData] = useState({});
+    const [cancelJobDialog, setCancelJobDialog] = useState({
+        isVisible: false,
+        requestId: '',
+    });
+
+    const [customerFormInputDisplayDialog, setCustomerFormInputDisplayDialog] = useState({
+        isVisible: false,
+        customerFormResponse: [],
+    });
+
+    const [isFetchingData, setIsFetchingData] = useState(true);
 
     const jobRequestActionSheet = useRef(null);
     const mapViewRef = useRef(null);
 
     useEffect(() => {
-        const unsubscriber = RequestService.getRequestById(setRequestData, requestId);
+        const unsubscriber = RequestService.getRequestById(data => {
+            setRequestData(data);
+
+            setTimeout(() => {
+                setIsFetchingData(false);
+            }, 1000);
+
+            return () => {
+                unsubscriber();
+            };
+        }, requestId);
 
         return () => {
             unsubscriber();
@@ -88,7 +111,18 @@ const ViewRequest = ({route}) => {
                                         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
                                         fontSize: CustomTypography.FONT_SIZE_16,
                                     }}>
-                                    My Service Request
+                                    My Service Request{'\n'}
+                                    <Text
+                                        style={{
+                                            fontSize: 10,
+                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                            color: CustomColors.GRAY,
+                                            marginTop: -8,
+                                            paddingVertical: 0,
+                                            paddingHorizontal: 16,
+                                        }}>
+                                        RequestId: {requestData?.id}
+                                    </Text>
                                 </Text>
                             </View>
                             {[
@@ -145,7 +179,7 @@ const ViewRequest = ({route}) => {
                                                 paddingVertical: 30,
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
-                                                marginTop:50
+                                                marginTop: 50,
                                             }}>
                                             <View style={{width: '80%', height: undefined, aspectRatio: 395 / 258}}>
                                                 <WaitingForServiceIllustration fill={'#fff'} />
@@ -157,12 +191,161 @@ const ViewRequest = ({route}) => {
                                                     color: CustomColors.GRAY,
                                                     textAlign: 'center',
                                                     marginTop: 12,
-                                                    paddingHorizontal: 24
+                                                    paddingHorizontal: 24,
                                                 }}>
                                                 Waiting service provider to start the service request.
                                             </Text>
                                         </View>
                                     ) : null}
+                                    {!!requestData?.requestLocation?.addressCoor &&
+                                    requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS ? (
+                                        <View>
+                                            <View style={styles.container}>
+                                                <MapView
+                                                    ref={mapViewRef}
+                                                    showsUserLocation={false}
+                                                    rotateEnabled={false}
+                                                    showsMyLocationButton={false}
+                                                    initialCamera={{
+                                                        altitude: 15000,
+                                                        center: {
+                                                            ...requestData?.requestLocation?.addressCoor,
+                                                        },
+                                                        heading: 0,
+                                                        pitch: 0,
+                                                        zoom: 11,
+                                                    }}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: 200,
+                                                        marginTop: 20,
+                                                        borderRadius: 20,
+                                                        overflow: 'hidden',
+                                                    }}>
+                                                    <Marker
+                                                        identifier={'customerLocationMarker'}
+                                                        coordinate={{
+                                                            ...requestData?.requestLocation?.addressCoor,
+                                                        }}
+                                                        title={'Request Location'}
+                                                        description={'Customer request Location'}
+                                                    />
+                                                    {!!requestData.serviceProviderRealTimePosition ? (
+                                                        <Marker
+                                                            identifier={'serviceProviderLocationMarker'}
+                                                            coordinate={{
+                                                                ...requestData.serviceProviderRealTimePosition.coor,
+                                                            }}>
+                                                            <View style={{width: 50, height: 50}}>
+                                                                <ServiceProviderMarkerSvg
+                                                                    width="100%"
+                                                                    height="100%"
+                                                                    fill="#fff"
+                                                                />
+                                                            </View>
+                                                        </Marker>
+                                                    ) : null}
+                                                </MapView>
+                                                <TouchableRipple
+                                                    style={{
+                                                        position: 'absolute',
+                                                        right: 16,
+                                                        bottom: 16,
+                                                        borderRadius: 24,
+                                                        zIndex: 100,
+                                                    }}
+                                                    borderless
+                                                    rippleColor="rgba(0, 0, 0, .32)"
+                                                    onPress={() => {
+                                                        try {
+                                                            if (!!requestData.serviceProviderRealTimePosition) {
+                                                                mapViewRef.current.fitToSuppliedMarkers(
+                                                                    [
+                                                                        'customerLocationMarker',
+                                                                        'serviceProviderLocationMarker',
+                                                                    ],
+                                                                    {
+                                                                        edgePadding: {
+                                                                            top: 100,
+                                                                            right: 100,
+                                                                            bottom: 100,
+                                                                            left: 100,
+                                                                        },
+                                                                    },
+                                                                );
+                                                                return;
+                                                            }
+
+                                                            mapViewRef.current.animateCamera({
+                                                                center: {
+                                                                    ...requestData?.requestLocation?.addressCoor,
+                                                                },
+                                                                zoom: 11,
+                                                            });
+                                                        } catch (err) {
+                                                            console.log(err);
+                                                        }
+                                                    }}>
+                                                    <View
+                                                        style={{
+                                                            width: 48,
+                                                            height: 48,
+                                                            opacity: 0.7,
+                                                            borderRadius: 24,
+                                                            overflow: 'hidden',
+                                                            backgroundColor: 'white',
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                        }}>
+                                                        <MaterialIcon
+                                                            name="my-location"
+                                                            size={20}
+                                                            color={CustomColors.GRAY_DARK}
+                                                        />
+                                                    </View>
+                                                </TouchableRipple>
+                                            </View>
+                                            <Text
+                                                style={{
+                                                    fontSize: CustomTypography.FONT_SIZE_14,
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    color: CustomColors.GRAY,
+                                                    textAlign: 'center',
+                                                    marginTop: 12,
+                                                    paddingHorizontal: 24,
+                                                }}>
+                                                Service provider is heading to your doorstep now. You may refer to the
+                                                service provider real-time location on the map above.
+                                            </Text>
+                                        </View>
+                                    ) : null}
+                                </View>
+                            ) : null}
+                            {requestData?.requestStatus == Constants.REQUEST_STATUS.PENDING ? (
+                                <View>
+                                    <View
+                                        style={{
+                                            width: '100%',
+                                            paddingVertical: 30,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            marginTop: 50,
+                                        }}>
+                                        <View style={{width: '80%', height: undefined, aspectRatio: 395 / 258}}>
+                                            <PendingResponseIllustration fill={'#fff'} />
+                                        </View>
+                                        <Text
+                                            style={{
+                                                fontSize: CustomTypography.FONT_SIZE_14,
+                                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                color: CustomColors.GRAY,
+                                                textAlign: 'center',
+                                                marginTop: 12,
+                                                paddingHorizontal: 24,
+                                            }}>
+                                            Your service request is pending for response from service provider.
+                                        </Text>
+                                    </View>
                                 </View>
                             ) : null}
                             {!!requestData ? (
@@ -230,7 +413,7 @@ const ViewRequest = ({route}) => {
                                         backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
                                     }}>
                                     <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>
-                                        Payment earned on this job
+                                        Fees paid for this service request:
                                     </Text>
                                     <View
                                         style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 16}}>
@@ -353,13 +536,7 @@ const ViewRequest = ({route}) => {
                                     View Customer Input
                                 </Button>
                             </View>
-                            <TouchableWithoutFeedback
-                                onPress={() => {
-                                    setGoogleMapRedirectDialog({
-                                        isVisible: true,
-                                        redirectCoordinate: `${requestData?.requestLocation?.addressCoor?.latitude},${requestData?.requestLocation?.addressCoor?.longitude}`,
-                                    });
-                                }}>
+                            <TouchableWithoutFeedback onPress={() => {}}>
                                 <View style={{flexDirection: 'row', alignItems: 'flex-start', marginTop: 16}}>
                                     <MaterialIcon name="location-on" size={30} color={CustomColors.GRAY} />
                                     <Text style={styles.requestedAddress}>
@@ -367,98 +544,76 @@ const ViewRequest = ({route}) => {
                                     </Text>
                                 </View>
                             </TouchableWithoutFeedback>
-                            {/* {!!requestData?.requestLocation?.addressCoor ? (
-                                <View style={styles.container}>
-                                    <MapView
-                                        ref={mapViewRef}
-                                        showsUserLocation={false}
-                                        rotateEnabled={false}
-                                        showsMyLocationButton={false}
-                                        initialCamera={{
-                                            altitude: 15000,
-                                            center: {
-                                                ...requestData?.requestLocation?.addressCoor,
-                                            },
-                                            heading: 0,
-                                            pitch: 0,
-                                            zoom: 11,
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            height: 200,
-                                            marginTop: 20,
-                                            borderRadius: 20,
-                                            overflow: 'hidden',
-                                        }}>
-                                        <Marker
-                                            identifier={'customerLocationMarker'}
-                                            coordinate={{
-                                                ...requestData?.requestLocation?.addressCoor,
-                                            }}
-                                            title={'Request Location'}
-                                            description={'Customer request Location'}
-                                        />
-                                        {!!realTimeLocation ? (
-                                            <Marker
-                                                identifier={'serviceProviderLocationMarker'}
-                                                coordinate={{
-                                                    ...realTimeLocation,
-                                                }}>
-                                                <View style={{width: 50, height: 50}}>
-                                                    <ServiceProviderMarkerSvg width="100%" height="100%" fill="#fff" />
-                                                </View>
-                                            </Marker>
-                                        ) : null}
-                                    </MapView>
-                                    <TouchableRipple
-                                        style={{
-                                            position: 'absolute',
-                                            right: 16,
-                                            bottom: 16,
-                                            borderRadius: 24,
-                                            zIndex: 100,
-                                        }}
-                                        borderless
-                                        rippleColor="rgba(0, 0, 0, .32)"
-                                        onPress={() => {
-                                            try {
-                                                if (!!realTimeLocation) {
-                                                    mapViewRef.current.fitToSuppliedMarkers(
-                                                        ['customerLocationMarker', 'serviceProviderLocationMarker'],
-                                                        {edgePadding: {top: 100, right: 100, bottom: 100, left: 100}},
-                                                    );
-                                                    return;
-                                                }
-
-                                                mapViewRef.current.animateCamera({
-                                                    center: {
-                                                        ...requestData?.requestLocation?.addressCoor,
-                                                    },
-                                                    zoom: 11,
-                                                });
-                                            } catch (err) {
-                                                console.log(err);
-                                            }
-                                        }}>
-                                        <View
-                                            style={{
-                                                width: 48,
-                                                height: 48,
-                                                opacity: 0.7,
-                                                borderRadius: 24,
-                                                overflow: 'hidden',
-                                                backgroundColor: 'white',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                            }}>
-                                            <MaterialIcon name="my-location" size={20} color={CustomColors.GRAY_DARK} />
-                                        </View>
-                                    </TouchableRipple>
-                                </View>
-                            ) : null} */}
                         </View>
                     </View>
                 </ScrollView>
+                {isFetchingData ? (
+                    <View
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            zIndex: 1000,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                        }}>
+                        <ActivityIndicator animating={true} color={CustomColors.WHITE} />
+                    </View>
+                ) : null}
+                <Portal>
+                    <Dialog
+                        visible={cancelJobDialog.isVisible}
+                        onDismiss={() => {
+                            setCancelJobDialog({isVisible: false});
+                        }}>
+                        <Dialog.Title>Cancel Job Confirmation</Dialog.Title>
+                        <Dialog.Content>
+                            <Text>
+                                Are you sure you want to cancel this job? Please note that deposit fee wlll not be
+                                returned.
+                            </Text>
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button
+                                style={{width: 80}}
+                                color={CustomColors.GRAY}
+                                onPress={() => {
+                                    setCancelJobDialog({isVisible: false});
+                                }}>
+                                No
+                            </Button>
+                            <Button
+                                style={{width: 80}}
+                                color={CustomColors.ALERT}
+                                onPress={() => {
+                                    RequestService.customerCancelRequest(requestId, requestData.serviceProvider.userId)
+                                        .then(data => {
+                                            showMessage({
+                                                message: 'Request successfully cancelled.',
+                                                type: 'info',
+                                                position: 'center',
+                                                titleStyle: {marginTop: 5},
+                                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                                color: 'white', // text color
+                                                hideOnPress: true,
+                                                autoHide: true,
+                                                duration: 1000,
+                                            });
+                                            setCancelJobDialog({isVisible: false});
+                                        })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                    setCancelJobDialog({isVisible: false});
+                                }}>
+                                Yes
+                            </Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                </Portal>
                 <Portal>
                     <BottomSheet
                         ref={jobRequestActionSheet}
@@ -504,6 +659,119 @@ const ViewRequest = ({route}) => {
                             </View>
                         }
                     />
+                </Portal>
+                <Portal>
+                    <Dialog
+                        style={{backgroundColor: CustomColors.WHITE}}
+                        visible={customerFormInputDisplayDialog.isVisible}
+                        dismissable={false}
+                        needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
+                        onDismiss={() => {
+                            setCustomerFormInputDisplayDialog({...customerFormInputDisplayDialog, isVisible: false});
+                        }}>
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                paddingHorizontal: 16,
+                                paddingVertical: 8,
+                            }}>
+                            <Text style={styles.dialogTitle}>Customer Form Response</Text>
+                            <IconButton
+                                icon="close"
+                                size={24}
+                                color={CustomColors.GRAY_DARK}
+                                onPress={() => {
+                                    setCustomerFormInputDisplayDialog({isVisible: false, customerFormResponse: []});
+                                }}></IconButton>
+                        </View>
+
+                        <Dialog.ScrollArea style={{paddingHorizontal: 0, paddingVertical: 0}}>
+                            <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{flexGrow: 1}}>
+                                <View style={{widht: '100%', flex: 1, paddingHorizontal: 16, paddingVertical: 24}}>
+                                    {customerFormInputDisplayDialog.customerFormResponse.map(
+                                        (currentQuestion, index) => (
+                                            <View
+                                                style={styles.questionSetupWrapper}
+                                                needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
+                                                key={currentQuestion.id}>
+                                                <Text style={[styles.inputTitle, {marginTop: 8, marginLeft: 8}]}>
+                                                    {currentQuestion.questionName}
+                                                </Text>
+                                                {currentQuestion.questionType ==
+                                                Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? (
+                                                    <TextInput
+                                                        disabled
+                                                        mode="outlined"
+                                                        label="Customer response"
+                                                        multiline
+                                                        placeholder="Your question"
+                                                        style={[styles.inputPrompt]}
+                                                        value={currentQuestion.response}></TextInput>
+                                                ) : null}
+
+                                                {currentQuestion.questionType ==
+                                                Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? null : (
+                                                    <View style={{marginTop: 16}}>
+                                                        {currentQuestion.options.map((option, i) => (
+                                                            <View
+                                                                style={{flexDirection: 'row', alignItems: 'center'}}
+                                                                key={option.optionId}>
+                                                                {currentQuestion.questionType ==
+                                                                Constants.QUESTIONNAIRE_TYPE.CHECK_BOX ? (
+                                                                    <Checkbox
+                                                                        style={{marginTop: 5}}
+                                                                        status={
+                                                                            currentQuestion.response.indexOf(
+                                                                                option.optionId,
+                                                                            ) != -1
+                                                                                ? 'checked'
+                                                                                : 'unchecked'
+                                                                        }
+                                                                        disabled
+                                                                    />
+                                                                ) : null}
+                                                                {currentQuestion.questionType ==
+                                                                Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ? (
+                                                                    <RadioButton
+                                                                        status={
+                                                                            currentQuestion.response == option.optionId
+                                                                                ? 'checked'
+                                                                                : 'unchecked'
+                                                                        }
+                                                                        disabled
+                                                                    />
+                                                                ) : null}
+                                                                <TextInput
+                                                                    disabled
+                                                                    mode="flat"
+                                                                    label=""
+                                                                    placeholder="Option name"
+                                                                    style={[
+                                                                        styles.inputPrompt,
+                                                                        {
+                                                                            flex: 1,
+                                                                            height: 36,
+                                                                            marginHorizontal: 8,
+                                                                            marginTop: 0,
+                                                                            backgroundColor: 'transparent',
+                                                                        },
+                                                                    ]}
+                                                                    value={option.optionName}
+                                                                />
+                                                                <View style={{width: 30, height: 30}}></View>
+                                                            </View>
+                                                        ))}
+                                                    </View>
+                                                )}
+                                            </View>
+                                        ),
+                                    )}
+                                </View>
+                            </ScrollView>
+                        </Dialog.ScrollArea>
+                    </Dialog>
                 </Portal>
             </SafeAreaView>
         </View>

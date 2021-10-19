@@ -102,6 +102,9 @@ const UpcomingServiceListing = () => {
                                             {moment(new Date(request.requestTimeSlot.start)).format(
                                                 'YYYY-MM-DD hh:mm A',
                                             )}
+                                            {request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
+                                                ? 'zz'
+                                                : null}
                                         </Text>
                                     </View>
                                     <View style={{flexDirection: 'row', alignItems: 'flex-start', marginTop: 16}}>
@@ -124,10 +127,9 @@ const UpcomingServiceListing = () => {
                                             marginTop: 24,
                                             padding: 12,
                                             borderRadius: 10,
-                                            backgroundColor:
-                                                request.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
+                                            backgroundColor: request.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
                                                     ? CustomColors.GRAY
-                                                    : '70cbff',
+                                                    : '#70cbff'
                                             // request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
                                             //     ? CustomColors.SUCCESS
                                             //     : request.requestStatus == Constants.REQUEST_STATUS.REJECTED
@@ -150,12 +152,11 @@ const UpcomingServiceListing = () => {
                                             {request.requestStatus == Constants.REQUEST_STATUS.PENDING
                                                 ? 'REQUEST PENDING'
                                                 : ''} */}
-
-                                            {request.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
-                                                ? 'Waiting for Service'
-                                                : null}
                                             {request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
                                                 ? 'Service In Progress'
+                                                : null}
+                                            {request.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
+                                                ? 'Waiting for Service'
                                                 : null}
                                         </Text>
                                         {request.requestStatus == Constants.REQUEST_STATUS.REJECTED ? (
@@ -309,9 +310,9 @@ const UpcomingServiceListing = () => {
                                                                     <Checkbox
                                                                         style={{marginTop: 5}}
                                                                         status={
-                                                                            currentQuestion.response.includes(
-                                                                                option.optionId.toString(),
-                                                                            )
+                                                                            currentQuestion.response.indexOf(
+                                                                                option.optionId,
+                                                                            ) != -1
                                                                                 ? 'checked'
                                                                                 : 'unchecked'
                                                                         }

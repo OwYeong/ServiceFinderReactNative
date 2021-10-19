@@ -30,6 +30,7 @@ import {
     TouchableRipple,
     HelperText,
     Surface,
+    ActivityIndicator,
 } from 'react-native-paper';
 import {Portal} from '@gorhom/portal';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -78,6 +79,8 @@ const JobRequestControlDashboard = ({route}) => {
         isVisible: false,
         requestId: '',
     });
+    
+    const [isFetchingData, setIsFetchingData] = useState(true);
 
     const jobRequestActionSheet = useRef(null);
 
@@ -86,7 +89,17 @@ const JobRequestControlDashboard = ({route}) => {
     const [paymentReceived, setPaymentReceived] = useState({value: '', error: ''});
 
     useEffect(() => {
-        const unsubscriber = RequestService.getRequestById(setRequestData, requestId);
+        const unsubscriber = RequestService.getRequestById(data => {
+            setRequestData(data);
+
+            setTimeout(() => {
+                setIsFetchingData(false);
+            }, 1000);
+
+            return () => {
+                unsubscriber();
+            };
+        }, requestId);
 
         return () => {
             unsubscriber();
@@ -159,7 +172,18 @@ const JobRequestControlDashboard = ({route}) => {
                                         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
                                         fontSize: CustomTypography.FONT_SIZE_16,
                                     }}>
-                                    Job Request Control Dashboard
+                                    Job Request Control Dashboard{'\n'}
+                                    <Text
+                                        style={{
+                                            fontSize: 10,
+                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                            color: CustomColors.GRAY,
+                                            marginTop: -8,
+                                            paddingVertical: 0,
+                                            paddingHorizontal: 16,
+                                        }}>
+                                        RequestId: {requestData?.id}
+                                    </Text>
                                 </Text>
                             </View>
                             {[
@@ -542,6 +566,22 @@ const JobRequestControlDashboard = ({route}) => {
                         </View>
                     </View>
                 </ScrollView>
+                {isFetchingData ? (
+                    <View
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            zIndex: 1000,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                        }}>
+                        <ActivityIndicator animating={true} color={CustomColors.WHITE} />
+                    </View>
+                ) : null}
                 <Portal>
                     <BottomSheet
                         ref={jobRequestActionSheet}
@@ -628,7 +668,7 @@ const JobRequestControlDashboard = ({route}) => {
                                             autoHide: true,
                                             duration: 1000,
                                         });
-                                        setStartJobDialog({isVisible: false});
+                                        setCancelJobDialog({isVisible: false});
                                     })
                                     .catch(err => {
                                         console.log(err);
