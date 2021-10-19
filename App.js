@@ -70,24 +70,14 @@ const App: () => Node = () => {
     const dispatch = useDispatch();
     const loginBlock = useSelector(state => state.appState.loginBlock);
     const userInfo = useSelector(state => state.loginState.userInfo);
-    const [publishableKey, setPublishableKey] = useState('');
+    const [publishableKey, setPublishableKey] = useState(PUBLISHABLE_KEY);
 
     const backgroundStyle = {
         backgroundColor: 'blue',
     };
     var autoFetchLocked = false;
 
-    const fetchPublishableKey = async () => {
-        const key = await PaymentService.fetchPublishableKey();
-
-        console.log('MY KEY IS')
-        console.log(key)
-        if(!!key){
-            setPublishableKey(key);
-        } else {
-            setPublishableKey(PUBLISHABLE_KEY);
-        }
-    };
+   
 
     console.log('hahaha');
 
@@ -99,7 +89,6 @@ const App: () => Node = () => {
         });
 
         const authenticationListener = auth().onAuthStateChanged(user => {
-            fetchPublishableKey();
             // LocalNotification()
             console.log('yoyo, authenticated');
             console.log(user);

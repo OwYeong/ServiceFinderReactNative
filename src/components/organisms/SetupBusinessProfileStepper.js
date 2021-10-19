@@ -66,7 +66,7 @@ import {Constants} from '~constants';
 import ProviderService from '@services/ProviderService';
 import moment from 'moment';
 import UserService from '@services/UserService';
-import { useSelector } from 'react-redux';
+import {useSelector} from 'react-redux';
 
 const validationSchema = yup.object().shape({
     businessCategory: yup.string().required('Business category is mandatory.'),
@@ -177,7 +177,7 @@ const SetupBusinessProfileStepper = () => {
             backgroundColor: 'transparent', // change the color to "rgba(1,0,0,0)"
         },
     };
-    
+
     const userInfo = useSelector(state => state.loginState.userInfo);
 
     const [userInput, setUserInput] = useState({
@@ -464,6 +464,11 @@ const SetupBusinessProfileStepper = () => {
                 addressSearchBarRef.current.blur();
             }
         });
+        UserService.fetchLoggedInUserDataToRedux().then(()=>{
+
+        }).catch((err)=>{
+            console.log(err)
+        })
 
         return () => {
             // clean up
@@ -474,7 +479,7 @@ const SetupBusinessProfileStepper = () => {
 
     const finishSetup = withAdditionalForm => {
         setLoadingModal({isVisible: true, modalTitle: 'Finishing Setup'});
-        console.log('cover img path ', userInput.businessProfile.coverImagePath);
+        console.log('cover img pat{}h ', userInput.businessProfile.coverImagePath);
         console.log('business logo img path ', userInput.businessProfile.businessLogoPath);
         var promises = [];
 
@@ -511,7 +516,18 @@ const SetupBusinessProfileStepper = () => {
                     priceStart: userInput.businessProfile.priceStart,
                     priceEnd: userInput.businessProfile.priceEnd,
                     popularity: {
+                        "AUG_2021": 0,
+                        "SEP_2021": 0,
+                        "OCT_2021": 0,
+                        "NOV_2021": 0,
+                        "DEC_2021": 0,
+                        "JAN_2022": 0,
+                        "FEB_2022": 0,
+                        "MAR_2022": 0,
+                        "APR_2022": 0,
+                        "MAY_2022": 0,
                         [moment().format('MMM_YYYY').toUpperCase()]: 0,
+                        
                     },
                     totalEarnings: 0,
                     averageRatings: 0,
@@ -525,6 +541,9 @@ const SetupBusinessProfileStepper = () => {
                         numOf5Star: 0,
                     },
                     firstJoined: new Date(userInfo.firstJoined),
+                    dateNotAvailable: [],
+                    workingHours: {startHour: 9, endHour: 18},
+                    phoneNumber: userInfo?.phoneNumber,
                 };
 
                 if (isUserSetupCoverImage) {
@@ -586,9 +605,24 @@ const SetupBusinessProfileStepper = () => {
                     priceStart: userInput.businessProfile.priceStart,
                     priceEnd: userInput.businessProfile.priceEnd,
                     popularity: {
+                        "AUG_2021": 0,
+                        "SEP_2021": 0,
+                        "OCT_2021": 0,
+                        "NOV_2021": 0,
+                        "DEC_2021": 0,
+                        "JAN_2022": 0,
+                        "FEB_2022": 0,
+                        "MAR_2022": 0,
+                        "APR_2022": 0,
+                        "MAY_2022": 0,
                         [moment().format('MMM_YYYY').toUpperCase()]: 0,
+                        
                     },
                     serviceCoverage: {...userInput.serviceCoverage},
+                    firstJoined: new Date(userInfo.firstJoined),
+                    dateNotAvailable: [],
+                    workingHours: {startHour: 9, endHour: 18},
+                    phoneNumber: userInfo?.phoneNumber,
                 };
 
                 if (withAdditionalForm) {

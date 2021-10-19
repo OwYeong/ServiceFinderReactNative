@@ -1,6 +1,6 @@
 import RequestService from '@services/RequestService';
 import React, {useEffect, useState} from 'react';
-import {Linking, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View} from 'react-native';
+import {Linking, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View, Image} from 'react-native';
 import {
     Avatar,
     Button,
@@ -20,10 +20,10 @@ import {CustomColors, CustomTypography} from '@styles';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 import {Constants} from '~constants';
-import {showMessage} from 'react-native-flash-message';
-import { useNavigation } from '@react-navigation/core';
+import {useNavigation} from '@react-navigation/core';
+import CommonFunction from '@utils/CommonFunction';
 
-const IncompleteRequestListing = () => {
+const UpcomingServiceListing = () => {
     const navigation = useNavigation();
     const [requests, setRequests] = useState([]);
 
@@ -38,7 +38,7 @@ const IncompleteRequestListing = () => {
     });
 
     useEffect(() => {
-        const unsubscriber = RequestService.getIncompleteRequestByCustomer(setRequests);
+        const unsubscriber = RequestService.getUpcomingRequestByCustomer(setRequests);
 
         return () => {
             unsubscriber();
@@ -46,29 +46,38 @@ const IncompleteRequestListing = () => {
     }, []);
 
     return (
-        <ScrollView contentContainerStyle={{flexGrow: 1}}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{flexGrow: 1}}>
             <View style={{flex: 1, width: '100%', padding: 16, backgroundColor: CustomColors.GRAY_EXTRA_LIGHT}}>
                 {requests.length > 0 ? (
                     requests.map(request => (
-                        <TouchableRipple key={request.id} onPress={() => {
-                            navigation.navigate('ViewRequest',{requestId: request.id})
-                        }}>
+                        <TouchableWithoutFeedback
+                            key={request.id}
+                            onPress={() => {
+                                navigation.navigate('ViewRequest', {requestId: request.id});
+                            }}>
                             <Surface style={styles.requestContainer}>
                                 <View>
                                     <View style={{flexDirection: 'row'}}>
-                                        <Avatar.Text
-                                            color={'white'}
-                                            size={40}
-                                            label={request.customerInfo.lastName.charAt(0)}
-                                        />
+                                        <View style={{width: 40, height: 40, borderRadius: 20, overflow: 'hidden'}}>
+                                            {!!request?.serviceProvider?.businessLogoUrl ? (
+                                                <Image
+                                                    style={{width: '100%', height: '100%'}}
+                                                    source={{
+                                                        uri: request?.serviceProvider?.businessLogoUrl,
+                                                    }}></Image>
+                                            ) : (
+                                                <Image
+                                                    style={{width: '100%', height: '100%'}}
+                                                    source={require('@assets/images/default-profileImage.png')}></Image>
+                                            )}
+                                        </View>
                                         <View style={{marginLeft: 16}}>
                                             <Text style={styles.customerName}>
-                                                {request.customerInfo.firstName + ' ' + request.customerInfo.lastName}
+                                                {request?.serviceProvider?.businessName}
                                             </Text>
                                             <Text style={styles.requestedDateTime}>
-                                                requested at{' '}
-                                                {moment(new Date(request.dateTimeRequested)).format(
-                                                    'YYYY-MM-DD hh:mm A',
+                                                {CommonFunction.getDisplayNameForServiceType(
+                                                    request?.serviceProvider?.serviceType,
                                                 )}
                                             </Text>
                                         </View>
@@ -106,7 +115,7 @@ const IncompleteRequestListing = () => {
                                                     customerFormResponse: request.customerFormResponse,
                                                 });
                                             }}>
-                                            View Customer Input
+                                            View My Filled Form
                                         </Button>
                                     </View>
                                     <View
@@ -116,11 +125,14 @@ const IncompleteRequestListing = () => {
                                             padding: 12,
                                             borderRadius: 10,
                                             backgroundColor:
-                                                request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
-                                                    ? CustomColors.SUCCESS
-                                                    : request.requestStatus == Constants.REQUEST_STATUS.REJECTED
-                                                    ? CustomColors.ALERT
-                                                    : CustomColors.WARNING,
+                                                request.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
+                                                    ? CustomColors.GRAY
+                                                    : '70cbff',
+                                            // request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
+                                            //     ? CustomColors.SUCCESS
+                                            //     : request.requestStatus == Constants.REQUEST_STATUS.REJECTED
+                                            //     ? CustomColors.ALERT
+                                            //     : CustomColors.WARNING,
                                         }}>
                                         <Text
                                             style={{
@@ -129,7 +141,7 @@ const IncompleteRequestListing = () => {
                                                 fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
                                                 color: CustomColors.WHITE,
                                             }}>
-                                            {request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
+                                            {/* {request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
                                                 ? 'REQUEST ACCEPTED'
                                                 : ''}
                                             {request.requestStatus == Constants.REQUEST_STATUS.REJECTED
@@ -137,7 +149,14 @@ const IncompleteRequestListing = () => {
                                                 : ''}
                                             {request.requestStatus == Constants.REQUEST_STATUS.PENDING
                                                 ? 'REQUEST PENDING'
-                                                : ''}
+                                                : ''} */}
+
+                                            {request.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
+                                                ? 'Waiting for Service'
+                                                : null}
+                                            {request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
+                                                ? 'Service In Progress'
+                                                : null}
                                         </Text>
                                         {request.requestStatus == Constants.REQUEST_STATUS.REJECTED ? (
                                             <Text
@@ -157,7 +176,7 @@ const IncompleteRequestListing = () => {
                                     </View>
                                 </View>
                             </Surface>
-                        </TouchableRipple>
+                        </TouchableWithoutFeedback>
                     ))
                 ) : (
                     <View
@@ -345,7 +364,7 @@ const IncompleteRequestListing = () => {
     );
 };
 
-export default IncompleteRequestListing;
+export default UpcomingServiceListing;
 
 const styles = StyleSheet.create({
     requestContainer: {

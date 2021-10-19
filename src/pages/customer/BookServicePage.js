@@ -335,7 +335,7 @@ const BookServicePage = ({route}) => {
 
         if (clientSecret == null) {
             showMessage({
-                message: 'Some error occured please try again later..',
+                message: 'Some error occured, please try again later.',
                 type: 'info',
                 position: 'center',
                 backgroundColor: 'rgba(0,0,0,0.6)', // background color

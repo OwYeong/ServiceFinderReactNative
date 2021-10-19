@@ -109,7 +109,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'Happy Car Wash Sdn Bhd'
+         'businessName': 'Happy Car Wash Sdn Bhd',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -198,7 +200,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'Call2Wash Sdn Bhd'
+         'businessName': 'Call2Wash Sdn Bhd',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -261,7 +265,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'Brothers Factory Outlet'
+         'businessName': 'Brothers Factory Outlet',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -325,7 +331,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'TechHypermart Sdn Bhd'
+         'businessName': 'TechHypermart Sdn Bhd',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -388,7 +396,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'R&K Mobile Repair Center'
+         'businessName': 'R&K Mobile Repair Center',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -451,7 +461,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'Fitness First'
+         'businessName': 'Fitness First',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -516,7 +528,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'YMCA KL'
+         'businessName': 'YMCA KL',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -580,7 +594,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'Retro Catering Sdn Bhd'
+         'businessName': 'Retro Catering Sdn Bhd',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -644,7 +660,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'Thomas Photography Sdn Bhd'
+         'businessName': 'Thomas Photography Sdn Bhd',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },
@@ -708,7 +726,9 @@ service_provider_dummies = [
              'coverageDistance': '15',
              'addressFullName': 'Kota Kemuning, 40460 Klang, Selangor'
          },
-         'businessName': 'My Wedding Planner Sdn Bhd'
+         'businessName': 'My Wedding Planner Sdn Bhd',
+         'dateNotAvailable': [],
+         'workingHours': {'startHour': 9, 'endHour': 18},
 
      }
      },

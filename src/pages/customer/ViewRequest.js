@@ -47,6 +47,7 @@ import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 import ServiceProviderMarkerSvg from '@assets/images/service-provider-marker';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 import CommonFunction from '@utils/CommonFunction';
+import WaitingForServiceIllustration from '@assets/images/waiting-for-service-illustration';
 
 const ViewRequest = ({route}) => {
     const navigation = useNavigation();
@@ -110,9 +111,17 @@ const ViewRequest = ({route}) => {
                             <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
                                 <View style={{flexDirection: 'row'}}>
                                     <View style={{width: 40, height: 40, borderRadius: 20, overflow: 'hidden'}}>
-                                        <Image
-                                            style={{width: '100%', height: '100%'}}
-                                            source={{uri: requestData?.serviceProvider?.businessLogoUrl}}></Image>
+                                        {!!requestData?.serviceProvider?.businessLogoUrl ? (
+                                            <Image
+                                                style={{width: '100%', height: '100%'}}
+                                                source={{
+                                                    uri: requestData?.serviceProvider?.businessLogoUrl,
+                                                }}></Image>
+                                        ) : (
+                                            <Image
+                                                style={{width: '100%', height: '100%'}}
+                                                source={require('@assets/images/default-profileImage.png')}></Image>
+                                        )}
                                     </View>
                                     <View style={{marginLeft: 16}}>
                                         <Text style={styles.customerName}>
@@ -127,6 +136,35 @@ const ViewRequest = ({route}) => {
                                 </View>
                                 <Button onPress={() => {}}>Chat</Button>
                             </View>
+                            {requestData?.requestStatus == Constants.REQUEST_STATUS.ACCEPTED ? (
+                                <View>
+                                    {requestData?.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE ? (
+                                        <View
+                                            style={{
+                                                width: '100%',
+                                                paddingVertical: 30,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                marginTop:50
+                                            }}>
+                                            <View style={{width: '80%', height: undefined, aspectRatio: 395 / 258}}>
+                                                <WaitingForServiceIllustration fill={'#fff'} />
+                                            </View>
+                                            <Text
+                                                style={{
+                                                    fontSize: CustomTypography.FONT_SIZE_14,
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    color: CustomColors.GRAY,
+                                                    textAlign: 'center',
+                                                    marginTop: 12,
+                                                    paddingHorizontal: 24
+                                                }}>
+                                                Waiting service provider to start the service request.
+                                            </Text>
+                                        </View>
+                                    ) : null}
+                                </View>
+                            ) : null}
                             {!!requestData ? (
                                 <View
                                     style={{

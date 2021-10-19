@@ -118,23 +118,21 @@ const RequestService = {
                 },
             );
     },
-    getIncompleteRequestByCustomer: (callback, customerUserId = auth().currentUser.uid) => {
+    getUpcomingRequestByCustomer: (callback, customerUserId = auth().currentUser.uid) => {
         let requestCollection = firestore().collection('requests');
 
         return requestCollection
             .where('customerInfo.userId', '==', customerUserId)
-            .where('requestStatus', 'in', [
-                Constants.REQUEST_STATUS.ACCEPTED,
-                Constants.REQUEST_STATUS.REJECTED,
-                Constants.REQUEST_STATUS.PENDING,
+            .where('requestStatus', '==', Constants.REQUEST_STATUS.ACCEPTED)
+            .where('serviceStatus', 'in', [
+                Constants.SERVICE_STATUS.WAITING_FOR_SERVICE,
+                Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS,
             ])
-            .orderBy('dateTimeRequested', 'desc')
+            .orderBy('requestTimeSlot.start')
             .onSnapshot(
                 querySnapshot => {
-                    console.log(querySnapshot);
                     if (querySnapshot.size > 0) {
                         const requests = [];
-
                         querySnapshot.forEach(docSnapshot => {
                             let request = {
                                 id: docSnapshot.id,
@@ -145,6 +143,8 @@ const RequestService = {
                                 },
                                 dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
                             };
+
+                            console.log(docSnapshot.data());
                             requests.push(request);
                         });
 
@@ -160,6 +160,97 @@ const RequestService = {
                 },
             );
     },
+    getPendingRequestByCustomer: (callback, customerUserId = auth().currentUser.uid) => {
+        let requestCollection = firestore().collection('requests');
+
+        return requestCollection
+            .where('customerInfo.userId', '==', customerUserId)
+            .where('requestStatus', '==', Constants.REQUEST_STATUS.PENDING)
+            .orderBy('dateTimeRequested', 'desc')
+            .onSnapshot(
+                querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const requests = [];
+                        querySnapshot.forEach(docSnapshot => {
+                            let request = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                                requestTimeSlot: {
+                                    start: docSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                    end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                                },
+                                dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+
+                            console.log(docSnapshot.data());
+                            requests.push(request);
+                        });
+
+                        callback(requests);
+                    } else {
+                        const requests = [];
+
+                        callback(requests);
+                    }
+                },
+                error => {
+                    console.error(error);
+                },
+            );
+    },
+    getHistoryRequestByCustomer: (callback, customerUserId = auth().currentUser.uid) => {
+        let requestCollection = firestore().collection('requests');
+
+        return requestCollection
+            .where('customerInfo.userId', '==', customerUserId)
+            .where('requestStatus', '==', [Constants.REQUEST_STATUS.ACCEPTED, Constants.REQUEST_STATUS.REJECTED])
+            .orderBy('dateTimeRequested', 'desc')
+            .onSnapshot(
+                querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const requests = [];
+                        querySnapshot.forEach(docSnapshot => {
+                            let request = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                                requestTimeSlot: {
+                                    start: docSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                    end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                                },
+                                dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+
+                            console.log(docSnapshot.data());
+                            if (request.requestStatus == Constants.REQUEST_STATUS.ACCEPTED) {
+
+                                if (
+                                    [
+                                        Constants.SERVICE_STATUS.CANCELLED_BY_CUSTOMER,
+                                        Constants.SERVICE_STATUS.CANCELLED_BY_VENDOR,
+                                        Constants.SERVICE_STATUS.SERVICE_COMPLETED,
+                                    ].indexOf(request.serviceStatus) != -1
+                                ) {
+                                    requests.push(request);
+                                }
+
+                            } else {
+                                requests.push(request);
+                            }
+                        });
+
+                        callback(requests);
+                    } else {
+                        const requests = [];
+
+                        callback(requests);
+                    }
+                },
+                error => {
+                    console.error(error);
+                },
+            );
+    },
+
     getRequestById: (callback, requestId) => {
         let requestCollection = firestore().collection('requests');
 
