@@ -587,6 +587,8 @@ const ProviderService = {
 
                 const loggedInProviderData = {
                     ...currentServiceProvider.data(),
+                    
+                    firstJoined: currentServiceProvider.data().firstJoined.toDate().toString(),
                 };
 
                 store.dispatch(setProviderInfo(loggedInProviderData));

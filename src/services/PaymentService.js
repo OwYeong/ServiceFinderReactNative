@@ -36,6 +36,7 @@ const PaymentService = {
 
             return clientSecret;
         } catch (err) {
+            return null;
             console.log(err);
         }
     },

@@ -524,7 +524,7 @@ const SetupBusinessProfileStepper = () => {
                         numOf4Star: 0,
                         numOf5Star: 0,
                     },
-                    firstJoined: userInfo.firstJoined
+                    firstJoined: new Date(userInfo.firstJoined),
                 };
 
                 if (isUserSetupCoverImage) {

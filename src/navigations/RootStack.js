@@ -21,6 +21,7 @@ import LocationPicker from '@pages/customer/LocationPicker';
 import ForceLocationPick from '@pages/customer/ForceLocationPick';
 import ViewServiceProvider from '@pages/customer/ViewServiceProvider';
 import BookServicePage from '@pages/customer/BookServicePage';
+import ViewRequest from '@pages/customer/ViewRequest';
 
 const Stack = createStackNavigator();
 
@@ -55,19 +56,18 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                         </Stack.Screen>
                     ) : null}
 
-                    {!userInfo.serviceAddress ? (
-                        <Stack.Screen
-                            name="ForceLocationPick"
-                            component={ForceLocationPick}
-                            options={{
-                                animationEnabled: true,
-                                headerShown: false,
-                            }}
-                        />
-                    ) : null}
-
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.CONSUMER ? (
                         <>
+                            {!userInfo.serviceAddress ? (
+                                <Stack.Screen
+                                    name="ForceLocationPick"
+                                    component={ForceLocationPick}
+                                    options={{
+                                        animationEnabled: true,
+                                        headerShown: false,
+                                    }}
+                                />
+                            ) : null}
                             <Stack.Screen
                                 name="Customer"
                                 component={CustomerStack}
@@ -100,7 +100,7 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                                     headerShown: false,
                                 }}
                             />
-                            
+
                             <Stack.Screen
                                 name="ViewServiceProvider"
                                 component={ViewServiceProvider}
@@ -109,7 +109,7 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                                     headerShown: false,
                                 }}
                             />
-                            
+
                             <Stack.Screen
                                 name="PostView"
                                 component={PostViewPage}
@@ -121,6 +121,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="BookServicePage"
                                 component={BookServicePage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="ViewRequest"
+                                component={ViewRequest}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,

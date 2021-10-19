@@ -75,9 +75,13 @@ import {useNavigation} from '@react-navigation/core';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {CardField, useConfirmPayment} from '@stripe/stripe-react-native';
 import PaymentService from '@services/PaymentService';
+import RequestService from '@services/RequestService';
+import firebase from '@react-native-firebase/app';
 
 const BookServicePage = ({route}) => {
     const navigation = useNavigation();
+    const userInfo = useSelector(state => state.loginState.userInfo);
+
     const {confirmPayment, loading} = useConfirmPayment();
 
     const providerId = route.params.providerId;
@@ -216,6 +220,110 @@ const BookServicePage = ({route}) => {
         swiperRef.current.scrollBy(1);
     };
 
+    const createNewServiceRequest = async doorstepServiceFeeStripeRef => {
+        try {
+            if (!providerInfo?.withAdditionalForm) {
+                //without additional form
+                const requestData = {
+                    customerInfo: {
+                        firstName: userInfo.firstName,
+                        lastName: userInfo.lastName,
+                        phoneNumber: userInfo.phoneNumber,
+                        userId: auth().currentUser.uid,
+                    },
+                    dateTimeRequested: firebase.firestore.FieldValue.serverTimestamp(),
+                    doorstepServiceFee: 10,
+                    requestLocation: {
+                        ...userInfo.serviceAddress,
+                    },
+                    requestStatus: Constants.REQUEST_STATUS.PENDING,
+                    requestTimeSlot: {
+                        start: bookType == 'now' ? moment().toDate() : selectedDateTime,
+                        end:
+                            bookType == 'now'
+                                ? moment().add(1, 'hours').toDate()
+                                : moment(selectedDateTime).add(1, 'hours').toDate(),
+                    },
+                    serviceProvider: {
+                        businessCategory: providerInfo?.businessCategory,
+                        businessLogoUrl: providerInfo?.businessLogoUrl,
+                        businessName: providerInfo?.businessName,
+                        serviceType: providerInfo?.serviceType,
+                        userId: providerInfo?.id,
+                    },
+                    serviceStatus: Constants.SERVICE_STATUS.WAITING_FOR_SERVICE,
+                    doorstepServiceFeeStripeRef: doorstepServiceFeeStripeRef,
+                };
+
+                const newDocumentId = await RequestService.createRequest(requestData);
+
+                navigation.navigate('viewRequest', {requestId: newDocumentId});
+            } else {
+                //with additional form
+                const requestData = {
+                    customerFormResponse: [...formResponse],
+                    customerInfo: {
+                        firstName: userInfo.firstName,
+                        lastName: userInfo.lastName,
+                        phoneNumber: userInfo.phoneNumber,
+                        userId: auth().currentUser.uid,
+                    },
+                    dateTimeRequested: firebase.firestore.FieldValue.serverTimestamp(),
+                    doorstepServiceFee: 10,
+                    requestLocation: {
+                        ...userInfo.serviceAddress,
+                    },
+                    requestStatus: Constants.REQUEST_STATUS.PENDING,
+                    requestTimeSlot: {
+                        start: bookType == 'now' ? moment().toDate() : selectedDateTime,
+                        end:
+                            bookType == 'now'
+                                ? moment().add(1, 'hours').toDate()
+                                : moment(selectedDateTime).add(1, 'hours').toDate(),
+                    },
+                    serviceProvider: {
+                        businessCategory: providerInfo?.businessCategory,
+                        businessLogoUrl: providerInfo?.businessLogoUrl,
+                        businessName: providerInfo?.businessName,
+                        serviceType: providerInfo?.serviceType,
+                        userId: providerInfo?.id,
+                    },
+                    // doorStepServiceFeeStripeRef:
+                    serviceStatus: Constants.SERVICE_STATUS.WAITING_FOR_SERVICE,
+                    doorstepServiceFeeStripeRef: doorstepServiceFeeStripeRef,
+                };
+
+                const newDocumentId = await RequestService.createRequest(requestData);
+                console.log(newDocumentId);
+                showMessage({
+                    message: 'Service request placed successfully',
+                    type: 'info',
+                    position: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                    color: 'white', // text color
+                    titleStyle: {marginTop: 5},
+                    hideOnPress: true,
+                    autoHide: true,
+                    duration: 2000,
+                });
+                navigation.navigate('ViewRequest', {requestId: newDocumentId});
+            }
+        } catch (error) {
+            console.log(error);
+            showMessage({
+                message: 'Some Error Occurs.',
+                type: 'info',
+                position: 'center',
+                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                color: 'white', // text color
+                titleStyle: {marginTop: 5},
+                hideOnPress: true,
+                autoHide: true,
+                duration: 2000,
+            });
+        }
+    };
+
     const payAndProceed = async () => {
         // 1. fetch Intent Client Secret from backend
         const clientSecret = await PaymentService.fetchPaymentIntentClientSecret(10.0);
@@ -225,12 +333,27 @@ const BookServicePage = ({route}) => {
             name: cardHolderName,
         };
 
+        if (clientSecret == null) {
+            showMessage({
+                message: 'Some error occured please try again later..',
+                type: 'info',
+                position: 'center',
+                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                color: 'white', // text color
+                titleStyle: {marginTop: 5},
+                hideOnPress: true,
+                autoHide: true,
+                duration: 2000,
+            });
+            return;
+        }
+
         const {error, paymentIntent} = await confirmPayment(clientSecret, {
             type: 'Card',
             billingDetails,
         });
-        console.log(error)
-        if (error || cardHolderName=="") {
+        console.log(error);
+        if (error || cardHolderName == '') {
             showMessage({
                 message: 'Payment Details is incomplete.',
                 type: 'info',
@@ -243,8 +366,8 @@ const BookServicePage = ({route}) => {
                 duration: 2000,
             });
         } else if (paymentIntent) {
-            Alert.alert('Success', `The payment was confirmed successfully! currency: ${paymentIntent.currency}`);
-            console.log('Success from promise', paymentIntent);
+            console.log('calling createNewServiceRequest');
+            createNewServiceRequest(paymentIntent.clientSecret);
         }
     };
 
@@ -842,7 +965,14 @@ const BookServicePage = ({route}) => {
                                             funds will not be return if you cancel the service request later.
                                         </Text>
 
-                                        <View style={{padding:12,backgroundColor: CustomColors.GRAY_EXTRA_LIGHT, borderRadius: 12, elevation:1, marginTop:24}}>
+                                        <View
+                                            style={{
+                                                padding: 12,
+                                                backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
+                                                borderRadius: 12,
+                                                elevation: 1,
+                                                marginTop: 24,
+                                            }}>
                                             <Text
                                                 style={{
                                                     fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,

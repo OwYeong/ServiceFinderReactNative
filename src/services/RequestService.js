@@ -118,6 +118,48 @@ const RequestService = {
                 },
             );
     },
+    getIncompleteRequestByCustomer: (callback, customerUserId = auth().currentUser.uid) => {
+        let requestCollection = firestore().collection('requests');
+
+        return requestCollection
+            .where('customerInfo.userId', '==', customerUserId)
+            .where('requestStatus', 'in', [
+                Constants.REQUEST_STATUS.ACCEPTED,
+                Constants.REQUEST_STATUS.REJECTED,
+                Constants.REQUEST_STATUS.PENDING,
+            ])
+            .orderBy('dateTimeRequested', 'desc')
+            .onSnapshot(
+                querySnapshot => {
+                    console.log(querySnapshot);
+                    if (querySnapshot.size > 0) {
+                        const requests = [];
+
+                        querySnapshot.forEach(docSnapshot => {
+                            let request = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                                requestTimeSlot: {
+                                    start: docSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                    end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                                },
+                                dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+                            requests.push(request);
+                        });
+
+                        callback(requests);
+                    } else {
+                        const requests = [];
+
+                        callback(requests);
+                    }
+                },
+                error => {
+                    console.error(error);
+                },
+            );
+    },
     getRequestById: (callback, requestId) => {
         let requestCollection = firestore().collection('requests');
 
@@ -205,6 +247,46 @@ const RequestService = {
                     console.log(err);
                     reject('Some error occur');
                 });
+        });
+    },
+    createRequest: data => {
+        return new Promise((resolve, reject) => {
+            try {
+                const requestsCollection = firestore().collection('requests');
+                console.log('creating request', data);
+                requestsCollection
+                    .add({
+                        ...data,
+                    })
+                    .then(async docRef => {
+                        console.log('Request data successfully created!');
+
+                        try {
+                            const targetUserInfo = await UserService.getUserInfo(data.serviceProvider.userId);
+
+                            if (!!targetUserInfo.fcmToken) {
+                                console.log('sending notification to' + targetUserInfo.fcmToken);
+
+                                await NotificationService.sendNotificationToDevice(
+                                    targetUserInfo.fcmToken,
+                                    `You have a new job request`,
+                                    `You have a new job request, you may view the request in the app.`,
+                                );
+                            }
+                            resolve(docRef.id);
+                        } catch (err) {
+                            reject('Some error occur');
+                            console.log(err);
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        reject('Some error occur');
+                    });
+            } catch (err) {
+                console.log('errr');
+                console.log(err);
+            }
         });
     },
     updateRequest: (data, documentId) => {

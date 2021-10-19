@@ -317,7 +317,7 @@ const ProviderProfilePage = () => {
                     bottomSheerColor="#FFFFFF"
                     // ref="BottomSheet"
                     initialPosition={0}
-                    snapPoints={[0, 260]}
+                    snapPoints={[0, 300]}
                     isBackDrop={true}
                     isBackDropDismissByPress={true}
                     isRoundBorderWithTipHeader={true}
@@ -489,7 +489,7 @@ const ProviderProfilePage = () => {
                     bottomSheerColor="#FFFFFF"
                     // ref="BottomSheet"
                     initialPosition={0}
-                    snapPoints={[0, 260]}
+                    snapPoints={[0, 300]}
                     isBackDrop={true}
                     isBackDropDismissByPress={true}
                     isRoundBorderWithTipHeader={true}
@@ -659,7 +659,7 @@ const ProviderProfilePage = () => {
                     bottomSheerColor="#FFFFFF"
                     // ref="BottomSheet"
                     initialPosition={0}
-                    snapPoints={[0, 260]}
+                    snapPoints={[0, 320]}
                     isBackDrop={true}
                     isBackDropDismissByPress={true}
                     isRoundBorderWithTipHeader={true}
