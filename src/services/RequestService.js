@@ -276,6 +276,36 @@ const RequestService = {
             },
         );
     },
+    getRequestByIdOneTimeRead: (requestId) => {
+        return new Promise((resolve, reject) => {
+            let requestCollection = firestore().collection('requests');
+
+            requestCollection
+                .doc(requestId)
+                .get()
+                .then(documentSnapshot => {
+                    if (documentSnapshot.exists) {
+                        let data = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                            requestTimeSlot: {
+                                start: documentSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                end: documentSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                            },
+                            dateTimeRequested: documentSnapshot.data().dateTimeRequested.toDate().toString(),
+                        };
+
+                        resolve(data);
+                    } else {
+                        reject('Document does not exist');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getPost\n');
+                    reject(error);
+                });
+        });
+    },
     rejectRequest: (documentId, rejectReason, customerId) => {
         return new Promise((resolve, reject) => {
             const requestsCollection = firestore().collection('requests');

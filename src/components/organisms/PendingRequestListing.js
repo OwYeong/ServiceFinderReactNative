@@ -22,6 +22,7 @@ import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 import {Constants} from '~constants';
 import {useNavigation} from '@react-navigation/core';
 import CommonFunction from '@utils/CommonFunction';
+import NoPendingRequestIllustration from '@assets/images/no-pending-request-illustration';
 
 const PendingRequestListing = () => {
     const navigation = useNavigation();
@@ -78,6 +79,12 @@ const PendingRequestListing = () => {
                                             <Text style={styles.requestedDateTime}>
                                                 {CommonFunction.getDisplayNameForServiceType(
                                                     request?.serviceProvider?.serviceType,
+                                                )}
+                                            </Text>
+                                            <Text style={[styles.requestedDateTime, {fontSize: 10}]}>
+                                                requested at{' '}
+                                                {moment(new Date(request?.dateTimeRequested)).format(
+                                                    'YYYY-MM-DD hh:mm A',
                                                 )}
                                             </Text>
                                         </View>
@@ -155,17 +162,19 @@ const PendingRequestListing = () => {
                             paddingBottom: 140,
                         }}>
                         <View style={{alignItems: 'center'}}>
-                            <MaterialIcon name="history" size={100} color={CustomColors.GRAY} />
-
+                            <View style={{width:150, height:undefined, aspectRatio:441/374}}>
+                                <NoPendingRequestIllustration fill={'#fff'} />
+                            </View>
+                            
                             <Text
                                 style={{
-                                    fontSize: CustomTypography.FONT_SIZE_16,
+                                    fontSize: CustomTypography.FONT_SIZE_14,
                                     fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
                                     color: CustomColors.GRAY,
                                     textAlign: 'center',
                                     marginTop: 8,
                                 }}>
-                                You have no history yet.
+                                You have no pending request yet.
                             </Text>
                         </View>
                     </View>

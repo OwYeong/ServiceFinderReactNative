@@ -22,6 +22,7 @@ import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 import {Constants} from '~constants';
 import {useNavigation} from '@react-navigation/core';
 import CommonFunction from '@utils/CommonFunction';
+import NoUpcomingRequestIllustration from '@assets/images/no-upcoming-request-illustration';
 
 const UpcomingServiceListing = () => {
     const navigation = useNavigation();
@@ -189,17 +190,19 @@ const UpcomingServiceListing = () => {
                             paddingBottom: 140,
                         }}>
                         <View style={{alignItems: 'center'}}>
-                            <MaterialIcon name="history" size={100} color={CustomColors.GRAY} />
+                            <View style={{width:200, height:undefined, aspectRatio:473/270, marginLeft:30, marginTop:40}}>
+                                <NoUpcomingRequestIllustration fill={'#fff'} />
+                            </View>
 
                             <Text
                                 style={{
-                                    fontSize: CustomTypography.FONT_SIZE_16,
+                                    fontSize: CustomTypography.FONT_SIZE_14,
                                     fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
                                     color: CustomColors.GRAY,
                                     textAlign: 'center',
                                     marginTop: 8,
                                 }}>
-                                You have no history yet.
+                                You have upcoming service request yet. Consider booking service now.
                             </Text>
                         </View>
                     </View>

@@ -356,7 +356,10 @@ const ViewRequest = ({route}) => {
                                         padding: 8,
                                         borderRadius: 10,
                                         backgroundColor:
-                                            requestData?.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
+                                            requestData?.requestStatus == Constants.REQUEST_STATUS.REJECTED
+                                                ? CustomColors.ALERT
+                                                : requestData?.serviceStatus ==
+                                                  Constants.SERVICE_STATUS.WAITING_FOR_SERVICE
                                                 ? '#a8a8a8'
                                                 : requestData?.serviceStatus ==
                                                   Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
@@ -374,31 +377,48 @@ const ViewRequest = ({route}) => {
                                             fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
                                             color: CustomColors.WHITE,
                                         }}>
-                                        Status:{' '}
                                         {requestData?.requestStatus == Constants.REQUEST_STATUS.PENDING
-                                            ? 'PENDING FOR CONFIMATION'
+                                            ? 'Pending For Confirmation'
                                             : null}
                                         {requestData?.serviceStatus == Constants.SERVICE_STATUS.WAITING_FOR_SERVICE &&
                                         requestData?.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
-                                            ? 'WAITING TO SERVICE'
+                                            ? 'Waiting for Service'
                                             : null}
                                         {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS &&
                                         requestData?.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
-                                            ? 'SERVICE IN PROGESSING'
+                                            ? 'Service In Progress'
                                             : null}
                                         {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED &&
                                         requestData?.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
-                                            ? 'SERVICE COMPLETED'
+                                            ? 'Service Completed'
                                             : null}
                                         {requestData?.serviceStatus == Constants.SERVICE_STATUS.CANCELLED_BY_CUSTOMER &&
                                         requestData?.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
-                                            ? 'CANCELLED BY CUSTOMER'
+                                            ? 'Cancelled By Customer'
                                             : null}
                                         {requestData?.serviceStatus == Constants.SERVICE_STATUS.CANCELLED_BY_VENDOR &&
                                         requestData?.requestStatus == Constants.REQUEST_STATUS.ACCEPTED
-                                            ? 'CANCELLED BY VENDOR'
+                                            ? 'Cancelled By Service Provider'
+                                            : null}
+                                        {requestData?.requestStatus == Constants.REQUEST_STATUS.REJECTED
+                                            ? 'Rejected By Service Provider'
                                             : null}
                                     </Text>
+                                    {requestData?.requestStatus == Constants.REQUEST_STATUS.REJECTED ? (
+                                        <Text
+                                            style={{
+                                                borderTopWidth: 1,
+                                                borderColor: 'white',
+                                                padding: 12,
+                                                marginTop: 8,
+                                                textAlign: 'center',
+                                                fontSize: CustomTypography.FONT_SIZE_12,
+                                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                color: CustomColors.WHITE,
+                                            }}>
+                                            Reason: {requestData?.rejectReason}
+                                        </Text>
+                                    ) : null}
                                 </View>
                             ) : null}
 
@@ -507,6 +527,57 @@ const ViewRequest = ({route}) => {
                                                 </Text>
                                             </View>
                                         </View>
+                                    </View>
+                                </Surface>
+                            ) : null}
+                            {requestData?.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED &&
+                            !requestData?.isReviewSubmitted ? (
+                                <Surface
+                                    style={{
+                                        width: '100%',
+                                        padding: 16,
+                                        elevation: 2,
+                                        marginVertical: 16,
+                                        borderRadius: 12,
+                                        backgroundColor: CustomColors.WHITE,
+                                    }}>
+                                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                        <Text
+                                            style={{
+                                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                color: CustomColors.GRAY,
+                                            }}>
+                                            Like This Service Provider?
+                                        </Text>
+                                        <MaterialIcon
+                                            name="thumb-up-off-alt"
+                                            style={{marginTop: -8, marginLeft: 12}}
+                                            size={24}
+                                            color={CustomColors.GRAY}
+                                        />
+                                    </View>
+                                    <Text
+                                        style={{
+                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                            color: CustomColors.GRAY,
+                                            fontSize: CustomTypography.FONT_SIZE_12,
+                                        }}>
+                                        Please considers leaving a reviews.
+                                    </Text>
+                                    <View style={{flexDirection: 'row'}}>
+                                        <Button
+                                            mode="outlined"
+                                            color={CustomColors.PRIMARY_BLUE}
+                                            labelStyle={{
+                                                fontSize: CustomTypography.FONT_SIZE_12,
+                                                color: CustomColors.PRIMARY_BLUE,
+                                            }}
+                                            style={{borderColor: CustomColors.PRIMARY_BLUE, marginTop: 12}}
+                                            onPress={() => {
+                                                navigation.navigate('WriteReviewPage', {requestId: requestId})
+                                            }}>
+                                            WRITE A REVIEW
+                                        </Button>
                                     </View>
                                 </Surface>
                             ) : null}

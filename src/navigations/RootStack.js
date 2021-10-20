@@ -22,6 +22,7 @@ import ForceLocationPick from '@pages/customer/ForceLocationPick';
 import ViewServiceProvider from '@pages/customer/ViewServiceProvider';
 import BookServicePage from '@pages/customer/BookServicePage';
 import ViewRequest from '@pages/customer/ViewRequest';
+import WriteReviewPage from '@pages/customer/WriteReviewPage';
 
 const Stack = createStackNavigator();
 
@@ -129,6 +130,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="ViewRequest"
                                 component={ViewRequest}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="WriteReviewPage"
+                                component={WriteReviewPage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,

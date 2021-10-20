@@ -80,6 +80,12 @@ const ServiceHistoryListing = () => {
                                                     request?.serviceProvider?.serviceType,
                                                 )}
                                             </Text>
+                                            <Text style={[styles.requestedDateTime, {fontSize: 10}]}>
+                                                requested at{' '}
+                                                {moment(new Date(request?.dateTimeRequested)).format(
+                                                    'YYYY-MM-DD hh:mm A',
+                                                )}
+                                            </Text>
                                         </View>
                                     </View>
                                     <TouchableWithoutFeedback
@@ -147,7 +153,7 @@ const ServiceHistoryListing = () => {
                                                 ? 'Cancelled By Customer'
                                                 : null}
                                             {request.serviceStatus == Constants.SERVICE_STATUS.CANCELLED_BY_VENDOR
-                                                ? 'Cancelled By Sservice Provider'
+                                                ? 'Cancelled By Service Provider'
                                                 : null}
                                             {request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_COMPLETED
                                                 ? 'Service Completed'
@@ -313,7 +319,7 @@ const ServiceHistoryListing = () => {
                                                                         disabled
                                                                     />
                                                                 ) : null}
-                                                                
+
                                                                 {currentQuestion.questionType ==
                                                                 Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ? (
                                                                     <RadioButton
