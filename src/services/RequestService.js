@@ -10,6 +10,7 @@ import {FCM_SERVER_TOKEN} from '@env';
 import axios from 'axios';
 import NotificationService from './NotificationService';
 import ProviderService from './ProviderService';
+import moment from 'moment';
 
 const RequestService = {
     getAllRequestByProvider: (callback, providerUserId = auth().currentUser.uid) => {
@@ -172,7 +173,6 @@ const RequestService = {
                     if (querySnapshot.size > 0) {
                         const requests = [];
                         querySnapshot.forEach(docSnapshot => {
-                            
                             console.log(docSnapshot.data());
                             let request = {
                                 id: docSnapshot.id,
@@ -182,9 +182,11 @@ const RequestService = {
                                     end: docSnapshot.data().requestTimeSlot.end.toDate().toString(),
                                 },
                             };
-                            if(!!docSnapshot.data().dateTimeRequested){
-                                request = {...request, 
-                                    dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),}
+                            if (!!docSnapshot.data().dateTimeRequested) {
+                                request = {
+                                    ...request,
+                                    dateTimeRequested: docSnapshot.data().dateTimeRequested.toDate().toString(),
+                                };
                             }
 
                             requests.push(request);
@@ -233,7 +235,6 @@ const RequestService = {
                                         Constants.SERVICE_STATUS.SERVICE_COMPLETED,
                                     ].indexOf(request.serviceStatus) != -1
                                 ) {
-                                    
                                     requests.push(request);
                                 }
                             } else {
@@ -276,7 +277,7 @@ const RequestService = {
             },
         );
     },
-    getRequestByIdOneTimeRead: (requestId) => {
+    getRequestByIdOneTimeRead: requestId => {
         return new Promise((resolve, reject) => {
             let requestCollection = firestore().collection('requests');
 
@@ -304,6 +305,100 @@ const RequestService = {
                     console.log('Error -> ProviderService.getPost\n');
                     reject(error);
                 });
+        });
+    },
+    checkIfRequestTimeIsAvailableForServiceProvider: (dateTimeRequested, serviceProviderId) => {
+        return new Promise(async (resolve, reject) => {
+            //This function is to check if service provider is available at the requested time. To avoid of timetable clash
+            try {
+                let requestCollection = firestore().collection('requests');
+
+                let result = [];
+                console.log(dateTimeRequested);
+                console.log(moment(dateTimeRequested).add(1, 'hours').toDate());
+                const startDateCrashQuerySnapshot = await requestCollection
+                    .where('serviceProvider.userId', '==', serviceProviderId)
+                    .where('requestTimeSlot.start', '>', firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1,'minutes').toDate()))
+                    .where(
+                        'requestTimeSlot.start',
+                        '<',
+                        firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1, 'hours').subtract(1,'minutes').toDate()),
+                    )
+                    .get();
+
+                if (startDateCrashQuerySnapshot.size > 0) {
+                    startDateCrashQuerySnapshot.forEach(documentSnapshot => {
+                        let request = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                            requestTimeSlot: {
+                                start: documentSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                end: documentSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                            },
+                        };
+
+                        if (!!documentSnapshot.data().dateTimeRequested) {
+                            request = {
+                                ...request,
+                                dateTimeRequested: documentSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+                        }
+
+                        console.log(request);
+
+                        result.push(request);
+                    });
+                } else {
+                }
+
+                const endDateCrashQuerySnapshot = await requestCollection
+                    .where('serviceProvider.userId', '==', serviceProviderId)
+                    .where('requestTimeSlot.end', '>', firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1,'minutes').toDate()))
+                    .where(
+                        'requestTimeSlot.end',
+                        '<',
+                        firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1, 'hours').subtract(1,'minutes').toDate()),
+                    )
+                    .get();
+                if (endDateCrashQuerySnapshot.size > 0) {
+                    endDateCrashQuerySnapshot.forEach(documentSnapshot => {
+                        console.log(documentSnapshot.id);
+                        let request = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                            requestTimeSlot: {
+                                start: documentSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                end: documentSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                            },
+                        };
+                        if (!!documentSnapshot.data().dateTimeRequested) {
+                            request = {
+                                ...request,
+                                dateTimeRequested: documentSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+                        }
+
+                        console.log(request);
+                        console.log()
+                        //if document is not already in the list
+                        if (!result.find(req => req.id == documentSnapshot.id)) {
+                            result.push(request);
+                        } else {
+                            console.log('splicing '+ result.findIndex(req => req.id == documentSnapshot.id))
+                            result.splice(result.findIndex(req => req.id == documentSnapshot.id), 1); 
+                        }
+                    });
+                } else {
+                }
+                console.log('clasg check');
+                console.log(result);
+                const isTimetableClashOccur = result.length > 0;
+                resolve(isTimetableClashOccur);
+            } catch (error) {
+                console.log('Error -> ProviderService.checkIfRequestTimeIsAvailableForServiceProvider\n');
+                console.log(error);
+                reject('some error occur');
+            }
         });
     },
     rejectRequest: (documentId, rejectReason, customerId) => {

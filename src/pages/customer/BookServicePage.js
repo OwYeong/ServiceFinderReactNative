@@ -167,6 +167,7 @@ const BookServicePage = ({route}) => {
     );
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [providerOffDay, setProviderOffDay] = useState(false);
+    const [isProviderTimetableClash, setIsProviderTimetableClash] = useState(false);
 
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [providerNotAvailableAtHisHour, setProviderNotAvailableAtHisHour] = useState(false);
@@ -180,40 +181,92 @@ const BookServicePage = ({route}) => {
 
     const swiperRef = useRef(null);
 
-    const submitServiceDateTime = () => {
-        console.log(bookType);
-        console.log(providerOffDay + '  ' + bookNowNotAvailable);
-        if (bookType == 'now' && (bookNowNotAvailable || providerOffDay)) {
-            showMessage({
-                message: 'Book now not available.',
-                type: 'info',
-                position: 'center',
-                backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                color: 'white', // text color
-                titleStyle: {marginTop: 5},
-                hideOnPress: true,
-                autoHide: true,
-                duration: 2000,
-            });
-            return;
-        }
+    const submitServiceDateTime = async () => {
+        setIsProviderTimetableClash(false);
+        try {
+            console.log(bookType);
+            console.log(providerOffDay + '  ' + bookNowNotAvailable);
+            const currentDateTime = moment().add(1, 'day').minutes(0).seconds(0).milliseconds(0).toDate();
 
-        if (bookType == 'later' && (providerNotAvailableAtHisHour || providerNotAvailableAtDateSelected)) {
-            showMessage({
-                message: 'Please pick a valid date and time.',
-                type: 'info',
-                position: 'center',
-                backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                color: 'white', // text color
-                titleStyle: {marginTop: 5},
-                hideOnPress: true,
-                autoHide: true,
-                duration: 2000,
-            });
-            return;
-        }
+            if (bookType == 'now') {
+                if (bookType == 'now' && (bookNowNotAvailable || providerOffDay)) {
+                    showMessage({
+                        message: 'Book now not available.',
+                        type: 'info',
+                        position: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                        color: 'white', // text color
+                        titleStyle: {marginTop: 5},
+                        hideOnPress: true,
+                        autoHide: true,
+                        duration: 2000,
+                    });
+                    return;
+                }
 
-        swiperRef.current.scrollBy(1);
+                const isTimeTableClashOccur = await RequestService.checkIfRequestTimeIsAvailableForServiceProvider(
+                    currentDateTime,
+                    providerId,
+                );
+
+                if (isTimeTableClashOccur) {
+                    showMessage({
+                        message: 'Service provider is busy now.',
+                        type: 'info',
+                        position: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                        color: 'white', // text color
+                        titleStyle: {marginTop: 5},
+                        hideOnPress: true,
+                        autoHide: true,
+                        duration: 2000,
+                    });
+                    setIsProviderTimetableClash(true);
+                    return;
+                }
+            } else {
+                if (bookType == 'later' && (providerNotAvailableAtHisHour || providerNotAvailableAtDateSelected)) {
+                    showMessage({
+                        message: 'Please pick a valid date and time.',
+                        type: 'info',
+                        position: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                        color: 'white', // text color
+                        titleStyle: {marginTop: 5},
+                        hideOnPress: true,
+                        autoHide: true,
+                        duration: 2000,
+                    });
+                    return;
+                }
+
+                const isTimeTableClashOccur = await RequestService.checkIfRequestTimeIsAvailableForServiceProvider(
+                    selectedDateTime,
+                    providerId,
+                );
+
+                if (isTimeTableClashOccur) {
+                    showMessage({
+                        message: 'Service provider is busy at selected date time.',
+                        type: 'info',
+                        position: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                        color: 'white', // text color
+                        titleStyle: {marginTop: 5},
+                        hideOnPress: true,
+                        autoHide: true,
+                        duration: 2000,
+                    });
+
+                    setIsProviderTimetableClash(true);
+                    return;
+                }
+            }
+
+            swiperRef.current.scrollBy(1);
+        } catch (error) {
+            console.log(errorF);
+        }
     };
 
     const submitFormResponse = () => {
@@ -538,6 +591,7 @@ const BookServicePage = ({route}) => {
             }
         }
     }, [bookType]);
+
     return (
         <View style={{backgroundColor: CustomColors.PRIMARY_BLUE}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
@@ -788,6 +842,24 @@ const BookServicePage = ({route}) => {
                                                     color: CustomColors.ALERT,
                                                 }}>
                                                 This Service Provider is not operating today.
+                                            </Text>
+                                        </View>
+                                    ) : null}
+                                    {isProviderTimetableClash ? (
+                                        <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 12}}>
+                                            <MaterialCommunityIcons
+                                                name="alert-circle-outline"
+                                                size={24}
+                                                color={CustomColors.ALERT}
+                                            />
+                                            <Text
+                                                style={{
+                                                    marginLeft: 8,
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    fontSize: CustomTypography.FONT_SIZE_12,
+                                                    color: CustomColors.ALERT,
+                                                }}>
+                                                This Service Provider is busy at selected date time. Please try to select another time.
                                             </Text>
                                         </View>
                                     ) : null}
