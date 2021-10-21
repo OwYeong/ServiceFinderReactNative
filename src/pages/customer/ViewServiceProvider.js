@@ -5,6 +5,7 @@ import {
     Dimensions,
     Image,
     ImageBackground,
+    RefreshControl,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -52,6 +53,7 @@ const ViewServiceProvider = ({route}) => {
 
     const [isBusinessLogoLoading, setIsBusinessLogoLoading] = useState(false);
     const [isCoverImgLoading, setIsCoverImgLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     const [photosList, setPhotosList] = useState([]);
     const [reviewList, setReviewList] = useState([]);
@@ -69,6 +71,35 @@ const ViewServiceProvider = ({route}) => {
     const [tabBarOffsetY, setTabBarOffsetY] = useState(0);
     const [isPhotoListingScrollable, setIsPhotoListingScrollable] = useState(false);
 
+    const fetchPostAndReviewData = async () => {
+        try {
+            const photoListData = await ProviderService.getAllPost(providerId);
+
+            setPhotosList(photoListData.data);
+
+            const reviewData = await ReviewService.getAllReview(providerId);
+
+            setReviewList(reviewData.data);
+
+            console.log(photoListData.data) 
+            
+            console.log(reviewData.data) 
+            return true;    
+        } catch (error) {
+
+            console.log(error)
+            return true;
+        }
+    };
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+
+        fetchPostAndReviewData();
+        
+        setRefreshing(false);
+
+    }, []);
+
     useEffect(() => {
         const unsubscriber = ProviderService.getProviderById(data => {
             setProviderInfo(data);
@@ -78,24 +109,7 @@ const ViewServiceProvider = ({route}) => {
             }, 1000);
         }, providerId);
 
-        ProviderService.getAllPost(providerId)
-            .then(data => {
-                setPhotosList(data.data);
-                console.log(data.data);
-                // <PhotoListingComponent dataList={photosList} />
-            })
-            .catch(err => {
-                console.log(err);
-            });
-        ReviewService.getAllReview(providerId)
-            .then(data => {
-                setReviewList(data.data);
-                console.log(data.data);
-                // <PhotoListingComponent dataList={photosList} />
-            })
-            .catch(err => {
-                console.log(err);
-            });
+        fetchPostAndReviewData();
 
         return () => {
             unsubscriber();
@@ -120,6 +134,9 @@ const ViewServiceProvider = ({route}) => {
                         }
                     }}
                     contentContainerStyle={{flexGrow: 1}}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={20} />
+                    }
                     nestedScrollEnabled={true}>
                     <View style={styles.bigContainer}>
                         <View style={styles.imageContainer}>
@@ -325,7 +342,7 @@ const ViewServiceProvider = ({route}) => {
                                     dark
                                     mode="contained"
                                     onPress={() => {
-                                        navigation.navigate('BusinessProfileEdit');
+                                        navigation.navigate('BookServicePage', {providerId: providerId});
                                     }}>
                                     Book Now
                                 </Button>
@@ -344,7 +361,7 @@ const ViewServiceProvider = ({route}) => {
 
                                 setTabBarOffsetY(y);
                             }}></View>
-                        
+
                         {isFetchingData ? (
                             <SkeletonPlaceholder>
                                 <View
@@ -356,69 +373,69 @@ const ViewServiceProvider = ({route}) => {
                                     }}></View>
                             </SkeletonPlaceholder>
                         ) : (
-                        <TabView
-                            style={{height: Dimensions.get('window').height + 2}}
-                            navigationState={navigationState}
-                            renderScene={({route}) => {
-                                switch (route.key) {
-                                    case 'about':
-                                        return (
-                                            <ProviderInfoDisplay
-                                                providerInfo={providerInfo}
-                                                isScrollEnabled={isPhotoListingScrollable}
-                                            />
-                                        );
-                                    case 'photos':
-                                        return (
-                                            <PhotoListingComponent
-                                                dataList={photosList}
-                                                isScrollEnabled={isPhotoListingScrollable}
-                                            />
-                                        );
-                                    case 'reviews':
-                                        return (
-                                            <ReviewDisplayComponent
-                                                dataList={reviewList}
-                                                averageRating={providerInfo?.averageRatings || 0}
-                                                starStats={
-                                                    providerInfo?.starStats || {
-                                                        numOf1Star: 0,
-                                                        numOf2Star: 0,
-                                                        numOf3Star: 0,
-                                                        numOf4Star: 0,
-                                                        numOf5Star: 0,
+                            <TabView
+                                style={{height: Dimensions.get('window').height + 2}}
+                                navigationState={navigationState}
+                                renderScene={({route}) => {
+                                    switch (route.key) {
+                                        case 'about':
+                                            return (
+                                                <ProviderInfoDisplay
+                                                    providerInfo={providerInfo}
+                                                    isScrollEnabled={isPhotoListingScrollable}
+                                                />
+                                            );
+                                        case 'photos':
+                                            return (
+                                                <PhotoListingComponent
+                                                    dataList={photosList}
+                                                    isScrollEnabled={isPhotoListingScrollable}
+                                                />
+                                            );
+                                        case 'reviews':
+                                            return (
+                                                <ReviewDisplayComponent
+                                                    dataList={reviewList}
+                                                    averageRating={providerInfo?.averageRatings || 0}
+                                                    starStats={
+                                                        providerInfo?.starStats || {
+                                                            numOf1Star: 0,
+                                                            numOf2Star: 0,
+                                                            numOf3Star: 0,
+                                                            numOf4Star: 0,
+                                                            numOf5Star: 0,
+                                                        }
                                                     }
-                                                }
-                                            />
-                                        );
-                                    default:
-                                        return null;
-                                }
-                            }}
-                            renderTabBar={props => {
-                                return (
-                                    <TabBar
-                                        {...props}
-                                        inactiveColor={CustomColors.GRAY}
-                                        indicatorStyle={{backgroundColor: CustomColors.GRAY_DARK}}
-                                        style={{backgroundColor: 'white', elevation: 0}}
-                                        labelStyle={{
-                                            fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-                                            fontSize: CustomTypography.FONT_SIZE_16,
-                                            color: CustomColors.GRAY_DARK,
-                                        }}
-                                    />
-                                );
-                            }}
-                            onIndexChange={index => {
-                                setNavigationState({...navigationState, index: index});
-                            }}
-                            renderPager={props => <PagerPan {...props} />}
-                            initialLayout={{
-                                width: Dimensions.get('window').width,
-                                height: Dimensions.get('window').height - 64 - 50,
-                            }}
-                        />
+                                                />
+                                            );
+                                        default:
+                                            return null;
+                                    }
+                                }}
+                                renderTabBar={props => {
+                                    return (
+                                        <TabBar
+                                            {...props}
+                                            inactiveColor={CustomColors.GRAY}
+                                            indicatorStyle={{backgroundColor: CustomColors.GRAY_DARK}}
+                                            style={{backgroundColor: 'white', elevation: 0}}
+                                            labelStyle={{
+                                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                fontSize: CustomTypography.FONT_SIZE_16,
+                                                color: CustomColors.GRAY_DARK,
+                                            }}
+                                        />
+                                    );
+                                }}
+                                onIndexChange={index => {
+                                    setNavigationState({...navigationState, index: index});
+                                }}
+                                renderPager={props => <PagerPan {...props} />}
+                                initialLayout={{
+                                    width: Dimensions.get('window').width,
+                                    height: Dimensions.get('window').height - 64 - 50,
+                                }}
+                            />
                         )}
                     </View>
                 </ScrollView>

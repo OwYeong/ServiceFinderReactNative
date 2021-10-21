@@ -310,6 +310,32 @@ const ProviderService = {
                 }
             });
     },
+    getProviderByIdOneTimeRead: (documentId) => {
+        return new Promise((resolve, reject) => {
+            let serviceProviderCollections = firestore().collection('serviceProviders');
+
+            serviceProviderCollections
+                .doc(documentId)
+                .get()
+                .then(documentSnapshot => {
+                    if (documentSnapshot.exists) {
+                        let data = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                            firstJoined: documentSnapshot.data().firstJoined.toDate().toString(),
+                        };
+
+                        resolve(data);
+                    } else {
+                        reject('Document does not exist');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getPost\n');
+                    reject(error);
+                });
+        });
+    },
     setProviderData: (data, documentId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
             const serviceProvidersCollection = firestore().collection('serviceProviders');
@@ -587,6 +613,8 @@ const ProviderService = {
 
                 const loggedInProviderData = {
                     ...currentServiceProvider.data(),
+                    
+                    firstJoined: currentServiceProvider.data().firstJoined.toDate().toString(),
                 };
 
                 store.dispatch(setProviderInfo(loggedInProviderData));

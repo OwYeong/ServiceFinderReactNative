@@ -105,7 +105,7 @@ const CustomerStack = () => {
                     name="CustomerBookingPage"
                     component={CustomerBookingPage}
                     options={{
-                        headerShown: true,
+                        headerShown: false,
                         tabBarLabel: ({focused, color}) => {
                             if (focused) {
                                 Animated.spring(tabIndicatorLeftPos, {
@@ -134,7 +134,7 @@ const CustomerStack = () => {
                     name="ChatPage"
                     component={ChatPage}
                     options={{
-                        headerShown: true,
+                        headerShown: false,
                         tabBarLabel: ({focused, color}) => {
                             if (focused) {
                                 Animated.spring(tabIndicatorLeftPos, {
@@ -163,7 +163,7 @@ const CustomerStack = () => {
                     name="NotificationPage"
                     component={NotificationPage}
                     options={{
-                        headerShown: true,
+                        headerShown: false,
                         tabBarLabel: ({focused, color}) => {
                             if (focused) {
                                 Animated.spring(tabIndicatorLeftPos, {

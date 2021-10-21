@@ -131,6 +131,7 @@ const ReviewDisplayComponent = ({averageRating, starStats, dataList, isScrollEna
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
                             <Avatar.Text color={'white'} size={30} label={item.reviewerName.charAt(0)} />
                             <Text style={styles.reviewerName}>{item.reviewerName}</Text>
+                            
                         </View>
                         <View
                             style={{
@@ -160,12 +161,12 @@ const ReviewDisplayComponent = ({averageRating, starStats, dataList, isScrollEna
                         </View>
                         <Text
                             style={{
-                                fontSize: CustomTypography.FONT_SIZE_16,
+                                fontSize: CustomTypography.FONT_SIZE_14,
                                 fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                color: CustomColors.GRAY_DARK,
+                                color: CustomColors.GRAY,
                                 marginTop: 8,
                             }}>
-                            {item.feedback}
+                            {item.feedback || 'No Message Given'}
                         </Text>
                     </View>
                 )}

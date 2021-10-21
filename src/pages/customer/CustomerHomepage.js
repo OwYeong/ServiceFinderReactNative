@@ -1,11 +1,12 @@
 import UserService from '@services/UserService';
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
     Animated,
     Button,
     Dimensions,
     Easing,
     FlatList,
+    RefreshControl,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -76,6 +77,10 @@ const CustomerHomepage = () => {
     const [popularContainerOffsetY, setPopularContainerOffsetY] = useState(0);
     const popularServiceSpinnerRef = useRef(null);
     const popularServiceFlatlistRef = useRef(null);
+    
+    const [refreshing, setRefreshing] = useState(false);
+
+
     const [searchBarxy, setSearchBarxy] = useState({x: 0, y: 0});
 
     const fetchPopularServiceData = async () => {
@@ -140,6 +145,18 @@ const CustomerHomepage = () => {
             console.log(error);
         }
     };
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+
+        fetchPopularServiceData();
+        fetchAllServiceCategories();
+        popularServiceFlatlistRef.current.scrollToOffset({ animated: true, x: 0 });
+        
+        setRefreshing(false);
+
+    }, []);
+
     useEffect(() => {
         setTimeout(() => {
             //TEMPORARY: Show skeleton effect
@@ -166,6 +183,9 @@ const CustomerHomepage = () => {
                 <ScrollView
                     contentContainerStyle={{flexGrow: 1}}
                     keyboardShouldPersistTaps="handled"
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={20} />
+                    }
                     onScroll={event => {
                         if (event.nativeEvent.contentOffset.y > popularContainerOffsetY) {
                             setStatusBarColor('white');
@@ -260,7 +280,7 @@ const CustomerHomepage = () => {
                                     style={styles.headerGradientBottomPortion}>
                                     <View style={styles.sectionHeader}>
                                         <Text style={styles.sectionTitle}>Popular This month</Text>
-                                        <Text style={styles.viewAll}>View All</Text>
+                                        <Text style={styles.viewAll}>Scroll For More</Text>
                                     </View>
                                 </LinearGradient>
                                 <View style={{flex: 1}}>
@@ -291,6 +311,7 @@ const CustomerHomepage = () => {
                                                             businessName={item.businessName}
                                                             profileImgUrl={item.businessLogoUrl}
                                                             coverImageUrl={item.coverImgUrl}
+                                                            providerId={item.id}
                                                         />
                                                     </TouchableRipple>
                                                 </Animatable.View>
