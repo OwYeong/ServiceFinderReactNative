@@ -50,6 +50,8 @@ import BottomSheet from 'react-native-bottomsheet-reanimated';
 import CommonFunction from '@utils/CommonFunction';
 import WaitingForServiceIllustration from '@assets/images/waiting-for-service-illustration';
 import PendingResponseIllustration from '@assets/images/pending-response-from-vendor-illustration';
+import ReviewService from '@services/ReviewService';
+import {Rating} from 'react-native-ratings';
 
 const ViewRequest = ({route}) => {
     const navigation = useNavigation();
@@ -65,6 +67,8 @@ const ViewRequest = ({route}) => {
         isVisible: false,
         customerFormResponse: [],
     });
+
+    const [reviewData, setReviewData] = useState(null);
 
     const [isFetchingData, setIsFetchingData] = useState(true);
 
@@ -88,6 +92,18 @@ const ViewRequest = ({route}) => {
             unsubscriber();
         };
     }, []);
+
+    useEffect(() => {
+        if (!!requestData?.isReviewSubmitted) {
+            ReviewService.getReviewByRequestId(requestId)
+                .then(data => {
+                    setReviewData(data);
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+        }
+    }, [requestData]);
 
     return (
         <View style={{backgroundColor: 'white', width: '100%', height: '100%'}}>
@@ -574,10 +590,84 @@ const ViewRequest = ({route}) => {
                                             }}
                                             style={{borderColor: CustomColors.PRIMARY_BLUE, marginTop: 12}}
                                             onPress={() => {
-                                                navigation.navigate('WriteReviewPage', {requestId: requestId})
+                                                navigation.navigate('WriteReviewPage', {requestId: requestId});
                                             }}>
                                             WRITE A REVIEW
                                         </Button>
+                                    </View>
+                                </Surface>
+                            ) : !!reviewData ? (
+                                <Surface
+                                    style={{
+                                        width: '100%',
+                                        padding: 16,
+                                        elevation: 2,
+                                        marginVertical: 16,
+                                        borderRadius: 12,
+                                        backgroundColor: CustomColors.WHITE,
+                                    }}>
+                                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                        <Text
+                                            style={{
+                                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                color: CustomColors.GRAY,
+                                            }}>
+                                            My Review
+                                        </Text>
+                                        <MaterialIcon
+                                            name="thumb-up-off-alt"
+                                            style={{marginTop: -8, marginLeft: 12}}
+                                            size={24}
+                                            color={CustomColors.GRAY}
+                                        />
+                                    </View>
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'flex-start',
+                                            justifyContent: 'flex-start',
+                                            marginTop: 20,
+                                        }}>
+                                        <Avatar.Text
+                                            style={{marginTop:3}}
+                                            color={'white'}
+                                            size={30}
+                                            label={reviewData?.reviewerName.charAt(0)}
+                                        />
+                                        <View
+                                            style={{
+                                                marginTop: 0,
+                                                alignItems: 'flex-start',
+                                                justifyContent: 'flex-start',
+                                                marginLeft: 8,
+                                            }}>
+                                            <Text
+                                                style={{
+                                                    fontSize: CustomTypography.FONT_SIZE_12,
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    color: CustomColors.GRAY_DARK,
+                                                }}>
+                                                {reviewData?.reviewerName}
+                                            </Text>
+                                            <Rating
+                                                type="custom"
+                                                startingValue={reviewData.numOfStar}
+                                                isDisabled={true}
+                                                showRating={false}
+                                                imageSize={14}
+                                                readonly
+                                            />
+                                            <Text
+                                                style={{
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    color: CustomColors.GRAY,
+                                                    fontSize: CustomTypography.FONT_SIZE_12,
+                                                    marginTop: 8,
+                                                    paddingRight:20
+                                                }}>
+                                                {reviewData.feedback || 'No Message Given'}
+                                            </Text>
+                                        </View>
                                     </View>
                                 </Surface>
                             ) : null}

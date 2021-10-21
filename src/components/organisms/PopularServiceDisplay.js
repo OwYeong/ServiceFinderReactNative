@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/core';
 import {CustomColors, CustomTypography} from '@styles';
 import CommonFunction from '@utils/CommonFunction';
 import React from 'react';
@@ -10,8 +11,10 @@ const PopularServiceDisplay = ({
     businessName,
     profileImgUrl,
     coverImageUrl,
+    providerId,
     style
 }) => {
+    const navigation = useNavigation();
     console.log(coverImageUrl);
     return (
         <Surface style={[styles.container, style]} needsOffscreenAlphaCompositing={true} >
@@ -23,7 +26,9 @@ const PopularServiceDisplay = ({
                     <Avatar.Image style={styles.businessLogo} size={80} source={{uri: profileImgUrl}} />
                     <View style={styles.bookNowWrapper}>
                         <Text style={styles.businessName}>{businessName}</Text>
-                        <Button style={styles.bookBtn} mode='contained' dark={true} color={CustomColors.PRIMARY_BLUE} contentStyle={{height: 40, width: '100%', padding: 0, margin: 0}} onPress={() => console.log('Pressed')}>BOOK NOW</Button>
+                        <Button style={styles.bookBtn} mode='contained' dark={true} color={CustomColors.PRIMARY_BLUE} contentStyle={{height: 40, width: '100%', padding: 0, margin: 0}} onPress={() => {
+                            navigation.navigate('BookServicePage', {providerId: providerId});
+                        }}>BOOK NOW</Button>
                     </View>
                 </View>
             </View>

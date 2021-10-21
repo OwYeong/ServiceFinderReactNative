@@ -77,6 +77,7 @@ import {CardField, useConfirmPayment} from '@stripe/stripe-react-native';
 import PaymentService from '@services/PaymentService';
 import RequestService from '@services/RequestService';
 import firebase from '@react-native-firebase/app';
+import {CommonActions} from '@react-navigation/native';
 
 const BookServicePage = ({route}) => {
     const navigation = useNavigation();
@@ -265,7 +266,7 @@ const BookServicePage = ({route}) => {
 
             swiperRef.current.scrollBy(1);
         } catch (error) {
-            console.log(errorF);
+            console.log(error);
         }
     };
 
@@ -310,7 +311,25 @@ const BookServicePage = ({route}) => {
 
                 const newDocumentId = await RequestService.createRequest(requestData);
 
-                navigation.navigate('viewRequest', {requestId: newDocumentId});
+                navigation.dispatch(state => {
+                    return CommonActions.reset({
+                        index: 1,
+                        routes: [
+                            {
+                                name: 'Customer',
+                                state: {
+                                    index: 1,
+                                    routes: [{name: 'CustomerHomepage'}, {name: 'CustomerBookingPage'}],
+                                },
+                            },
+                            {
+                                name: 'ViewRequest',
+                                params: {requestId: newDocumentId},
+                            },
+                        ],
+                    });
+                });
+                // navigation.navigate('viewRequest', {requestId: newDocumentId});
             } else {
                 //with additional form
                 const requestData = {
@@ -359,7 +378,26 @@ const BookServicePage = ({route}) => {
                     autoHide: true,
                     duration: 2000,
                 });
-                navigation.navigate('ViewRequest', {requestId: newDocumentId});
+
+                navigation.dispatch(state => {
+                    return CommonActions.reset({
+                        index: 1,
+                        routes: [
+                            {
+                                name: 'Customer',
+                                state: {
+                                    index: 1,
+                                    routes: [{name: 'CustomerHomepage'}, {name: 'CustomerBookingPage'}],
+                                },
+                            },
+                            {
+                                name: 'ViewRequest',
+                                params: {requestId: newDocumentId},
+                            },
+                        ],
+                    });
+                });
+                // navigation.navigate('viewRequest', {requestId: newDocumentId});
             }
         } catch (error) {
             console.log(error);
@@ -859,7 +897,8 @@ const BookServicePage = ({route}) => {
                                                     fontSize: CustomTypography.FONT_SIZE_12,
                                                     color: CustomColors.ALERT,
                                                 }}>
-                                                This Service Provider is busy at selected date time. Please try to select another time.
+                                                This Service Provider is busy at selected date time. Please try to
+                                                select another time.
                                             </Text>
                                         </View>
                                     ) : null}
@@ -1075,7 +1114,7 @@ const BookServicePage = ({route}) => {
                                             />
                                             <CardField
                                                 placeholder={{
-                                                    number: '4242 4242 4242 4242',
+                                                    number: 'Your Card Number',
                                                 }}
                                                 onCardChange={cardDetails => {
                                                     console.log('cardDetails', cardDetails);

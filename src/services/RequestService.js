@@ -318,11 +318,12 @@ const RequestService = {
                 console.log(moment(dateTimeRequested).add(1, 'hours').toDate());
                 const startDateCrashQuerySnapshot = await requestCollection
                     .where('serviceProvider.userId', '==', serviceProviderId)
-                    .where('requestTimeSlot.start', '>', firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1,'minutes').toDate()))
+                    .where('requestStatus', 'in', [Constants.REQUEST_STATUS.ACCEPTED, Constants.REQUEST_STATUS.PENDING])
+                    .where('requestTimeSlot.start', '>', firestore.Timestamp.fromDate(dateTimeRequested))
                     .where(
                         'requestTimeSlot.start',
                         '<',
-                        firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1, 'hours').subtract(1,'minutes').toDate()),
+                        firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1, 'hours').toDate()),
                     )
                     .get();
 
@@ -346,18 +347,25 @@ const RequestService = {
 
                         console.log(request);
 
-                        result.push(request);
+                        if (
+                            [
+                                Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS,
+                                Constants.SERVICE_STATUS.WAITING_FOR_SERVICE,
+                            ].indexOf(request.serviceStatus) != -1
+                        )
+                            result.push(request);
                     });
                 } else {
                 }
 
                 const endDateCrashQuerySnapshot = await requestCollection
                     .where('serviceProvider.userId', '==', serviceProviderId)
-                    .where('requestTimeSlot.end', '>', firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1,'minutes').toDate()))
+                    .where('requestStatus', 'in', [Constants.REQUEST_STATUS.ACCEPTED, Constants.REQUEST_STATUS.PENDING])
+                    .where('requestTimeSlot.end', '>', firestore.Timestamp.fromDate(dateTimeRequested))
                     .where(
                         'requestTimeSlot.end',
                         '<',
-                        firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1, 'hours').subtract(1,'minutes').toDate()),
+                        firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1, 'hours').toDate()),
                     )
                     .get();
                 if (endDateCrashQuerySnapshot.size > 0) {
@@ -379,16 +387,63 @@ const RequestService = {
                         }
 
                         console.log(request);
-                        console.log()
+                        console.log();
                         //if document is not already in the list
                         if (!result.find(req => req.id == documentSnapshot.id)) {
-                            result.push(request);
-                        } else {
-                            console.log('splicing '+ result.findIndex(req => req.id == documentSnapshot.id))
-                            result.splice(result.findIndex(req => req.id == documentSnapshot.id), 1); 
+                            if (
+                                [
+                                    Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS,
+                                    Constants.SERVICE_STATUS.WAITING_FOR_SERVICE,
+                                ].indexOf(request.serviceStatus) != -1
+                            )
+                                result.push(request);
                         }
                     });
                 } else {
+                }
+
+                const sameDateTimeCrashQuerySnapshot = await requestCollection
+                    .where('serviceProvider.userId', '==', serviceProviderId)
+                    .where('requestStatus', 'in', [Constants.REQUEST_STATUS.ACCEPTED, Constants.REQUEST_STATUS.PENDING])
+                    .where(
+                        'requestTimeSlot.end',
+                        '==',
+                        firestore.Timestamp.fromDate(moment(dateTimeRequested).add(1, 'hours').toDate()),
+                    )
+                    .where('requestTimeSlot.start', '==', firestore.Timestamp.fromDate(dateTimeRequested))
+                    .get();
+
+                if (sameDateTimeCrashQuerySnapshot.size > 0) {
+                    sameDateTimeCrashQuerySnapshot.forEach(documentSnapshot => {
+                        console.log('same start date and end date');
+                        console.log(documentSnapshot.id);
+                        let request = {
+                            id: documentSnapshot.id,
+                            ...documentSnapshot.data(),
+                            requestTimeSlot: {
+                                start: documentSnapshot.data().requestTimeSlot.start.toDate().toString(),
+                                end: documentSnapshot.data().requestTimeSlot.end.toDate().toString(),
+                            },
+                        };
+                        if (!!documentSnapshot.data().dateTimeRequested) {
+                            request = {
+                                ...request,
+                                dateTimeRequested: documentSnapshot.data().dateTimeRequested.toDate().toString(),
+                            };
+                        }
+
+                        //if document is not already in the list
+                        if (!result.find(req => req.id == documentSnapshot.id)) {
+                            if (
+                                [
+                                    Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS,
+                                    Constants.SERVICE_STATUS.WAITING_FOR_SERVICE,
+                                ].indexOf(request.serviceStatus) != -1
+                            )
+                                result.push(request);
+                        }   
+                    });
+                } else {    
                 }
                 console.log('clasg check');
                 console.log(result);
