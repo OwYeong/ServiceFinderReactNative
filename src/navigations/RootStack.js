@@ -23,6 +23,7 @@ import ViewServiceProvider from '@pages/customer/ViewServiceProvider';
 import BookServicePage from '@pages/customer/BookServicePage';
 import ViewRequest from '@pages/customer/ViewRequest';
 import WriteReviewPage from '@pages/customer/WriteReviewPage';
+import ChatroomPage from '@pages/ChatroomPage';
 
 const Stack = createStackNavigator();
 
@@ -143,6 +144,15 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                                     headerShown: false,
                                 }}
                             />
+                            
+                            <Stack.Screen
+                                name="Chatroom"
+                                component={ChatroomPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
                         </>
                     ) : null}
                     {loggedInAcctype == Constants.ACCOUNT_TYPE.VENDOR ? (
@@ -208,6 +218,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="JobRequestControlDashboard"
                                 component={JobRequestControlDashboard}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="Chatroom"
+                                component={ChatroomPage}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,

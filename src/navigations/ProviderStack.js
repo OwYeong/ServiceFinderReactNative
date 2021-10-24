@@ -137,7 +137,7 @@ const ProviderStack = () => {
                     name="ChatPage"
                     component={ChatPage}
                     options={{
-                        headerShown: true,
+                        headerShown: false,
                         tabBarLabel: ({focused, color}) => {
                             if (focused) {
                                 Animated.spring(tabIndicatorLeftPos, {
