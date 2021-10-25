@@ -63,4 +63,11 @@ export const Constants = {
         CANCELLED_BY_VENDOR: 'cancelledByVendor',
         CANCELLED_BY_CUSTOMER: 'cancelledByCustomer',
     },
+    NOTIFICATION_ACTION: {
+        NO_ACTION: 'noAction',
+        NAVIGATE_TO_REQUEST:'navigateToRequest',
+        NAVIGATE_TO_REVIEW: 'navigateToReview',
+        NAVIGATE_TO_PENDING_REQUEST: 'navigateToPendingRequest',
+
+    }
 };
