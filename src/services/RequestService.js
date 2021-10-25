@@ -662,7 +662,7 @@ const RequestService = {
                                     store.getState().loginState.providerInfo.businessName
                                 }.`,
                                 targetUserInfo.id,
-                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
+                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REVIEW,
                                 {
                                     requestId: documentId
                                 }

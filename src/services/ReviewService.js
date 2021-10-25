@@ -101,9 +101,9 @@ const ReviewService = {
                                     `You have received an new reviews`,
                                     `You have received an ${data.numOfStar} star review from your customer.`,
                                     targetUserInfo.id,
-                                    Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REVIEW,
+                                    Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
                                     {
-                                        requestId: documentId
+                                        requestId: data.requestId
                                     }
                                 );
                             }

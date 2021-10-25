@@ -10,13 +10,18 @@ import _ from 'lodash';
 import {useNavigation} from '@react-navigation/core';
 
 import NoChatIllustration from '@assets/images/no-chat-illustration';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 
 const ChatPage = () => {
     const navigation = useNavigation();
     const [chatrooms, setChatrooms] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const unsubcriber = ChatService.getChatroomByUserId(setChatrooms);
+        const unsubcriber = ChatService.getChatroomByUserId(data => {
+            setChatrooms(data);
+            setIsLoading(false);
+        });
 
         return () => {
             unsubcriber();
@@ -39,106 +44,143 @@ const ChatPage = () => {
                     </View>
                     <ScrollView contentContainerStyle={{flexGrow: 1}}>
                         <View style={styles.bigContainer}>
-                            {chatrooms.length > 0 ? (
-                                chatrooms.map(chatroom => (
-                                    <TouchableRipple
-                                        style={{width: '100%', backgroundColor: 'white'}}
-                                        key={chatroom.id}
-                                        onPress={() => {
-                                            navigation.navigate('Chatroom', {
-                                                chatroomId: chatroom.id,
-                                            });
+                            {!isLoading ? (
+                                chatrooms.length > 0 ? (
+                                    chatrooms.map(chatroom => (
+                                        <TouchableRipple
+                                            style={{width: '100%', backgroundColor: 'white'}}
+                                            key={chatroom.id}
+                                            onPress={() => {
+                                                navigation.navigate('Chatroom', {
+                                                    chatroomId: chatroom.id,
+                                                });
+                                            }}>
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    flexDirection: 'row',
+                                                    padding: 16,
+                                                    paddingVertical: 8,
+                                                }}>
+                                                <View style={{width: 60, borderRadius: 30, overflow: 'hidden'}}>
+                                                    {chatroom?.opponentUserInfo?.accType ==
+                                                    Constants.ACCOUNT_TYPE.VENDOR ? (
+                                                        !!chatroom?.opponentUserInfo?.businessLogoUrl ? (
+                                                            <Image
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: undefined,
+                                                                    aspectRatio: 1,
+                                                                }}
+                                                                source={{
+                                                                    uri: chatroom?.opponentUserInfo?.businessLogoUrl,
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <Image
+                                                                style={{
+                                                                    width: '108%',
+                                                                    height: undefined,
+                                                                    aspectRatio: 1,
+                                                                }}
+                                                                source={require('@assets/images/default-profileImage.png')}
+                                                            />
+                                                        )
+                                                    ) : (
+                                                        <Avatar.Text
+                                                            color={'white'}
+                                                            labelStyle={{fontSize: CustomTypography.FONT_SIZE_20}}
+                                                            size={60}
+                                                            label={chatroom?.opponentUserInfo?.name?.charAt(0) || 'A'}
+                                                        />
+                                                    )}
+                                                </View>
+                                                <View style={{justifyContent: 'center', marginLeft: 12}}>
+                                                    <Text
+                                                        style={{
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                            fontSize: CustomTypography.FONT_SIZE_16,
+                                                            color: CustomColors.GRAY_DARK,
+                                                        }}>
+                                                        {chatroom?.opponentUserInfo?.name}
+                                                    </Text>
+                                                    <Text
+                                                        style={{
+                                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                            fontSize: CustomTypography.FONT_SIZE_14,
+                                                            color: CustomColors.GRAY,
+                                                        }}>
+                                                        {!!chatroom?.lastMessage
+                                                            ? _.truncate(
+                                                                  chatroom?.lastMessageBy == auth().currentUser.uid
+                                                                      ? 'You: ' +
+                                                                            chatroom?.lastMessage?.replaceAll('\n', '')
+                                                                      : chatroom?.lastMessage?.replaceAll('\n', ''),
+                                                                  {
+                                                                      length: 30,
+                                                                  },
+                                                              )
+                                                            : 'No message yet'}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </TouchableRipple>
+                                    ))
+                                ) : (
+                                    <View
+                                        style={{
+                                            width: '100%',
+                                            flex: 1,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            paddingBottom: 140,
                                         }}>
+                                        <View style={{alignItems: 'center'}}>
+                                            <View style={{width: 160, height: undefined, aspectRatio: 795 / 645}}>
+                                                <NoChatIllustration fill={'#fff'} />
+                                            </View>
+
+                                            <Text
+                                                style={{
+                                                    fontSize: CustomTypography.FONT_SIZE_14,
+                                                    fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                    color: CustomColors.GRAY,
+                                                    textAlign: 'center',
+                                                    marginTop: 8,
+                                                }}>
+                                                You have no chat yet.
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )
+                            ) : (
+                                <View style={{paddingHorizontal: 16}}>
+                                    <SkeletonPlaceholder>
                                         <View
                                             style={{
                                                 width: '100%',
-                                                flexDirection: 'row',
-                                                padding: 16,
-                                                paddingVertical: 8,
-                                            }}>
-                                            <View style={{width: 60, borderRadius: 30, overflow: 'hidden'}}>
-                                                {chatroom?.opponentUserInfo?.accType ==
-                                                Constants.ACCOUNT_TYPE.VENDOR ? (
-                                                    !!chatroom?.opponentUserInfo?.businessLogoUrl ? (
-                                                        <Image
-                                                            style={{width: '100%', height: undefined, aspectRatio: 1}}
-                                                            source={{uri: chatroom?.opponentUserInfo?.businessLogoUrl}}
-                                                        />
-                                                    ) : (
-                                                        <Image
-                                                            style={{
-                                                                width: '108%',
-                                                                height: undefined,
-                                                                aspectRatio: 1,
-                                                            }}
-                                                            source={require('@assets/images/default-profileImage.png')}
-                                                        />
-                                                    )
-                                                ) : (
-                                                    <Avatar.Text
-                                                        color={'white'}
-                                                        labelStyle={{fontSize: CustomTypography.FONT_SIZE_20}}
-                                                        size={60}
-                                                        label={chatroom?.opponentUserInfo?.name?.charAt(0) || 'A'}
-                                                    />
-                                                )}
-                                            </View>
-                                            <View style={{justifyContent: 'center', marginLeft: 12}}>
-                                                <Text
-                                                    style={{
-                                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                        fontSize: CustomTypography.FONT_SIZE_16,
-                                                        color: CustomColors.GRAY_DARK,
-                                                    }}>
-                                                    {chatroom?.opponentUserInfo?.name}
-                                                </Text>
-                                                <Text
-                                                    style={{
-                                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                        fontSize: CustomTypography.FONT_SIZE_14,
-                                                        color: CustomColors.GRAY,
-                                                    }}>
-                                                    {!!chatroom?.lastMessage
-                                                        ? _.truncate(
-                                                              chatroom?.lastMessageBy == auth().currentUser.uid
-                                                                  ? 'You: ' +
-                                                                        chatroom?.lastMessage?.replaceAll('\n', '')
-                                                                  : chatroom?.lastMessage?.replaceAll('\n', ''),
-                                                              {
-                                                                  length: 30,
-                                                              },
-                                                          )
-                                                        : 'No message yet'}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                    </TouchableRipple>
-                                ))
-                            ) : (
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        flex: 1,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        paddingBottom: 140,
-                                    }}>
-                                    <View style={{alignItems: 'center'}}>
-                                        <View style={{width: 160, height: undefined, aspectRatio: 795 / 645}}>
-                                            <NoChatIllustration fill={'#fff'} />
-                                        </View>
-
-                                        <Text
+                                                height: 80,
+                                                borderRadius: 12,
+                                                marginTop: 16,
+                                                overflow: 'hidden',
+                                            }}></View>
+                                        <View
                                             style={{
-                                                fontSize: CustomTypography.FONT_SIZE_14,
-                                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                                color: CustomColors.GRAY,
-                                                textAlign: 'center',
-                                                marginTop: 8,
-                                            }}>
-                                            You have no chat yet.
-                                        </Text>
-                                    </View>
+                                                width: '100%',
+                                                height: 80,
+                                                borderRadius: 12,
+                                                marginTop: 16,
+                                                overflow: 'hidden',
+                                            }}></View>
+                                        <View
+                                            style={{
+                                                width: '100%',
+                                                height: 80,
+                                                borderRadius: 12,
+                                                marginTop: 16,
+                                                overflow: 'hidden',
+                                            }}></View>
+                                    </SkeletonPlaceholder>
                                 </View>
                             )}
                         </View>
