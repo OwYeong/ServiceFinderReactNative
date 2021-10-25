@@ -43,6 +43,7 @@ import Stars from 'react-native-stars';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import ProviderInfoDisplay from '@organisms/ProviderInfoDisplay';
+import ChatService from '@services/ChatService';
 
 const ViewServiceProvider = ({route}) => {
     const navigation = useNavigation();
@@ -216,7 +217,17 @@ const ViewServiceProvider = ({route}) => {
                                                         )}
                                                         color={CustomColors.WHITE}
                                                         size={30}
-                                                        onPress={() => {}}
+                                                        onPress={async () => {
+                                                            try {
+                                                                const chatroomId = await ChatService.getChatroomIdBetweenTwoUser(providerInfo.id);
+                    
+                                                                navigation.navigate('Chatroom', {
+                                                                    chatroomId: chatroomId,
+                                                                })
+                                                            } catch (error) {
+                                                                console.log(error);
+                                                            }
+                                                        }}
                                                     />
                                                 </View>
                                             </View>

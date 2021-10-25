@@ -29,8 +29,11 @@ const ChatService = {
                                     id: docSnapshot.id,
                                     _id: docSnapshot.id,
                                     ...docSnapshot.data(),
-                                    lastUpdated: docSnapshot.data().lastUpdated.toDate().toString(),
                                 };
+
+                                if (!!docSnapshot.data().lastUpdated) {
+                                    room = {...room, lastUpdated: docSnapshot.data().lastUpdated.toDate().toString()};
+                                }
 
                                 console.log(room);
                                 const opponentInfo = docSnapshot.data().usersInChat.find(id => id != userId);
@@ -60,6 +63,42 @@ const ChatService = {
                     console.error(error);
                 },
             );
+    },
+    getChatroomIdBetweenTwoUser: (userId1, userId2 = auth().currentUser.uid) => {
+        return new Promise((resolve, reject) => {
+
+            let chatroomCollection = firestore().collection('chatrooms');
+
+            chatroomCollection
+                .where(`chatUsersString`, 'in', [`${userId1}_${userId2}`,`${userId2}_${userId1}`])
+                .orderBy('lastUpdated', 'desc')
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const docSnapshot = querySnapshot.docs[0];
+
+                        resolve(docSnapshot.id);
+                    } else {
+                        chatroomCollection
+                            .add({
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                                usersInChat: [userId1, userId2],
+                                chatUsersString: `${userId1}_${userId2}`,
+                            })
+                            .then(async docRef => {
+                                resolve(docRef.id);
+                            })
+                            .catch(err => {
+                                console.log(err);
+                                reject('Some error occur');
+                            });
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                    reject('Some error occur');
+                });
+        });
     },
     getChatroomByIdOneTimeRead: (documentId, userId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
@@ -144,7 +183,7 @@ const ChatService = {
                 })
                 .then(async () => {
                     try {
-                        console.log("getting target user")
+                        console.log('getting target user');
                         const targetUserInfo = await UserService.getUserInfo(data.sentTo);
                         const accType = store.getState().loginState.userInfo.accType;
 
@@ -178,7 +217,7 @@ const ChatService = {
                 });
         });
     },
-    updateLastMessageForChatRoom: (messageData, chatroomId)=>{
+    updateLastMessageForChatRoom: (messageData, chatroomId) => {
         return new Promise((resolve, reject) => {
             const chatroomCollection = firestore().collection('chatrooms');
 
@@ -187,7 +226,7 @@ const ChatService = {
                 .update({
                     lastMessage: messageData.text,
                     lastMessageBy: messageData.sentBy,
-                    lastUpdated: messageData.createdAt
+                    lastUpdated: messageData.createdAt,
                 })
                 .then(() => {
                     console.log('last Message successfully updated!');
@@ -198,8 +237,7 @@ const ChatService = {
                     reject('Some error occur');
                 });
         });
-
-    }
+    },
 };
 
 export default ChatService;

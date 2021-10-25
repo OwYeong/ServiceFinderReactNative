@@ -52,6 +52,7 @@ import WaitingForServiceIllustration from '@assets/images/waiting-for-service-il
 import PendingResponseIllustration from '@assets/images/pending-response-from-vendor-illustration';
 import ReviewService from '@services/ReviewService';
 import {Rating} from 'react-native-ratings';
+import ChatService from '@services/ChatService';
 
 const ViewRequest = ({route}) => {
     const navigation = useNavigation();
@@ -184,7 +185,17 @@ const ViewRequest = ({route}) => {
                                         </Text>
                                     </View>
                                 </View>
-                                <Button onPress={() => {}}>Chat</Button>
+                                <Button onPress={async () => {
+                                    try {
+                                        const chatroomId = await ChatService.getChatroomIdBetweenTwoUser(requestData?.serviceProvider?.userId);
+
+                                        navigation.navigate('Chatroom', {
+                                            chatroomId: chatroomId,
+                                        })
+                                    } catch (error) {
+                                        console.log(error);
+                                    }
+                                }}>Chat</Button>
                             </View>
                             {requestData?.requestStatus == Constants.REQUEST_STATUS.ACCEPTED ? (
                                 <View>

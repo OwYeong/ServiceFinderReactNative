@@ -13,6 +13,7 @@ import {Constants} from '~constants';
 import ChatService from '@services/ChatService';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import _ from 'lodash';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 
 const ChatroomPage = ({user, route}) => {
     const navigation = useNavigation();
@@ -20,6 +21,7 @@ const ChatroomPage = ({user, route}) => {
     const userInfo = useSelector(state => state.loginState.userInfo);
     const providerInfo = useSelector(state => state.loginState.providerInfo);
 
+    const [isLoading, setIsLoading] = useState(true);
     const [messages, setMessages] = useState([]);
     const {chatroomId} = route.params;
 
@@ -29,6 +31,7 @@ const ChatroomPage = ({user, route}) => {
         ChatService.getChatroomByIdOneTimeRead(chatroomId)
             .then(roomData => {
                 setRoomInfo(roomData);
+                setIsLoading(false);
             })
             .catch(error => {
                 console.log(error);
@@ -97,43 +100,69 @@ const ChatroomPage = ({user, route}) => {
                                 navigation.goBack();
                             }}
                         />
-                        <View style={{width: 40, borderRadius: 30, overflow: 'hidden'}}>
-                            {roomInfo?.opponentUserInfo?.accType == Constants.ACCOUNT_TYPE.VENDOR ? (
-                                !!roomInfo?.opponentUserInfo?.businessLogoUrl ? (
-                                    <Image
-                                        style={{width: '100%', height: undefined, aspectRatio: 1}}
-                                        source={{uri: roomInfo?.opponentUserInfo?.businessLogoUrl}}
-                                    />
-                                ) : (
-                                    <Image
+                        {isLoading ? (
+                            <View style={{width:'100%', flexDirection:'row', alignItems:'center'}}>
+                                <SkeletonPlaceholder>
+                                    <View
                                         style={{
-                                            width: '108%',
-                                            height: undefined,
-                                            aspectRatio: 1,
-                                        }}
-                                        source={require('@assets/images/default-profileImage.png')}
-                                    />
-                                )
-                            ) : (
-                                <Avatar.Text
-                                    color={'white'}
-                                    labelStyle={{fontSize: CustomTypography.FONT_SIZE_20}}
-                                    size={40}
-                                    label={roomInfo?.opponentUserInfo?.name?.charAt(0) || 'A'}
-                                />
-                            )}
-                        </View>
-                        <Text
-                            style={{
-                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                fontSize: CustomTypography.FONT_SIZE_16,
-                                color: CustomColors.GRAY_DARK,
-                                marginLeft: 8,
-                            }}>
-                            {_.truncate(roomInfo?.opponentUserInfo?.name, {
-                                length: 30,
-                            })}
-                        </Text>
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: 20,
+                                            overflow: 'hidden',
+                                        }}></View>
+                                </SkeletonPlaceholder>
+                                <SkeletonPlaceholder>
+                                    <View
+                                        style={{
+                                            width: 200,
+                                            height: 20,
+                                            marginLeft:8,
+                                            borderRadius: 20,
+                                            overflow: 'hidden',
+                                        }}></View>
+                                </SkeletonPlaceholder>
+                            </View>
+                        ) : (
+                            <>
+                                <View style={{width: 40, borderRadius: 30, overflow: 'hidden'}}>
+                                    {roomInfo?.opponentUserInfo?.accType == Constants.ACCOUNT_TYPE.VENDOR ? (
+                                        !!roomInfo?.opponentUserInfo?.businessLogoUrl ? (
+                                            <Image
+                                                style={{width: '100%', height: undefined, aspectRatio: 1}}
+                                                source={{uri: roomInfo?.opponentUserInfo?.businessLogoUrl}}
+                                            />
+                                        ) : (
+                                            <Image
+                                                style={{
+                                                    width: '108%',
+                                                    height: undefined,
+                                                    aspectRatio: 1,
+                                                }}
+                                                source={require('@assets/images/default-profileImage.png')}
+                                            />
+                                        )
+                                    ) : (
+                                        <Avatar.Text
+                                            color={'white'}
+                                            labelStyle={{fontSize: CustomTypography.FONT_SIZE_20}}
+                                            size={40}
+                                            label={roomInfo?.opponentUserInfo?.name?.charAt(0) || 'A'}
+                                        />
+                                    )}
+                                </View>
+                                <Text
+                                    style={{
+                                        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                        fontSize: CustomTypography.FONT_SIZE_16,
+                                        color: CustomColors.GRAY_DARK,
+                                        marginLeft: 8,
+                                    }}>
+                                    {_.truncate(roomInfo?.opponentUserInfo?.name, {
+                                        length: 30,
+                                    })}
+                                </Text>
+                            </>
+                        )}
                     </View>
                     <View style={{flex: 1, paddingHorizontal: 8}}>
                         <GiftedChat
