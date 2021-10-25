@@ -184,6 +184,7 @@ const NewRequestDisplayComponent = () => {
                                         .then(supported => {
                                             if (!supported) {
                                                 console.log("Can't handle url: " + url);
+                                                return Linking.openURL(url);
                                             } else {
                                                 return Linking.openURL(url);
                                             }
