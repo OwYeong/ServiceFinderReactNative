@@ -10,6 +10,7 @@ import {setLoginBlock} from '@slices/appSlice';
 import store from '../../store';
 import firebase from '@react-native-firebase/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ProviderService from './ProviderService';
 
 const UserService = {
     vendor: {
@@ -615,6 +616,49 @@ const UserService = {
                         resolve(data);
                     } else {
                         reject('Document does not exist');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> UserService.getUserInfo\n');
+                    reject(error);
+                });
+        });
+    },
+    getUserInfoForChatroom: documentId => {
+        return new Promise(async (resolve, reject) => {
+            let userCollections = firestore().collection('users');
+
+            userCollections
+                .doc(documentId)
+                .get()
+                .then(async documentSnapshot => {
+                    try {
+                        if (documentSnapshot.exists) {
+                            let data = {
+                                id: documentSnapshot.id,
+                                name: documentSnapshot.data().firstName + ' ' + documentSnapshot.data().lastName,
+                                accType: documentSnapshot.data().accType,
+                            };
+
+                            if (documentSnapshot.data().accType == Constants.ACCOUNT_TYPE.VENDOR) {
+                                const providerData = await ProviderService.getProviderByIdOneTimeRead(
+                                    documentSnapshot.id,
+                                );
+
+                                data = {
+                                    ...data,
+                                    name: providerData?.businessName,
+                                    businessLogoUrl: providerData?.businessLogoUrl,
+                                };
+                            }
+
+                            resolve(data);
+                        } else {
+                            reject('Document does not exist');
+                        }
+                    } catch (error) {
+                        console.log(error);
+                        reject('some error occur');
                     }
                 })
                 .catch(error => {

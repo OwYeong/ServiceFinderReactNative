@@ -47,6 +47,7 @@ import Geolocation from 'react-native-geolocation-service';
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 import ServiceProviderMarkerSvg from '@assets/images/service-provider-marker';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
+import ChatService from '@services/ChatService';
 
 const JobRequestControlDashboard = ({route}) => {
     const navigation = useNavigation();
@@ -79,7 +80,7 @@ const JobRequestControlDashboard = ({route}) => {
         isVisible: false,
         requestId: '',
     });
-    
+
     const [isFetchingData, setIsFetchingData] = useState(true);
 
     const jobRequestActionSheet = useRef(null);
@@ -224,7 +225,20 @@ const JobRequestControlDashboard = ({route}) => {
                                         </Text>
                                     </View>
                                 </View>
-                                <Button onPress={() => {}}>Chat</Button>
+                                <Button
+                                    onPress={async () => {
+                                        try {
+                                            const chatroomId = await ChatService.getChatroomIdBetweenTwoUser(requestData?.customerInfo?.userId);
+
+                                            navigation.navigate('Chatroom', {
+                                                chatroomId: chatroomId,
+                                            })
+                                        } catch (error) {
+                                            console.log(error);
+                                        }
+                                    }}>
+                                    Chat
+                                </Button>
                             </View>
                             {!!requestData ? (
                                 <View
@@ -243,7 +257,7 @@ const JobRequestControlDashboard = ({route}) => {
                                                   Constants.SERVICE_STATUS.SERVICE_COMPLETED
                                                 ? '#95F985'
                                                 : CustomColors.ALERT,
-                                        opacity: !requestData?.serviceStatus?0:1
+                                        opacity: !requestData?.serviceStatus ? 0 : 1,
                                     }}>
                                     <Text
                                         style={{
