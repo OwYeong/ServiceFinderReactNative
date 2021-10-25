@@ -482,6 +482,11 @@ const RequestService = {
                                 `${
                                     store.getState().loginState.providerInfo.businessName
                                 } has rejected your job request with the reason: ${rejectReason} `,
+                                targetUserInfo.id,
+                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
+                                {
+                                    requestId: documentId
+                                }
                             );
                         }
                         resolve('Request successfully rejected!');
@@ -515,6 +520,11 @@ const RequestService = {
                                 `${
                                     store.getState().loginState.providerInfo.businessName
                                 } has accepted Your job request. You may track the progess in the app.`,
+                                targetUserInfo.id,
+                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
+                                {
+                                    requestId: documentId
+                                }
                             );
                         }
                         resolve('Request successfully accepted!');
@@ -550,6 +560,9 @@ const RequestService = {
                                     targetUserInfo.fcmToken,
                                     `You have a new job request`,
                                     `You have a new job request, you may view the request in the app.`,
+                                    targetUserInfo.id,
+                                    Constants.NOTIFICATION_ACTION.NAVIGATE_TO_PENDING_REQUEST
+                                    
                                 );
                             }
                             resolve(docRef.id);
@@ -607,6 +620,11 @@ const RequestService = {
                                 `${
                                     store.getState().loginState.providerInfo.businessName
                                 } has started to work on your job request. Service provider will arrive at your doorstep shortly.`,
+                                targetUserInfo.id,
+                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
+                                {
+                                    requestId: documentId
+                                }
                             );
                         }
                         resolve('Request successfully started!');
@@ -643,6 +661,11 @@ const RequestService = {
                                 } has completed your job request. Thank you for using ServiceFinder, please leave a rating to ${
                                     store.getState().loginState.providerInfo.businessName
                                 }.`,
+                                targetUserInfo.id,
+                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
+                                {
+                                    requestId: documentId
+                                }
                             );
                         }
                         await ProviderService.updateProviderTotalEarningAndNumOfJobCompleted(paymentReceived);
@@ -678,6 +701,11 @@ const RequestService = {
                                 `${
                                     store.getState().loginState.providerInfo.businessName
                                 } has cancelled your job request. Refund will be done shortly.`,
+                                targetUserInfo.id,
+                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
+                                {
+                                    requestId: documentId
+                                }
                             );
                         }
                         resolve('Request successfully started!');
@@ -713,6 +741,11 @@ const RequestService = {
                                     ' ' +
                                     store.getState().loginState.userInfo.lastName
                                 } has cancelled your job request.`,
+                                targetUserInfo.id,
+                                Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
+                                {
+                                    requestId: documentId
+                                }
                             );
                         }
                         resolve('Request successfully started!');
