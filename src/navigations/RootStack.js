@@ -24,6 +24,9 @@ import BookServicePage from '@pages/customer/BookServicePage';
 import ViewRequest from '@pages/customer/ViewRequest';
 import WriteReviewPage from '@pages/customer/WriteReviewPage';
 import ChatroomPage from '@pages/ChatroomPage';
+import EditAccountProfile from '@pages/EditAccountProfile';
+import ChangePassword from '@pages/ChangePassword';
+import ChangePhone from '@pages/ChangePhone';
 
 const Stack = createStackNavigator();
 
@@ -144,7 +147,7 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                                     headerShown: false,
                                 }}
                             />
-                            
+
                             <Stack.Screen
                                 name="Chatroom"
                                 component={ChatroomPage}
@@ -233,6 +236,30 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             />
                         </>
                     ) : null}
+                    <Stack.Screen
+                        name="EditAccountProfile"
+                        component={EditAccountProfile}
+                        options={{
+                            animationEnabled: true,
+                            headerShown: false,
+                        }}
+                    />
+                    <Stack.Screen
+                        name="ChangePassword"
+                        component={ChangePassword}
+                        options={{
+                            animationEnabled: true,
+                            headerShown: false,
+                        }}
+                    />
+                    <Stack.Screen
+                        name="ChangePhone"
+                        component={ChangePhone}
+                        options={{
+                            animationEnabled: true,
+                            headerShown: false,
+                        }}
+                    />
                 </>
             ) : (
                 <Stack.Screen

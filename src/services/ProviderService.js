@@ -294,23 +294,21 @@ const ProviderService = {
     getProviderById: (callback, documentId) => {
         let serviceProviderCollections = firestore().collection('serviceProviders');
 
-        return serviceProviderCollections
-            .doc(documentId)
-            .onSnapshot(docSnapshot => {
-                if (docSnapshot.exists) {
-                    let providerData = {
-                        id: docSnapshot.id,
-                        ...docSnapshot.data(),
-                        firstJoined: docSnapshot.data().firstJoined.toDate().toString(),
-                    };
+        return serviceProviderCollections.doc(documentId).onSnapshot(docSnapshot => {
+            if (docSnapshot.exists) {
+                let providerData = {
+                    id: docSnapshot.id,
+                    ...docSnapshot.data(),
+                    firstJoined: docSnapshot.data().firstJoined.toDate().toString(),
+                };
 
-                    callback(providerData);
-                } else {
-                    callback(null);
-                }
-            });
+                callback(providerData);
+            } else {
+                callback(null);
+            }
+        });
     },
-    getProviderByIdOneTimeRead: (documentId) => {
+    getProviderByIdOneTimeRead: documentId => {
         return new Promise((resolve, reject) => {
             let serviceProviderCollections = firestore().collection('serviceProviders');
 
@@ -577,9 +575,9 @@ const ProviderService = {
     },
     updatePhoneNumber: (documentId, phoneNumber) => {
         return new Promise(async (resolve, reject) => {
-            const usersCollection = firestore().collection('serviceProviders');
+            const providersCollection = firestore().collection('serviceProviders');
 
-            usersCollection
+            providersCollection
                 .doc(documentId)
                 .update({
                     phoneNumber: phoneNumber,
@@ -589,7 +587,18 @@ const ProviderService = {
                 })
                 .catch(err => {
                     console.log(err);
-                    reject('Some error occur');
+                    providersCollection
+                        .doc(documentId)
+                        .set({
+                            phoneNumber: phoneNumber,
+                        })
+                        .then(() => {
+                            resolve('Successfully updated');
+                        })
+                        .catch(error => {
+                            console.log(error);
+                            reject('Some error occur');
+                        });
                 });
         });
     },
@@ -613,7 +622,7 @@ const ProviderService = {
 
                 const loggedInProviderData = {
                     ...currentServiceProvider.data(),
-                    
+
                     firstJoined: currentServiceProvider.data().firstJoined.toDate().toString(),
                 };
 
