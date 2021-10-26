@@ -126,6 +126,120 @@ const ProviderService = {
                 });
         });
     },
+    getProviderJoinedInLast30DayWithPagination: (lastVisibleDocument = null) => {
+        return new Promise((resolve, reject) => {
+            let popularService = null;
+            // Firebase does not support query that uses a fieldvalue.
+            // In our case, we need serviceCoverage field value when querying the service providers within the area of customer doorstep
+            // Its is best to be done using firebaseCloud function or a custom backend server with firebase admin SDK.
+            // Since, firebaseCloud function required payment option and we do not have a custome backend application
+            // We will temperory do the location filter in frontend.
+
+            // if (!!lastVisibleDocument) {
+            //     popularService = firestore()
+            //         .collection('serviceProviders')
+            //         .limit(10)
+            //         // Filter results
+            //         .orderBy('popularity.AUG_2021', 'desc')
+            //         .startAfter(lastVisibleDocument);
+            // } else {
+            //     popularService = firestore()
+            //         .collection('serviceProviders')
+            //         .limit(10)
+            //         // Filter results
+            //         .orderBy('popularity.AUG_2021', 'desc');
+            // }
+
+            var serviceProviderCollection = firestore()
+                .collection('serviceProviders')
+                .where('firstJoined', '>', firestore.Timestamp.fromDate(moment().startOf('day').subtract(30, 'days').toDate()))
+                .orderBy(`firstJoined`, 'desc');
+
+            var providerWithinAreaOfCustomerLocation = [];
+
+            serviceProviderCollection
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        console.log('last visible document');
+                        console.log(lastVisibleDocument);
+                        try {
+                            var popularServices = [];
+
+                            querySnapshot.forEach(docSnapshot => {
+                                let provider = {
+                                    id: docSnapshot.id,
+                                    ...docSnapshot.data(),
+                                    firstJoined: docSnapshot.data().firstJoined.toDate().toString(),
+                                };
+                                let providerCoverageDistance = provider.serviceCoverage.coverageDistance;
+                                let providerCoor = provider.serviceCoverage.addressCoor;
+
+                                let userCoor = store.getState().loginState.userInfo.serviceAddress.addressCoor;
+
+                                let lowLatThreshold = userCoor.latitude - latDegreeFor1Km * providerCoverageDistance;
+                                let lowLonThreshold = userCoor.longitude - lonDegreeFor1Km * providerCoverageDistance;
+
+                                let highLatThreshold = userCoor.latitude + latDegreeFor1Km * providerCoverageDistance;
+                                let highLonThreshold = userCoor.longitude + lonDegreeFor1Km * providerCoverageDistance;
+
+                                console.log(providerCoor.latitude + ',' + providerCoor.longitude);
+                                //Location Filter, Temperatory here.
+                                if (
+                                    providerCoor.latitude > lowLatThreshold &&
+                                    providerCoor.latitude < highLatThreshold &&
+                                    providerCoor.longitude > lowLonThreshold &&
+                                    providerCoor.longitude < highLonThreshold
+                                )
+                                    providerWithinAreaOfCustomerLocation.push(provider);
+                            });
+
+                            const paginationLimit = 10;
+
+                            if (!!lastVisibleDocument) {
+                                lastVisibleDocumentIndex = providerWithinAreaOfCustomerLocation.findIndex(element => {
+                                    return element.id == lastVisibleDocument.id;
+                                });
+
+                                popularServices = providerWithinAreaOfCustomerLocation.slice(
+                                    lastVisibleDocumentIndex + 1,
+                                    lastVisibleDocumentIndex + 1 + paginationLimit,
+                                );
+                            } else {
+                                popularServices = providerWithinAreaOfCustomerLocation.slice(0, paginationLimit);
+                            }
+                            var result = {};
+
+                            if (popularServices.length > 0) {
+                                result = {
+                                    lastVisibleDocument: popularServices[popularServices.length - 1],
+                                    data: popularServices,
+                                };
+                            } else {
+                                result = {
+                                    lastVisibleDocument: lastVisibleDocument,
+                                    data: [],
+                                };
+                            }
+                        } catch (err) {
+                            console.log(err);
+                        }
+                        resolve(result);
+                    } else {
+                        const result = {
+                            lastVisibleDocument: lastVisibleDocument,
+                            data: [],
+                        };
+
+                        resolve(result);
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getPopularServiceOfTheMonthWithPagination\n');
+                    reject(error);
+                });
+        });
+    },
     getAllPost: (userId = auth().currentUser.uid) => {
         return new Promise((resolve, reject) => {
             let popularService = firestore().collection('posts');
