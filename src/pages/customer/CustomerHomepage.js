@@ -38,6 +38,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import _ from 'lodash';
 import moment from 'moment';
+import NewlyJoinedProviderDisplay from '@organisms/NewlyJoinedProviderDisplay';
 
 const moveCloud = {
     0: {
@@ -78,16 +79,75 @@ const CustomerHomepage = () => {
     const [popularContainerOffsetY, setPopularContainerOffsetY] = useState(0);
     const popularServiceSpinnerRef = useRef(null);
     const popularServiceFlatlistRef = useRef(null);
+
+    const newlyJoinedProviderSpinnerRef = useRef(null);
+    const newlyJoinedProviderFlatlistRef = useRef(null);
+    const [newlyJoinedProviderList, setNewlyJoinedProviderList] = useState({isLoadingMoreData: false, data: []});
+    const [newlyJoinedProviderFetchBlock, setNewlyJoinedProviderFetchBlock] = useState(false);
+    const [isFetchingNewlyJoinedProvider, setIsFetchingNewlyJoinedProvider] = useState(true);
     
     const [refreshing, setRefreshing] = useState(false);
 
 
     const [searchBarxy, setSearchBarxy] = useState({x: 0, y: 0});
 
+    const fetchNewlyJoinedProvider = async () => {
+        try {
+            const newlyJoinedProviders = await ProviderService.getProviderJoinedInLast30DayWithPagination();
+            console.log('YESYES');
+            console.log(newlyJoinedProviders);
+
+            setIsFetchingNewlyJoinedProvider(false);
+            setNewlyJoinedProviderList({
+                ...newlyJoinedProviderList,
+                lastDocumentInList: newlyJoinedProviders.lastVisibleDocument,
+                data: newlyJoinedProviders.data,
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const fetchMoreNewlyJoinedProvider = async () => {
+        if (!!newlyJoinedProviderList.lastDocumentInList) {
+            try {
+                setTimeout(() => {
+                    newlyJoinedProviderFlatlistRef.current.scrollToEnd();
+                }, 20);
+
+                const newNewlyJoinedProviders = await ProviderService.getProviderJoinedInLast30DayWithPagination(
+                    newlyJoinedProviderList.lastDocumentInList,
+                );
+
+                
+
+                setTimeout(() => {
+                    setNewlyJoinedProviderList({
+                        isLoadingMoreData: false,
+                        lastDocumentInList: newNewlyJoinedProviders.lastVisibleDocument,
+                        data: [...newlyJoinedProviderList.data, ...newNewlyJoinedProviders.data],
+                    });
+
+                    if (newNewlyJoinedProviders.data.length == 0) {
+                        setTimeout(() => {
+                            newlyJoinedProviderFlatlistRef.current.scrollToEnd();
+                            setNewlyJoinedProviderFetchBlock(false);
+                        }, 100);
+                    } else {
+                        setNewlyJoinedProviderFetchBlock(false);
+                    }
+                }, 2000);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    };
+
+
     const fetchPopularServiceData = async () => {
         try {
             const popularServices = await ProviderService.getPopularServiceOfTheMonthWithPagination();
-            console.log(popularServices);
+            // console.log(popularServices);
 
             setIsFetchingPopularService(false);
             setPopularServiceList({
@@ -152,8 +212,9 @@ const CustomerHomepage = () => {
 
         fetchPopularServiceData();
         fetchAllServiceCategories();
+        fetchNewlyJoinedProvider()
         popularServiceFlatlistRef.current.scrollToOffset({ animated: true, x: 0 });
-        
+        newlyJoinedProviderFlatlistRef.current.scrollToOffset({ animated: true, x: 0 });
         setRefreshing(false);
 
     }, []);
@@ -164,6 +225,7 @@ const CustomerHomepage = () => {
 
             fetchPopularServiceData();
             fetchAllServiceCategories();
+            fetchNewlyJoinedProvider();
         }, 1000);
     }, []);
 
@@ -173,6 +235,12 @@ const CustomerHomepage = () => {
             fetchMorePopularServiceData();
         }
     }, [popularServiceList.isLoadingMoreData]);
+
+    useEffect(() => {
+        if (newlyJoinedProviderList.isLoadingMoreData) {
+            fetchMoreNewlyJoinedProvider();
+        }
+    }, [newlyJoinedProviderList.isLoadingMoreData]);
     return (
         <LinearGradient
             colors={[CustomColors.PRIMARY_BLUE, CustomColors.SECONDARY_BLUE_PURPLE]}
@@ -375,6 +443,104 @@ const CustomerHomepage = () => {
                                             if (!popularServiceFetchBlock) {
                                                 setPopularServiceList({...popularServiceList, isLoadingMoreData: true});
                                                 setPopularServiceFetchBlock(true);
+                                            }
+                                        }}
+                                        onEndReachedThreshold={0}
+                                    />
+                                    <View style={styles.sectionHeader}>
+                                        <Text style={styles.sectionTitle}>Provider joined this month</Text>
+                                        <Text style={styles.viewAll}>Scroll For More</Text>
+                                    </View>
+                                    <FlatList
+                                        ref={newlyJoinedProviderFlatlistRef}
+                                        style={styles.popularServiceScrollView}
+                                        scrollEnabled={newlyJoinedProviderList.data.length > 0}
+                                        horizontal={true}
+                                        showsHorizontalScrollIndicator={false}
+                                        data={newlyJoinedProviderList.data}
+                                        renderItem={({index, item}) => {
+                                            return (
+                                                <Animatable.View
+                                                    animation="fadeIn"
+                                                    useNativeDriver={true}
+                                                    needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
+                                                    style={[
+                                                        styles.popularServiceWrapper,
+                                                        {paddingLeft: index > 0 ? 0 : 20},
+                                                    ]}>
+                                                    <TouchableRipple
+                                                        onPress={() => {
+                                                            navigation.navigate('ViewServiceProvider', {providerId: item.id});
+                                                        }}>
+                                                        <NewlyJoinedProviderDisplay
+                                                            serviceType={item.serviceType}
+                                                            joinedDate={item.firstJoined}
+                                                            businessName={item.businessName}
+                                                            profileImgUrl={item.businessLogoUrl}
+                                                            coverImageUrl={item.coverImgUrl}
+                                                            providerId={item.id}
+                                                        />
+                                                    </TouchableRipple>
+                                                </Animatable.View>
+                                            );
+                                        }}
+                                        keyExtractor={item => item.id}
+                                        ListHeaderComponent={() => {
+                                            return isFetchingNewlyJoinedProvider ? (
+                                                <>
+                                                    <View style={styles.popularServiceWrapper}>
+                                                        <PopularServiceDisplaySkeleton style={{}} />
+                                                        <View style={{width: 20, height: '100%'}}></View>
+                                                        <PopularServiceDisplaySkeleton style={{}} />
+                                                    </View>
+                                                </>
+                                            ) : newlyJoinedProviderList.data.length > 0 ? null : (
+                                                <View style={{padding: 20}}>
+                                                    <View style={{width: 250, height: 100, justifyContent: 'center'}}>
+                                                        <Text
+                                                            style={{
+                                                                textAlign: 'left',
+                                                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                                color: CustomColors.GRAY,
+                                                                fontSize: CustomTypography.FONT_SIZE_12,
+                                                            }}>
+                                                            Sorry, there are no popular service at your area currently
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                            );
+                                        }}
+                                        ListFooterComponent={() => {
+                                            if (newlyJoinedProviderList.isLoadingMoreData) {
+                                                return (
+                                                    <Animatable.View
+                                                        ref={newlyJoinedProviderSpinnerRef}
+                                                        style={{
+                                                            width: 48,
+                                                            flex: 1,
+                                                            alignItems: 'center',
+                                                            justifyContent: 'flex-end',
+                                                            marginRight: 8,
+                                                        }}>
+                                                        <View style={{width: 64, height: 64}}>
+                                                            <LottieView
+                                                                source={require('@assets/animations/loadingSpinner.json')}
+                                                                autoPlay
+                                                                loop={true}
+                                                            />
+                                                        </View>
+                                                    </Animatable.View>
+                                                );
+                                            } else {
+                                                return null;
+                                            }
+                                        }}
+                                        overScrollMode="never"
+                                        onEndReached={() => {
+                                            console.log('end reach');
+                                            if (!newlyJoinedProviderFetchBlock) {
+                                                setNewlyJoinedProviderList({...newlyJoinedProviderList, isLoadingMoreData: true});
+                                                setNewlyJoinedProviderFetchBlock(true);
                                             }
                                         }}
                                         onEndReachedThreshold={0}
