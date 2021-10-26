@@ -37,6 +37,7 @@ import PopularServiceDisplaySkeleton from '@organisms/PopularServiceDisplaySkele
 import {useNavigation} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import _ from 'lodash';
+import moment from 'moment';
 
 const moveCloud = {
     0: {
@@ -307,7 +308,7 @@ const CustomerHomepage = () => {
                                                         }}>
                                                         <PopularServiceDisplay
                                                             serviceType={item.serviceType}
-                                                            appointmentInCurrentMonth={item.popularity.AUG_2021}
+                                                            appointmentInCurrentMonth={item.popularity[`${moment().format('MMM_YYYY').toUpperCase()}`]}
                                                             businessName={item.businessName}
                                                             profileImgUrl={item.businessLogoUrl}
                                                             coverImageUrl={item.coverImgUrl}

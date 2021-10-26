@@ -6,6 +6,7 @@ import {setProviderInfo} from '@slices/loginSlice';
 import store from '../../store';
 import UserService from './UserService';
 import firebase from '@react-native-firebase/app';
+import moment from 'moment';
 
 // ~1 km of lat and lon in degrees (not 100% accurate, approximately only)
 //adopted from : https://stackoverflow.com/questions/4000886/gps-coordinates-1km-square-around-a-point
@@ -39,7 +40,7 @@ const ProviderService = {
 
             var serviceProviderCollection = firestore()
                 .collection('serviceProviders')
-                .orderBy('popularity.AUG_2021', 'desc');
+                .orderBy(`popularity.${moment().format('MMM_YYYY').toUpperCase()}`, 'desc');
 
             var providerWithinAreaOfCustomerLocation = [];
 
@@ -373,9 +374,14 @@ const ProviderService = {
     },
     updateProviderTotalEarningAndNumOfJobCompleted: paymentReceived => {
         return new Promise((resolve, reject) => {
+            popularityInCurrentMonth =
+                store.getState().loginState.providerInfo.popularity[moment().format('MMM_YYYY').toUpperCase()];
             ProviderService.updateProviderData({
                 totalEarnings: firebase.firestore.FieldValue.increment(paymentReceived),
                 jobsCompleted: firebase.firestore.FieldValue.increment(1),
+                [`popularity.${moment().format('MMM_YYYY').toUpperCase()}`]: !!popularityInCurrentMonth
+                    ? firebase.firestore.FieldValue.increment(1)
+                    : 1,
             })
                 .then(data => {
                     resolve('success');
