@@ -31,11 +31,12 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Portal} from '@gorhom/portal';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AntDesignIcons from 'react-native-vector-icons/AntDesign';
 import {showMessage} from 'react-native-flash-message';
 import auth from '@react-native-firebase/auth';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import { useFocusEffect, useNavigation } from '@react-navigation/core';
+import {useFocusEffect, useNavigation} from '@react-navigation/core';
 import ReviewDisplayComponent from '@organisms/ReviewDisplayComponent';
 
 const ProviderProfilePage = () => {
@@ -65,22 +66,26 @@ const ProviderProfilePage = () => {
     const [isCoverImgLoading, setIsCoverImgLoading] = useState(false);
 
     useEffect(() => {
-        ProviderService.getAllPost().then(data => {
-            setPhotosList(data.data);
-            console.log(data.data);
-            // <PhotoListingComponent dataList={photosList} />
-        }).catch(err=>{
-            console.log(err);
-        })
-        ReviewService.getAllReview().then(data => {
-            setReviewList(data.data);
-            console.log(data.data);
-            // <PhotoListingComponent dataList={photosList} />
-        }).catch(err=>{
-            console.log(err);
-        })
+        ProviderService.getAllPost()
+            .then(data => {
+                setPhotosList(data.data);
+                console.log(data.data);
+                // <PhotoListingComponent dataList={photosList} />
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        ReviewService.getAllReview()
+            .then(data => {
+                setReviewList(data.data);
+                console.log(data.data);
+                // <PhotoListingComponent dataList={photosList} />
+            })
+            .catch(err => {
+                console.log(err);
+            });
     }, []);
-    
+
     useFocusEffect(
         useCallback(() => {
             ProviderService.getAllPost().then(data => {
@@ -88,8 +93,8 @@ const ProviderProfilePage = () => {
                 console.log(data.data);
                 // <PhotoListingComponent dataList={photosList} />
             });
-        }, [])
-      )
+        }, []),
+    );
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} />
@@ -279,7 +284,13 @@ const ProviderProfilePage = () => {
                                             />
                                         );
                                     case 'reviews':
-                                        return <ReviewDisplayComponent dataList={reviewList} averageRating={providerInfo?.averageRatings} starStats={providerInfo?.starStats}/>;
+                                        return (
+                                            <ReviewDisplayComponent
+                                                dataList={reviewList}
+                                                averageRating={providerInfo?.averageRatings}
+                                                starStats={providerInfo?.starStats}
+                                            />
+                                        );
                                     default:
                                         return null;
                                 }
@@ -659,7 +670,7 @@ const ProviderProfilePage = () => {
                     bottomSheerColor="#FFFFFF"
                     // ref="BottomSheet"
                     initialPosition={0}
-                    snapPoints={[0, 320]}
+                    snapPoints={[0, 450]}
                     isBackDrop={true}
                     isBackDropDismissByPress={true}
                     isRoundBorderWithTipHeader={true}
@@ -671,10 +682,11 @@ const ProviderProfilePage = () => {
                     // bodyStyle={{backgroundColor:"red",flex:1}}
                     body={
                         <View style={{paddingVertical: 16}}>
-                            <TouchableOpacity onPress={() => {
-                                serviceProviderProfileActionSheet.current.snapTo(0);
-                                navigation.navigate("FormEdit")
-                            }}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    serviceProviderProfileActionSheet.current.snapTo(0);
+                                    navigation.navigate('FormEdit');
+                                }}>
                                 <View style={styles.actionButton}>
                                     <View
                                         style={{
@@ -691,26 +703,27 @@ const ProviderProfilePage = () => {
                                     <Text style={styles.actionButtonLabel}>My Form Setup</Text>
                                 </View>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => {
-                                ImageCropPicker.openPicker({
-                                    width: 400,
-                                    height: 400,
-                                    cropping: true,
-                                    mediaType: 'photo',
-                                })
-                                    .then(image => {
-                                        serviceProviderProfileActionSheet.current.snapTo(0);
-                                        navigation.navigate('PostEditCreate', {
-                                            chosenImage: { 
-                                                path: image.path,
-                                                mime: image.mime
-                                            }
-                                          });
+                            <TouchableOpacity
+                                onPress={() => {
+                                    ImageCropPicker.openPicker({
+                                        width: 400,
+                                        height: 400,
+                                        cropping: true,
+                                        mediaType: 'photo',
                                     })
-                                    .catch(e => {
-                                        console.log(e);
-                                    });
-                            }}>
+                                        .then(image => {
+                                            serviceProviderProfileActionSheet.current.snapTo(0);
+                                            navigation.navigate('PostEditCreate', {
+                                                chosenImage: {
+                                                    path: image.path,
+                                                    mime: image.mime,
+                                                },
+                                            });
+                                        })
+                                        .catch(e => {
+                                            console.log(e);
+                                        });
+                                }}>
                                 <View style={styles.actionButton}>
                                     <View
                                         style={{
@@ -725,6 +738,73 @@ const ProviderProfilePage = () => {
                                         <AntDesignIcons name="addfile" size={24} color={CustomColors.GRAY_DARK} />
                                     </View>
                                     <Text style={styles.actionButtonLabel}>Add Post</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    serviceProviderProfileActionSheet.current.snapTo(0);
+                                    navigation.navigate('ChangePassword');
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <MaterialCommunityIcons
+                                            name="lock-reset"
+                                            size={24}
+                                            color={CustomColors.GRAY_DARK}
+                                        />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Change Password</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    serviceProviderProfileActionSheet.current.snapTo(0);
+                                    navigation.navigate('ChangePhone');
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <MaterialCommunityIcons name="phone" size={20} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Change Phone Number</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    serviceProviderProfileActionSheet.current.snapTo(0);
+                                    navigation.navigate('EditAccountProfile');
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <MaterialCommunityIcons name="account" size={20} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Update Account Details</Text>
                                 </View>
                             </TouchableOpacity>
                             <TouchableOpacity

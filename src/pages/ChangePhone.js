@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import {
     Animated,
     Keyboard,
@@ -10,8 +10,10 @@ import {
     LayoutAnimation,
     TouchableOpacity,
     TouchableWithoutFeedback,
+    StatusBar,
+    ScrollView,
 } from 'react-native';
-import {Button, HelperText} from 'react-native-paper';
+import {Button, HelperText, IconButton} from 'react-native-paper';
 import PhoneVerificationIllustration from '@assets/images/phone-verification-illustration';
 import * as Animatable from 'react-native-animatable';
 import {CustomColors, CustomTypography} from '@styles';
@@ -23,39 +25,26 @@ import OTPInputView from '@twotalltotems/react-native-otp-input';
 import firebase from '@react-native-firebase/app';
 import LottieView from 'lottie-react-native';
 import Ripple from 'react-native-material-ripple';
-import CustomModal from './CustomModal';
-import LoadingModal from './LoadingModal';
+import CustomModal from '@organisms/CustomModal';
+import LoadingModal from '@organisms/LoadingModal';
 import UserService from '@services/UserService';
 import auth from '@react-native-firebase/auth';
 import {useSelector} from 'react-redux';
 import {Constants} from '~constants';
+import {debounce} from 'lodash';
+import {useNavigation} from '@react-navigation/core';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import ProviderService from '@services/ProviderService';
+import { showMessage } from 'react-native-flash-message';
 
-const movingUpAndDown = {
-    0: {
-        translateY: 0,
-        scale: 1,
-    },
-    0.25: {
-        translateY: -10,
-    },
-    0.75: {
-        translateY: 10,
-        scale: 1,
-    },
-    1: {
-        translateY: 0,
-        scale: 1,
-    },
-};
+const ChangePhone = () => {
+    const navigation = useNavigation();
 
-const PhoneVerification = () => {
     const phoneInput = useRef(null);
     const otpAnimatable = useRef(null);
     const otpInputRef = useRef(null);
     const [countryCode, setCountryCode] = useState('MY');
     const [showCountryPicker, setShowCountryPicker] = useState(false);
-    const [showIllustration, setShowIllustration] = useState(true);
     const [phoneNumInputted, setPhoneNumInputted] = useState('');
     const [uiState, setUiState] = useState('promptUserInput');
     const [verificationId, setVerificationId] = useState(null);
@@ -69,9 +58,7 @@ const PhoneVerification = () => {
     const userInfo = useSelector(state => state.loginState.userInfo);
 
     useEffect(() => {
-        if (!!userInfo.phoneNumber) {
-            setUiState('verificationSuccess');
-        }
+        phoneInput.current.setValue(userInfo.phoneNumber);
     }, []);
     const selectCountry = country => {
         phoneInput.current.selectCountry(country.cca2.toLowerCase());
@@ -115,7 +102,6 @@ const PhoneVerification = () => {
                             });
                             break;
                         case firebase.auth.PhoneAuthState.ERROR: // or 'error'
-                            
                             if (phoneAuthSnapshot.error.code === 'auth/too-many-requests') {
                                 setModal({
                                     isVisible: true,
@@ -131,7 +117,8 @@ const PhoneVerification = () => {
                                     isVisible: true,
                                     modalType: 'error',
                                     modalTitle: 'OTP resend failed !',
-                                    modalDesc: 'Unexpected error occur during OTP resend process. Please try again later.',
+                                    modalDesc:
+                                        'Unexpected error occur during OTP resend process. Please try again later.',
                                     onDismiss: () => {
                                         setModal({...modal, isVisible: false});
                                     },
@@ -215,7 +202,8 @@ const PhoneVerification = () => {
                                     isVisible: true,
                                     modalType: 'error',
                                     modalTitle: 'OTP resend failed !',
-                                    modalDesc: 'Unexpected error occur during OTP resend process. Please try again later.',
+                                    modalDesc:
+                                        'Unexpected error occur during OTP resend process. Please try again later.',
                                     onDismiss: () => {
                                         setModal({...modal, isVisible: false});
                                     },
@@ -284,20 +272,42 @@ const PhoneVerification = () => {
                 .then(userCredential => {
                     //Verification Success, OTP inputted is correct.
                     setLoadingModal({isVisible: false, modalTitle: ''});
-                    setUiState('verificationSuccess');
+                    // setUiState('verificationSuccess');
 
                     setVerificationId(null);
 
-                    UserService.updatePhoneNumber(auth().currentUser.uid, phoneNumInputted)
-                        .then(data => {})
-                        .catch(err => {});
+                    let promises = [];
+                    promises.push(UserService.updatePhoneNumber(auth().currentUser.uid, phoneNumInputted));
 
-                    if (userInfo.accType == Constants.ACCOUNT_TYPE.VENDOR){
-                        ProviderService.updatePhoneNumber(auth().currentUser.uid, phoneNumInputted)
-                        .then(data => {})
-                        .catch(err => {});
+                    if (userInfo.accType == Constants.ACCOUNT_TYPE.VENDOR) {
+                        promises.push(ProviderService.updatePhoneNumber(auth().currentUser.uid, phoneNumInputted));
                     }
 
+                    Promise.all(promises)
+                        .then(async values => {
+                            await UserService.fetchLoggedInUserDataToRedux();
+
+                            if(userInfo?.accType == Constants.ACCOUNT_TYPE.VENDOR)
+                                await ProviderService.fetchProviderDataToRedux();   
+
+                            showMessage({
+                                message: 'Phone number successfully changed.',
+                                type: 'info',
+                                position: 'center',
+                                titleStyle: {marginTop: 5},
+                                backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                color: 'white', // text color
+                                hideOnPress: true,
+                                autoHide: true,
+                                duration: 2000,
+                            });
+                            navigation.goBack();
+
+
+                        })
+                        .catch(error => {
+                            console.log(error)
+                        });
                     console.log('verificationSuccess');
 
                     return firebaseAuthWorker.signOut().catch(err => {});
@@ -376,11 +386,9 @@ const PhoneVerification = () => {
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-            setShowIllustration(false); // Update the keyboard state
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-            setShowIllustration(true); // Update the keyboard state
         });
 
         if (Platform.OS === 'android') {
@@ -396,236 +404,265 @@ const PhoneVerification = () => {
     }, []);
 
     return (
-        <View style={styles.bigContainer}>
-            {showIllustration ? (
-                <View
-                    style={{
-                        width: 300,
-                        height: 300,
-                        borderRadius: 350 / 2,
-                        backgroundColor: '#d0f4fc',
-                        overflow: 'hidden',
-                        marginTop: 50,
-                    }}>
-                    <Animatable.View
-                        animation={movingUpAndDown}
-                        iterationCount={'infinite'}
-                        easing={'linear'}
-                        duration={5000}
-                        useNativeDriver={true}>
-                        <PhoneVerificationIllustration
-                            style={{transform: [{scale: 1.15}]}}
-                            width="100%"
-                            height="100%"
-                            fill="#ffffff"
-                        />
-                    </Animatable.View>
-                </View>
-            ) : null}
-            <Text style={styles.title}>
-                {uiState == 'verificationSuccess' ? 'Verification Success' : 'Verify Your Phone Number'}
-            </Text>
-
-            {uiState == 'promptUserInput' ? (
-                <>
-                    <Text style={styles.desc}>
-                        {userInfo.accType == Constants.ACCOUNT_TYPE.CONSUMER
-                            ? 'One last step, verify your phone number and book service now. This will ensure that service provider could contact you.'
-                            : 'One last step, verify your phone number and sell service now. This will ensure that your customer could contact you.'}
-                    </Text>
-                    <View
-                        style={{
-                            marginTop: 12,
-                            backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
-                            borderRadius: 10,
-                        }}>
-                            
-                        <PhoneInput
-                            style={{width: '100%', paddingHorizontal: 16}}
-                            ref={phoneInput}
-                            textStyle={{
-                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                height: 50,
-                                color: CustomColors.GRAY_DARK,
-                            }}
-                            initialCountry="my"
-                            textProps={{placeholder: 'Enter Your Phone Number'}}
-                            onPressFlag={onPressFlag}
-                            countriesList={require('@assets/allowedCountries.json')}
-                        />
-
-                        <CountryPicker
-                            visible={showCountryPicker}
-                            onSelect={value => selectCountry(value)}
-                            onClose={() => {
-                                setShowCountryPicker(false);
-                            }}
-                            translation="eng"
-                            withModal={true}
-                            withFilter
-                            withFlagButton={false}
-                            withCountryNameButton
-                            withAlphaFilter
-                            withCallingCode
-                            countryCode={countryCode}
-                            countryCodes={['MY', 'SG', 'TH', 'VN', 'US', 'UK', 'IN', 'ID']}>
-                            <View></View>
-                        </CountryPicker>
-                    </View>
-                    <Button
-                        style={styles.button}
-                        mode="contained"
-                        contentStyle={{height: 50}}
-                        dark
-                        color={CustomColors.PRIMARY_BLUE}
-                        onPress={() => {
-                            sendOTPCode(phoneInput.current.getValue());
-                        }}>
-                        Verify
-                    </Button>
-                </>
-            ) : null}
-
-            {uiState == 'pendingOTP' ? (
-                <>
-                    <Text
-                        style={[
-                            styles.desc,
-                            {flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center'},
-                        ]}>
-                        We will send you a One Time Password to{' '}
-                        <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>{phoneNumInputted}</Text>.{' '}
-                        <TouchableWithoutFeedback
-                            onPress={() => {
-                                setPhoneNumInputted('');
-                                setOtpError({isError: false, errorMsg: ''});
-                                setOtpInputted('');
-                                setUiState('promptUserInput');
+        <View style={{backgroundColor: 'white'}}>
+            <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
+            <SafeAreaView style={{width: '100%', height: '100%'}}>
+                <ScrollView contentContainerStyle={{flexGrow: 1}}>
+                    <View style={styles.bigContainer}>
+                        <View
+                            style={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'flex-start',
+                                marginLeft: -16,
                             }}>
+                            <IconButton
+                                icon="arrow-back"
+                                color={CustomColors.GRAY_DARK}
+                                size={CustomTypography.ICON_SMALL}
+                                onPress={() => {
+                                    navigation.goBack();
+                                }}
+                            />
                             <Text
                                 style={{
                                     fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                    color: CustomColors.SECONDARY_BLUE_PURPLE,
+                                    fontSize: CustomTypography.FONT_SIZE_16,
                                 }}>
-                                Not this number?
+                                Edit Phone Number
                             </Text>
-                        </TouchableWithoutFeedback>
-                    </Text>
-                    <Animatable.View ref={otpAnimatable}>
-                        <OTPInputView
-                            ref={otpInputRef}
-                            code={otpInputted}
-                            onCodeChanged={code => {
-                                setOtpError({...otpError, errorMsg: ''});
+                        </View>
+                        {uiState == 'promptUserInput' ? (
+                            <>
+                                <View
+                                    style={{
+                                        marginTop: 12,
+                                        backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
+                                        borderRadius: 10,
+                                    }}>
+                                    <PhoneInput
+                                        style={{width: '100%', paddingHorizontal: 16}}
+                                        ref={phoneInput}
+                                        textStyle={{
+                                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                            height: 50,
+                                            color: CustomColors.GRAY_DARK,
+                                        }}
+                                        initialCountry="my"
+                                        textProps={{placeholder: 'Enter Your Phone Number'}}
+                                        onPressFlag={onPressFlag}
+                                        countriesList={require('@assets/allowedCountries.json')}
+                                    />
 
-                                setOtpInputted(code);
-                                setOtpClear(false);
-                                if (code.length == 6) {
-                                    console.log('Submitting OTP code ' + code);
-                                    setLoadingModal({isVisible: true, modalTitle: 'Verifying otp...'});
-                                    verifyOTPCode(code);
-                                }
-                            }}
-                            style={{width: '100%', height: 60, paddingHorizontal: 20}}
-                            codeInputFieldStyle={[
-                                styles.underlineStyleBase,
-                                {
-                                    borderColor: otpError.isError ? 'red' : CustomColors.GRAY_LIGHT,
-                                    color: otpError.isError ? 'red' : CustomColors.GRAY_DARK,
-                                },
-                            ]}
-                            clearInputs={otpClear}
-                            codeInputHighlightStyle={styles.underlineStyleHighLighted}
-                            pinCount={6}></OTPInputView>
-                    </Animatable.View>
-                    <HelperText type="error" style={styles.errorText} visible={!!otpError.errorMsg}>
-                        {otpError.errorMsg}
-                    </HelperText>
+                                    <CountryPicker
+                                        visible={showCountryPicker}
+                                        onSelect={value => selectCountry(value)}
+                                        onClose={() => {
+                                            setShowCountryPicker(false);
+                                        }}
+                                        translation="eng"
+                                        withModal={true}
+                                        withFilter
+                                        withFlagButton={false}
+                                        withCountryNameButton
+                                        withAlphaFilter
+                                        withCallingCode
+                                        countryCode={countryCode}
+                                        countryCodes={['MY', 'SG', 'TH', 'VN', 'US', 'UK', 'IN', 'ID']}>
+                                        <View></View>
+                                    </CountryPicker>
+                                </View>
+                                <Button
+                                    style={styles.button}
+                                    mode="contained"
+                                    contentStyle={{height: 50}}
+                                    dark
+                                    color={CustomColors.PRIMARY_BLUE}
+                                    onPress={() => {
+                                        if (phoneInput.current.getValue() == userInfo.phoneNumber) {
+                                            //Since phone number does not change, no verification is required.
+                                            navigation.goBack();
+                                            return;
+                                        }
+                                        sendOTPCode(phoneInput.current.getValue());
+                                    }}>
+                                    Verify and Change Phone Number
+                                </Button>
+                            </>
+                        ) : null}
 
-                    <Text style={styles.otpResend}>
-                        Didn't receive the OTP ?
-                        <TouchableWithoutFeedback
-                            onPress={() => {
-                                resendOTPCode();
-                            }}>
-                            <Text
-                                style={{
-                                    color: CustomColors.PRIMARY_BLUE_SATURATED,
-                                    fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-                                }}>
-                                {' '}
-                                RESEND OTP
-                            </Text>
-                        </TouchableWithoutFeedback>
-                    </Text>
-                    <Button
-                        style={styles.button}
-                        mode="contained"
-                        contentStyle={{height: 50}}
-                        dark
-                        color={CustomColors.PRIMARY_BLUE}
-                        onPress={() => {
-                            console.log(phoneInput.current.setValue('haha'));
-                            setUiState('pendingOTP');
-                        }}>
-                        Submit
-                    </Button>
-                </>
-            ) : null}
+                        {uiState == 'pendingOTP' ? (
+                            <>
+                                <Text
+                                    style={[
+                                        styles.desc,
+                                        {
+                                            flexDirection: 'row',
+                                            flexWrap: 'wrap',
+                                            justifyContent: 'center',
+                                            alignContent: 'center',
+                                        },
+                                    ]}>
+                                    We will send you a One Time Password to{' '}
+                                    <Text style={{fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}}>
+                                        {phoneNumInputted}
+                                    </Text>
+                                    .{' '}
+                                    <TouchableWithoutFeedback
+                                        onPress={() => {
+                                            setPhoneNumInputted('');
+                                            setOtpError({isError: false, errorMsg: ''});
+                                            setOtpInputted('');
+                                            setUiState('promptUserInput');
+                                        }}>
+                                        <Text
+                                            style={{
+                                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                                color: CustomColors.SECONDARY_BLUE_PURPLE,
+                                            }}>
+                                            Not this number?
+                                        </Text>
+                                    </TouchableWithoutFeedback>
+                                </Text>
+                                <Animatable.View ref={otpAnimatable}>
+                                    <OTPInputView
+                                        ref={otpInputRef}
+                                        code={otpInputted}
+                                        onCodeChanged={code => {
+                                            setOtpError({...otpError, errorMsg: ''});
 
-            {uiState == 'verificationSuccess' ? (
-                <>
-                    <Text style={styles.desc}>
-                        Cheers! You have successfully verify your phone number and you may start booking service with
-                        ServiceFinder now.
-                    </Text>
-                    <View style={{width: '100%', flex: 1, marginBottom: 48}}>
-                        <Button
-                            style={[styles.button, {position: 'absolute', bottom: 0, left: 0}]}
-                            mode="contained"
-                            contentStyle={{height: 50}}
-                            dark
-                            color={CustomColors.PRIMARY_BLUE}
-                            onPress={() => {
-                                UserService.updateIsFirstTime(auth().currentUser.uid, false)
-                                    .then(data => {
-                                        UserService.fetchLoggedInUserDataToRedux();
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }}>
-                            Get Started
-                        </Button>
+                                            setOtpInputted(code);
+                                            setOtpClear(false);
+                                            if (code.length == 6) {
+                                                console.log('Submitting OTP code ' + code);
+                                                setLoadingModal({isVisible: true, modalTitle: 'Verifying otp...'});
+                                                verifyOTPCode(code);
+                                            }
+                                        }}
+                                        style={{width: '100%', height: 60, paddingHorizontal: 20}}
+                                        codeInputFieldStyle={[
+                                            styles.underlineStyleBase,
+                                            {
+                                                borderColor: otpError.isError ? 'red' : CustomColors.GRAY_LIGHT,
+                                                color: otpError.isError ? 'red' : CustomColors.GRAY_DARK,
+                                            },
+                                        ]}
+                                        clearInputs={otpClear}
+                                        codeInputHighlightStyle={styles.underlineStyleHighLighted}
+                                        pinCount={6}></OTPInputView>
+                                </Animatable.View>
+                                <HelperText type="error" style={styles.errorText} visible={!!otpError.errorMsg}>
+                                    {otpError.errorMsg}
+                                </HelperText>
+
+                                <Text style={styles.otpResend}>
+                                    Didn't receive the OTP ?
+                                    <TouchableWithoutFeedback
+                                        onPress={() => {
+                                            resendOTPCode();
+                                        }}>
+                                        <Text
+                                            style={{
+                                                color: CustomColors.PRIMARY_BLUE_SATURATED,
+                                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                            }}>
+                                            {' '}
+                                            RESEND OTP
+                                        </Text>
+                                    </TouchableWithoutFeedback>
+                                </Text>
+                                <Button
+                                    style={styles.button}
+                                    mode="contained"
+                                    contentStyle={{height: 50}}
+                                    dark
+                                    color={CustomColors.PRIMARY_BLUE}
+                                    onPress={() => {
+                                        // console.log(phoneInput.current.setValue('haha'));
+                                        setUiState('pendingOTP');
+                                    }}>
+                                    Submit
+                                </Button>
+                            </>
+                        ) : null}
+
+                        {uiState == 'verificationSuccess' ? (
+                            <>
+                                <Text style={styles.desc}>
+                                    Cheers! You have successfully verify your phone number and you may start booking
+                                    service with ServiceFinder now.
+                                </Text>
+                                <View style={{width: '100%', flex: 1, marginBottom: 48}}>
+                                    <Button
+                                        style={[styles.button, {position: 'absolute', bottom: 0, left: 0}]}
+                                        mode="contained"
+                                        contentStyle={{height: 50}}
+                                        dark
+                                        color={CustomColors.PRIMARY_BLUE}
+                                        onPress={() => {
+                                            UserService.updateIsFirstTime(auth().currentUser.uid, false)
+                                                .then(data => {
+                                                    UserService.fetchLoggedInUserDataToRedux();
+                                                })
+                                                .catch(err => {
+                                                    console.log(err);
+                                                });
+                                        }}>
+                                        Get Started
+                                    </Button>
+                                </View>
+                            </>
+                        ) : null}
+                        <CustomModal
+                            animationIn={'bounceIn'}
+                            animationOut={'bounceOut'}
+                            animationOutTiming={150}
+                            isVisible={modal.isVisible}
+                            modalType={modal.modalType}
+                            modalTitle={modal.modalTitle}
+                            modalDesc={modal.modalDesc}
+                            buttonOnPressCallback={modal.onDismiss}
+                            statusBarTranslucent={true}
+                            useNativeDriver={true}></CustomModal>
+                        <LoadingModal
+                            animationIn={'bounceIn'}
+                            animationOut={'bounceOut'}
+                            animationOutTiming={150}
+                            isVisible={loadingModal.isVisible}
+                            modalTitle={loadingModal.modalTitle}
+                            statusBarTranslucent={true}
+                            useNativeDriver={true}></LoadingModal>
                     </View>
-                </>
-            ) : null}
-            <CustomModal
-                animationIn={'bounceIn'}
-                animationOut={'bounceOut'}
-                animationOutTiming={150}
-                isVisible={modal.isVisible}
-                modalType={modal.modalType}
-                modalTitle={modal.modalTitle}
-                modalDesc={modal.modalDesc}
-                buttonOnPressCallback={modal.onDismiss}
-                statusBarTranslucent={true}
-                useNativeDriver={true}></CustomModal>
-            <LoadingModal
-                animationIn={'bounceIn'}
-                animationOut={'bounceOut'}
-                animationOutTiming={150}
-                isVisible={loadingModal.isVisible}
-                modalTitle={loadingModal.modalTitle}
-                statusBarTranslucent={true}
-                useNativeDriver={true}></LoadingModal>
+                </ScrollView>
+            </SafeAreaView>
         </View>
     );
 };
 
-export default PhoneVerification;
+export default ChangePhone;
 
 const styles = StyleSheet.create({
+    bigContainer: {
+        width: '100%',
+        flex: 1,
+        padding: 16,
+    },
+    inputPrompt: {
+        backgroundColor: 'white',
+        marginTop: 8,
+    },
+    actionBtnContainer: {
+        marginTop: 24,
+    },
+    actionBtn: {
+        marginTop: 12,
+        width: '100%',
+        borderRadius: 8,
+        fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+        fontSize: CustomTypography.FONT_SIZE_16,
+        justifyContent: 'center',
+    },
     bigContainer: {
         flex: 1,
         width: '100%',

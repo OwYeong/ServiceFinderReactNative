@@ -803,7 +803,7 @@ const ViewRequest = ({route}) => {
                         // bodyStyle={{backgroundColor:"red",flex:1}}
                         body={
                             <View style={{paddingVertical: 16}}>
-                                <TouchableOpacity
+                                <TouchableRipple
                                     onPress={() => {
                                         jobRequestActionSheet.current.snapTo(0);
                                         setCancelJobDialog({isVisible: true, requestId: requestId});
@@ -827,7 +827,7 @@ const ViewRequest = ({route}) => {
                                         </View>
                                         <Text style={styles.actionButtonLabel}>Cancel this Job</Text>
                                     </View>
-                                </TouchableOpacity>
+                                </TouchableRipple>
                             </View>
                         }
                     />

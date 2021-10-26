@@ -87,6 +87,7 @@ const UserService = {
                             .set({
                                 firstName: firstName,
                                 lastName: lastName,
+                                email: email,
                                 accType: Constants.ACCOUNT_TYPE.VENDOR,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                                 isFirstTimeUser: true,
@@ -160,6 +161,7 @@ const UserService = {
                             .set({
                                 firstName: firstName,
                                 lastName: lastName,
+                                email: email,
                                 accType: Constants.ACCOUNT_TYPE.CONSUMER,
                                 loginProvider: Constants.LOGIN_PROVIDER_FIREBASE,
                                 isFirstTimeUser: true,
@@ -396,6 +398,23 @@ const UserService = {
                 });
         });
     },
+    updateAccountInfo: (data, documentId = auth().currentUser.uid) => {
+        return new Promise((resolve, reject) => {
+            const usersCollection = firestore().collection('users');
+            usersCollection
+                .doc(documentId)
+                .update({
+                    ...data,
+                })
+                .then(() => {
+                    resolve('User Succesfully updated!');
+                })
+                .catch(err => {
+                    console.log(err);
+                    reject('Some error occur');
+                });
+        });
+    },
     createUserDataIfNotExist: (data, documentId) => {
         return new Promise(async (resolve, reject) => {
             const usersCollection = firestore().collection('users');
@@ -577,7 +596,7 @@ const UserService = {
                 const currentUserEmail = auth().currentUser.email;
 
                 console.log(auth().currentUser.uid);
-                const currentUser = await firestore().collection('users').doc(auth().currentUser.uid).get();
+                const currentUser = await firestore().collection('users').doc(auth( ).currentUser.uid).get();
 
                 if (!currentUser.exists) {
                     throw 'user document does not exist';

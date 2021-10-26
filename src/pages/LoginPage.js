@@ -117,6 +117,7 @@ const LoginPage = () => {
                         setModal({...modal, isVisible: false});
                     },
                 });
+                setLoadingModal({isVisible: false, modalTitle: 'Logging in...'});
             });
     };
 
@@ -135,6 +136,7 @@ const LoginPage = () => {
                         setModal({...modal, isVisible: false});
                     },
                 });
+                setLoadingModal({isVisible: false, modalTitle: 'Logging in...'});
             });
     };
 

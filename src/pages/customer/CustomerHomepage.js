@@ -209,7 +209,7 @@ const CustomerHomepage = () => {
                                         <Text style={styles.serviceAt}>
                                             SERVICE AT{'\n'}
                                             <Text style={styles.serviceLocation}>
-                                                {_.truncate(userInfo?.serviceAddress?.addressFullName, {length: 48})}{' '}
+                                                {_.truncate(userInfo?.serviceAddress?.addressFullName, {length: 40})}{' '}
                                                 <Icon name="caret-down" width={36} height={36} />
                                             </Text>
                                         </Text>

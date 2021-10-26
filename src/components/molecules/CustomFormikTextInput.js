@@ -1,6 +1,6 @@
 // CustomInput.js
 import {CustomColors, CustomTypography} from '@styles';
-import React, { Fragment } from 'react';
+import React, {Fragment} from 'react';
 import {StyleSheet} from 'react-native';
 import {TextInput, HelperText, Button, IconButton} from 'react-native-paper';
 
@@ -13,6 +13,7 @@ const CustomFormikTextInput = props => {
 
     const hasError = errors[name] && touched[name];
 
+    if (hasError) console.log('has error ' + name);
     return (
         <Fragment>
             <TextInput
@@ -39,14 +40,14 @@ const styles = StyleSheet.create({
     defaultTextStyle: {
         fontSize: CustomTypography.FONT_SIZE_14,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-        color: CustomColors.GRAY_DARK
+        color: CustomColors.GRAY_DARK,
     },
     errorText: {
         fontSize: CustomTypography.FONT_SIZE_12,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
         color: 'red',
         margin: 0,
-        padding: 0
+        padding: 0,
     },
 });
 
