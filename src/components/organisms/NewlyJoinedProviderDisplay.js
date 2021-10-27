@@ -19,12 +19,12 @@ const NewlyJoinedProviderDisplay = ({
     console.log(coverImageUrl);
     return (
         <Surface style={[styles.container, style]} needsOffscreenAlphaCompositing={true} >
-            <ImageBackground style={styles.businessCoverImg} source={{uri: coverImageUrl}}></ImageBackground>
+            <ImageBackground style={styles.businessCoverImg} source={!!coverImageUrl?{uri: coverImageUrl}: require('@assets/images/default-coverImage.png')}></ImageBackground>
             <View style={styles.contentWrapper}>
                 <Text style={styles.serviceType}>{CommonFunction.getDisplayNameForServiceType(serviceType)}</Text>
                 <Text style={styles.monthlyAppointment}>Joined on {moment(new Date(joinedDate)).format('DD MMM')}</Text>
                 <View style={styles.businessInfoWrapper}>
-                    <Avatar.Image style={styles.businessLogo} size={80} source={{uri: profileImgUrl}} />
+                    <Avatar.Image style={styles.businessLogo} size={80} source={!!profileImgUrl?{uri: profileImgUrl}: require('@assets/images/default-profileImage.png')} />
                     <View style={styles.bookNowWrapper}>
                         <Text style={styles.businessName}>{businessName}</Text>
                         <Button style={styles.bookBtn} mode='contained' dark={true} color={CustomColors.PRIMARY_BLUE} contentStyle={{height: 40, width: '100%', padding: 0, margin: 0}} onPress={() => {
