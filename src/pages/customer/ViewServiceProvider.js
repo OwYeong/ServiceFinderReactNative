@@ -385,7 +385,7 @@ const ViewServiceProvider = ({route}) => {
                             </SkeletonPlaceholder>
                         ) : (
                             <TabView
-                                style={{height: Dimensions.get('window').height + 2}}
+                                style={{height: Dimensions.get('window').height-24}}
                                 navigationState={navigationState}
                                 renderScene={({route}) => {
                                     switch (route.key) {

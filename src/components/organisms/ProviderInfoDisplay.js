@@ -20,14 +20,22 @@ const ProviderInfoDisplay = ({providerInfo, isScrollEnabled}) => {
                 contentContainerStyle={{flexGrow: 1}}
                 nestedScrollEnabled={true}>
                 <View style={{flex: 1}}>
-                    <View style={{flexDirection:'row', marginTop:24}}>
+                    <View style={{flexDirection: 'row', marginTop: 24}}>
                         <MaterialIcons name="phone" size={20} color={CustomColors.GRAY_DARK} />
-                        <Text style={[styles.desc, {marginLeft:12}]}>{providerInfo?.phoneNumber.split('').join('\u200A'.repeat(1))}</Text>
+                        <Text style={[styles.desc, {marginLeft: 12}]}>
+                            {providerInfo?.phoneNumber.split('').join('\u200A'.repeat(1))}
+                        </Text>
                     </View>
                     <Text style={styles.title}>Business description</Text>
-                    <Text style={styles.desc}>{providerInfo?.businessDesc}</Text>
+                    <Text style={styles.desc}>
+                        {!!providerInfo?.businessDesc ? providerInfo?.businessDesc.replaceAll('\\n', '\n') : ''}
+                    </Text>
                     <Text style={styles.title}>Service Description</Text>
-                    <Text style={styles.desc}>{providerInfo?.businessServiceDesc.trim()}</Text>
+                    <Text style={styles.desc}>
+                        {!!providerInfo?.businessServiceDesc
+                            ? providerInfo?.businessServiceDesc.trim().replaceAll('\\n', '\n')
+                            : ''}
+                    </Text>
                 </View>
             </ScrollView>
         </View>
