@@ -8,6 +8,7 @@ import {ExpandableCalendar, Timeline, CalendarProvider} from 'react-native-calen
 import XDate from 'xdate';
 import {CustomColors, CustomTypography} from '@styles';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import RequestService from '@services/RequestService';
 import {Constants} from '~constants';
 
@@ -184,56 +185,79 @@ const ProviderSchedulePage = () => {
                 <View style={styles.bigContainer}>
                     <View style={styles.headerContainer}>
                         <Text style={styles.pageTitle}>Jobs Schedule</Text>
-                        <TouchableRipple
-                            style={{borderRadius: 30}}
-                            borderless
-                            rippleColor="rgba(0, 0, 0, .32)"
-                            onPress={() => {
-                                navigation.navigate('JobRequestConfirmation');
-                            }}>
-                            <View
-                                style={{
-                                    backgroundColor: CustomColors.GRAY_LIGHT,
-                                    borderRadius: 30,
-                                    margin: 0,
-                                    height: 60,
-                                    width: 60,
-                                    elevation: 1,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
+                        <View style={{flexDirection:'row'}}>
+                            <TouchableRipple
+                                style={{borderRadius: 30, marginRight:8}}
+                                borderless
+                                rippleColor="rgba(0, 0, 0, .32)"
+                                onPress={() => {
+                                    navigation.navigate('ManageSchedule');
                                 }}>
-                                <MaterialIcons name="mail-outline" color={CustomColors.GRAY_DARK} size={24} />
+                                <View
+                                    style={{
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                        borderRadius: 30,
+                                        margin: 0,
+                                        height: 60,
+                                        width: 60,
+                                        elevation: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}>
+                                    <AntDesign name="setting" color={CustomColors.GRAY_DARK} size={24} />
+                                </View>
+                            </TouchableRipple>
+                            <TouchableRipple
+                                style={{borderRadius: 30}}
+                                borderless
+                                rippleColor="rgba(0, 0, 0, .32)"
+                                onPress={() => {
+                                    navigation.navigate('JobRequestConfirmation');
+                                }}>
+                                <View
+                                    style={{
+                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                                        borderRadius: 30,
+                                        margin: 0,
+                                        height: 60,
+                                        width: 60,
+                                        elevation: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}>
+                                    <MaterialIcons name="mail-outline" color={CustomColors.GRAY_DARK} size={24} />
 
-                                {pendingRequests.length > 0 ? (
-                                    <View
-                                        style={{
-                                            width: 20,
-                                            height: 20,
-                                            borderRadius: 20,
-                                            backgroundColor: 'rgba(255, 69, 56,1)',
-                                            position: 'absolute',
-                                            top: 9,
-                                            right: 9,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}>
-                                        <Text
+                                    {pendingRequests.length > 0 ? (
+                                        <View
                                             style={{
-                                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-                                                fontSize: 10,
-                                                color: CustomColors.WHITE,
-                                                textAlign: 'center',
-                                                marginTop: 2,
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: 20,
+                                                backgroundColor: 'rgba(255, 69, 56,1)',
+                                                position: 'absolute',
+                                                top: 9,
+                                                right: 9,
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
                                             }}>
-                                            {pendingRequests.length > 9 ? '9+' : null}
-                                            {pendingRequests.length <= 9 && pendingRequests.length > 0
-                                                ? pendingRequests.length.toString()
-                                                : null}
-                                        </Text>
-                                    </View>
-                                ) : null}
-                            </View>
-                        </TouchableRipple>
+                                            <Text
+                                                style={{
+                                                    fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                    fontSize: 10,
+                                                    color: CustomColors.WHITE,
+                                                    textAlign: 'center',
+                                                    marginTop: 2,
+                                                }}>
+                                                {pendingRequests.length > 9 ? '9+' : null}
+                                                {pendingRequests.length <= 9 && pendingRequests.length > 0
+                                                    ? pendingRequests.length.toString()
+                                                    : null}
+                                            </Text>
+                                        </View>
+                                    ) : null}
+                                </View>
+                            </TouchableRipple>
+                        </View>
                     </View>
                     <CalendarProvider
                         date={currentDate}
@@ -271,7 +295,7 @@ const ProviderSchedulePage = () => {
                             }}
                             eventTapped={e => {
                                 navigation.navigate('JobRequestControlDashboard', {
-                                    requestId: e.requestId
+                                    requestId: e.requestId,
                                 });
                             }}
                             events={events.filter(event => sameDate(new XDate(event.start), new XDate(currentDate)))}
@@ -324,8 +348,7 @@ const ProviderSchedulePage = () => {
                                 </Text>
                             </View>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                <View
-                                    style={{width: 12, height: 12, backgroundColor: '#70cbff'}}></View>
+                                <View style={{width: 12, height: 12, backgroundColor: '#70cbff'}}></View>
                                 <Text
                                     style={{
                                         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
