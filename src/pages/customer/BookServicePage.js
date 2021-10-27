@@ -311,6 +311,23 @@ const BookServicePage = ({route}) => {
 
                 const newDocumentId = await RequestService.createRequest(requestData);
 
+                setLoadingModal({
+                    isVisible: false,
+                    modalTitle: 'Creating request...',
+                });
+
+                showMessage({
+                    message: 'Service request placed successfully',
+                    type: 'info',
+                    position: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                    color: 'white', // text color
+                    titleStyle: {marginTop: 5},
+                    hideOnPress: true,
+                    autoHide: true,
+                    duration: 2000,
+                });
+                
                 navigation.dispatch(state => {
                     return CommonActions.reset({
                         index: 1,
@@ -367,6 +384,12 @@ const BookServicePage = ({route}) => {
 
                 const newDocumentId = await RequestService.createRequest(requestData);
                 console.log(newDocumentId);
+
+                setLoadingModal({
+                    isVisible: false,
+                    modalTitle: 'Creating request...',
+                });
+
                 showMessage({
                     message: 'Service request placed successfully',
                     type: 'info',
@@ -378,7 +401,7 @@ const BookServicePage = ({route}) => {
                     autoHide: true,
                     duration: 2000,
                 });
-
+                
                 navigation.dispatch(state => {
                     return CommonActions.reset({
                         index: 1,
@@ -401,6 +424,10 @@ const BookServicePage = ({route}) => {
             }
         } catch (error) {
             console.log(error);
+            setLoadingModal({
+                isVisible: false,
+                modalTitle: 'Creating request...',
+            });
             showMessage({
                 message: 'Some Error Occurs.',
                 type: 'info',
@@ -439,25 +466,41 @@ const BookServicePage = ({route}) => {
             return;
         }
 
+        setLoadingModal({
+            isVisible: true,
+            modalTitle: 'Verifying payment...',
+        });
+
         const {error, paymentIntent} = await confirmPayment(clientSecret, {
             type: 'Card',
             billingDetails,
         });
+
         console.log(error);
         if (error || cardHolderName == '') {
+            setLoadingModal({
+                isVisible: false,
+                modalTitle: 'Verifying payment...',
+            });
+
             showMessage({
-                message: 'Payment Details is incomplete.',
+                message: 'Payment verification failed. Please ensure payment details is complete.',
                 type: 'info',
                 position: 'center',
                 backgroundColor: 'rgba(0,0,0,0.6)', // background color
                 color: 'white', // text color
                 titleStyle: {marginTop: 5},
+                style: {height: 80},
                 hideOnPress: true,
                 autoHide: true,
                 duration: 2000,
             });
         } else if (paymentIntent) {
             console.log('calling createNewServiceRequest');
+            setLoadingModal({
+                isVisible: true,
+                modalTitle: 'Creating request...',
+            });
             createNewServiceRequest(paymentIntent.clientSecret);
         }
     };
