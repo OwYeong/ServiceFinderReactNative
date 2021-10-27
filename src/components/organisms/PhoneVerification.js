@@ -400,8 +400,8 @@ const PhoneVerification = () => {
             {showIllustration ? (
                 <View
                     style={{
-                        width: 300,
-                        height: 300,
+                        width: 200,
+                        height: 200,
                         borderRadius: 350 / 2,
                         backgroundColor: '#d0f4fc',
                         overflow: 'hidden',

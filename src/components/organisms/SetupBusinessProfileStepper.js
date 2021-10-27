@@ -74,6 +74,7 @@ const validationSchema = yup.object().shape({
     businessName: yup.string().required('Business name is mandatory.'),
     businessDesc: yup.string().required('Business desc is mandatory.'),
     businessServiceDesc: yup.string().max(1000).required('Business Service Description is mandatory.'),
+    bankAccountNum: yup.string().max(30).required('Bank Account Number is mandatory.'),
     priceStart: yup
         .string()
         .max(20)
@@ -202,6 +203,7 @@ const SetupBusinessProfileStepper = () => {
         businessServiceDesc: '',
         priceStart: '',
         priceEnd: '',
+        bankAccountNum:''
     });
 
     const [coverImagePath, setCoverImagePath] = useState(null);
@@ -375,7 +377,7 @@ const SetupBusinessProfileStepper = () => {
         ],
         car: [
             {
-                displayName: 'Car Maintenance',
+                displayName: 'Car Wash',
                 serviceId: 'carWash',
             },
             {
@@ -515,6 +517,7 @@ const SetupBusinessProfileStepper = () => {
                     businessServiceDesc: userInput.businessProfile.businessServiceDesc,
                     priceStart: userInput.businessProfile.priceStart,
                     priceEnd: userInput.businessProfile.priceEnd,
+                    bankAccountNum: userInput.businessProfile.bankAccountNum,
                     popularity: {
                         "AUG_2021": 0,
                         "SEP_2021": 0,
@@ -604,6 +607,7 @@ const SetupBusinessProfileStepper = () => {
                     businessServiceDesc: userInput.businessProfile.businessServiceDesc,
                     priceStart: userInput.businessProfile.priceStart,
                     priceEnd: userInput.businessProfile.priceEnd,
+                    bankAccountNum: userInput.businessProfile.bankAccountNum,
                     popularity: {
                         "AUG_2021": 0,
                         "SEP_2021": 0,
@@ -701,6 +705,7 @@ const SetupBusinessProfileStepper = () => {
                                                     businessServiceDesc,
                                                     priceStart,
                                                     priceEnd,
+                                                    bankAccountNum
                                                 } = values;
 
                                                 setUserInput({
@@ -709,12 +714,13 @@ const SetupBusinessProfileStepper = () => {
                                                         businessCategory: businessCategory,
                                                         serviceType: serviceType,
                                                         businessName: businessName,
-                                                        businessDesc: businessDesc,
-                                                        businessServiceDesc: businessServiceDesc,
+                                                        businessDesc: businessDesc.replaceAll('\n','\\n'),
+                                                        businessServiceDesc: businessServiceDesc.replaceAll('\n','\\n'),
                                                         priceStart: priceStart,
                                                         priceEnd: priceEnd,
                                                         coverImagePath: coverImagePath,
                                                         businessLogoPath: businessLogoPath,
+                                                        bankAccountNum: bankAccountNum
                                                     },
                                                 });
 
@@ -914,6 +920,19 @@ const SetupBusinessProfileStepper = () => {
                                                             }
                                                             numberOfLines={7}
                                                             multiline></Field>
+                                                        <Text style={styles.subSectionTitle}>Bank account details</Text>
+                                                        <Text style={[styles.inputTitle, {marginTop: 8}]}>
+                                                            The bank account will be used for ServiceFinder platform to tranfer the money you earned in the platform. This details will be kept private and confidential.
+                                                        </Text>
+                                                        <Field
+                                                            component={CustomFormikTextInput}
+                                                            mode="outlined"
+                                                            style={[styles.inputPrompt]}
+                                                            label="Bank Account Number"
+                                                            name="bankAccountNum"
+                                                            placeholder={
+                                                                'Your bank account number'
+                                                            }></Field>
                                                         <Text style={styles.subSectionTitle}>Pricing</Text>
                                                         <Text style={[styles.inputTitle, {marginTop: 8}]}>
                                                             Tell your customer a little bit about your pricing.
