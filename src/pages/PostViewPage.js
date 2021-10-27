@@ -11,6 +11,7 @@ import BottomSheet from 'react-native-bottomsheet-reanimated';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import auth from '@react-native-firebase/auth';
+import moment from 'moment';
 
 const PostViewPage = ({route}) => {
     const postDataParam = route.params.postData;
@@ -20,13 +21,25 @@ const PostViewPage = ({route}) => {
     const navigation = useNavigation();
 
     const [postTitle, setPostTitle] = useState(postData?.postTitle || 'My post title');
+    const [providerData, setProviderData] = useState(postData?.postTitle || 'My post title');
     const businessLogoActionSheet = useRef(null);
 
     useFocusEffect(
         useCallback(() => {
-            ProviderService.getPost(postData.id).then(data => {
-                setPostData(data);
-            });
+            ProviderService.getPost(postData.id)
+                .then(data => {
+                    setPostData(data);
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+            ProviderService.getProviderByIdOneTimeRead(postData.userId)
+                .then(data => {
+                    setProviderData(data);
+                })
+                .catch(err => {
+                    console.log(err);
+                });
         }, []),
     );
 
@@ -78,84 +91,98 @@ const PostViewPage = ({route}) => {
                             }}>
                             <Image style={[styles.postImage]} source={{uri: postData?.imageUrl}} resizeMode="cover" />
                         </View>
-                        <Text style={styles.inputStyle}>{postData?.postTitle}</Text>
+                        <Text style={styles.inputStyle}>
+                            <Text style={[styles.inputStyle, {fontFamily: CustomTypography.FONT_FAMILY_MEDIUM}]}>
+                                {providerData?.businessName}
+                            </Text>
+                            {':\n'}
+                            {postData?.postTitle.replaceAll('\\n', '\n')}
+                        </Text>
+                        <Text
+                            style={{
+                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                                fontSize: 10,
+                                color: CustomColors.GRAY
+                            }}>
+                            {moment(providerData?.postedDateTime).format('MMM DD YYYY')}
+                        </Text>
                     </View>
                 </ScrollView>
             </SafeAreaView>
             {postData?.userId == auth().currentUser.uid ? (
-            <BottomSheet
-                ref={businessLogoActionSheet}
-                bottomSheerColor="#FFFFFF"
-                // ref="BottomSheet"
-                initialPosition={0}
-                snapPoints={[0, 160]}
-                isBackDrop={true}
-                isBackDropDismissByPress={true}
-                isRoundBorderWithTipHeader={true}
-                // backDropColor="red"
-                // isModal
-                // containerStyle={{backgroundColor:"red"}}
-                // tipStyle={{backgroundColor:"red"}}
-                // headerStyle={{backgroundColor:"red"}}
-                // bodyStyle={{backgroundColor:"red",flex:1}}
-                body={
-                    <View style={{paddingVertical: 16}}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                businessLogoActionSheet.current.snapTo(0);
-                                navigation.navigate('PostEditCreate', {
-                                    postData: {
-                                        ...postData,
-                                    },
-                                });
-                            }}>
-                            <View style={styles.actionButton}>
-                                <View
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                        borderRadius: 25,
-                                        overflow: 'hidden',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        backgroundColor: CustomColors.GRAY_LIGHT,
-                                    }}>
-                                    <MaterialIcons name="mode-edit" size={24} color={CustomColors.GRAY_DARK} />
-                                </View>
-                                <Text style={styles.actionButtonLabel}>Edit Post</Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                ProviderService.deletePost(postData?.id)
-                                    .then(res => {
-                                        navigation.goBack();
-                                        businessLogoActionSheet.current.snapTo(0);
-                                    })
-                                    .catch(err => {
-                                        businessLogoActionSheet.current.snapTo(0);
+                <BottomSheet
+                    ref={businessLogoActionSheet}
+                    bottomSheerColor="#FFFFFF"
+                    // ref="BottomSheet"
+                    initialPosition={0}
+                    snapPoints={[0, 200]}
+                    isBackDrop={true}
+                    isBackDropDismissByPress={true}
+                    isRoundBorderWithTipHeader={true}
+                    // backDropColor="red"
+                    // isModal
+                    // containerStyle={{backgroundColor:"red"}}
+                    // tipStyle={{backgroundColor:"red"}}
+                    // headerStyle={{backgroundColor:"red"}}
+                    // bodyStyle={{backgroundColor:"red",flex:1}}
+                    body={
+                        <View style={{paddingVertical: 16}}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    businessLogoActionSheet.current.snapTo(0);
+                                    navigation.navigate('PostEditCreate', {
+                                        postData: {
+                                            ...postData,
+                                        },
                                     });
-                            }}>
-                            <View style={styles.actionButton}>
-                                <View
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                        borderRadius: 25,
-                                        overflow: 'hidden',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        backgroundColor: CustomColors.GRAY_LIGHT,
-                                    }}>
-                                    <MaterialIcons name="delete" size={24} color={CustomColors.GRAY_DARK} />
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <MaterialIcons name="mode-edit" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Edit Post</Text>
                                 </View>
-                                <Text style={styles.actionButtonLabel}>Delete Post</Text>
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                }
-            />
-            ):null}
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    ProviderService.deletePost(postData?.id)
+                                        .then(res => {
+                                            navigation.goBack();
+                                            businessLogoActionSheet.current.snapTo(0);
+                                        })
+                                        .catch(err => {
+                                            businessLogoActionSheet.current.snapTo(0);
+                                        });
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <MaterialIcons name="delete" size={24} color={CustomColors.GRAY_DARK} />
+                                    </View>
+                                    <Text style={styles.actionButtonLabel}>Delete Post</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    }
+                />
+            ) : null}
         </View>
     );
 };
@@ -172,7 +199,7 @@ const styles = StyleSheet.create({
     },
     inputStyle: {
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-        fontSize: CustomTypography.FONT_SIZE_16,
+        fontSize: CustomTypography.FONT_SIZE_14,
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
         paddingVertical: 2,

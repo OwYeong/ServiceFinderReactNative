@@ -16,8 +16,8 @@ const PostEditCreatePage = ({route}) => {
 
     console.log(route);
 
-    const [postTitle, setPostTitle] = useState(postData?.postTitle || 'My post title');
-    
+    const [postTitle, setPostTitle] = useState(postData?.postTitle.replaceAll('\\n', '\n') || 'My post title');
+
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
@@ -84,7 +84,7 @@ const PostEditCreatePage = ({route}) => {
                                 if (!!postData) {
                                     ProviderService.updatePost(
                                         {
-                                            postTitle: postTitle,
+                                            postTitle: !!postTitle ? postTitle.replaceAll('\n', '\\n') : '',
                                         },
                                         postData.id,
                                     )
@@ -107,7 +107,7 @@ const PostEditCreatePage = ({route}) => {
                                         });
                                 } else {
                                     ProviderService.createPost({
-                                        postTitle: postTitle,
+                                        postTitle: !!postTitle ? postTitle.replaceAll('\n', '\\n') : '',
                                         postImage: {
                                             path: chosenImage.path,
                                             mime: chosenImage.mime,
