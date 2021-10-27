@@ -53,6 +53,7 @@ const validationSchema = yup.object().shape({
     businessName: yup.string().required('Business name is mandatory.'),
     businessDesc: yup.string().required('Business desc is mandatory.'),
     businessServiceDesc: yup.string().max(1000).required('Business Service Description is mandatory.'),
+    bankAccountNum: yup.string().max(30).required('Bank Account Number is mandatory.'),
     priceStart: yup
         .string()
         .max(20)
@@ -213,7 +214,7 @@ const BusinessProfileEditPage = () => {
         ],
         car: [
             {
-                displayName: 'Car Maintenance',
+                displayName: 'Car Wash',
                 serviceId: 'carWash',
             },
             {
@@ -285,10 +286,13 @@ const BusinessProfileEditPage = () => {
         businessCategory: providerInfo?.businessCategory,
         serviceType: providerInfo?.serviceType,
         businessName: providerInfo?.businessName,
-        businessDesc: providerInfo?.businessDesc,
-        businessServiceDesc: providerInfo?.businessServiceDesc,
+        businessDesc: !!providerInfo?.businessDesc ? providerInfo?.businessDesc.replaceAll('\\n', '\n') : '',
+        businessServiceDesc: !!providerInfo?.businessServiceDesc
+            ? providerInfo?.businessServiceDesc.replaceAll('\\n', '\n')
+            : '',
         priceStart: providerInfo?.priceStart,
         priceEnd: providerInfo?.priceEnd,
+        bankAccountNum: providerInfo?.bankAccountNum,
     });
 
     console.log(providerInfo?.serviceCoverage);
@@ -376,9 +380,10 @@ const BusinessProfileEditPage = () => {
             businessServiceDesc: userInput.businessProfile.businessServiceDesc,
             priceStart: userInput.businessProfile.priceStart,
             priceEnd: userInput.businessProfile.priceEnd,
+            bankAccountNum: userInput.businessProfile.bankAccountNum,
             serviceCoverage: {...userInput.serviceCoverage},
         };
-
+        console.log(providerData);
         ProviderService.updateProviderData(providerData)
             .then(data => {
                 ProviderService.fetchProviderDataToRedux()
@@ -388,6 +393,7 @@ const BusinessProfileEditPage = () => {
                     .catch(err => {});
             })
             .catch(err => {
+                console.log(err)
                 console.log('error when updating');
                 showMessage({
                     message: 'Some error occurs. Please try again later.',
@@ -465,6 +471,7 @@ const BusinessProfileEditPage = () => {
                                     businessServiceDesc,
                                     priceStart,
                                     priceEnd,
+                                    bankAccountNum,
                                 } = values;
 
                                 setUserInput({
@@ -473,10 +480,13 @@ const BusinessProfileEditPage = () => {
                                         businessCategory: businessCategory,
                                         serviceType: serviceType,
                                         businessName: businessName,
-                                        businessDesc: businessDesc,
-                                        businessServiceDesc: businessServiceDesc,
+                                        businessDesc: !!businessDesc ? businessDesc.replaceAll('\n', '\\n') : '',
+                                        businessServiceDesc: !!businessServiceDesc
+                                            ? businessServiceDesc.replaceAll('\n', '\\n')
+                                            : '',
                                         priceStart: priceStart,
                                         priceEnd: priceEnd,
+                                        bankAccountNum: bankAccountNum,
                                     },
                                 });
 
@@ -628,6 +638,19 @@ const BusinessProfileEditPage = () => {
                                             }
                                             numberOfLines={7}
                                             multiline></Field>
+                                        <Text style={styles.subSectionTitle}>Bank account details</Text>
+                                        <Text style={[styles.inputTitle, {marginTop: 8}]}>
+                                            The bank account will be used for ServiceFinder platform to tranfer the
+                                            money you earned in the platform. This details will be kept private and
+                                            confidential.
+                                        </Text>
+                                        <Field
+                                            component={CustomFormikTextInput}
+                                            mode="outlined"
+                                            style={[styles.inputPrompt]}
+                                            label="Bank Account Number"
+                                            name="bankAccountNum"
+                                            placeholder={'Your bank account number'}></Field>
                                         <Text style={styles.subSectionTitle}>Pricing</Text>
                                         <Text style={[styles.inputTitle, {marginTop: 8}]}>
                                             Tell your customer a little bit about your pricing.

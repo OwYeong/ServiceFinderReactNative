@@ -252,9 +252,17 @@ const ProviderProfilePage = () => {
                             />
                             <View style={styles.businessInfoContainer}>
                                 <Text style={styles.title}>Business description</Text>
-                                <Text style={styles.desc}>{providerInfo?.businessDesc}</Text>
+                                <Text style={styles.desc}>
+                                    {!!providerInfo?.businessDesc
+                                        ? providerInfo?.businessDesc.replaceAll('\\n', '\n')
+                                        : 'No description'}
+                                </Text>
                                 <Text style={styles.title}>Service Description</Text>
-                                <Text style={styles.desc}>{providerInfo?.businessServiceDesc}</Text>
+                                <Text style={styles.desc}>
+                                    {!!providerInfo?.businessServiceDesc
+                                        ? providerInfo?.businessServiceDesc.replaceAll('\\n', '\n')
+                                        : 'No Service description'}
+                                </Text>
                             </View>
 
                             {/* <Button
@@ -802,7 +810,11 @@ const ProviderProfilePage = () => {
                                             alignItems: 'center',
                                             backgroundColor: CustomColors.GRAY_LIGHT,
                                         }}>
-                                        <MaterialCommunityIcons name="account" size={20} color={CustomColors.GRAY_DARK} />
+                                        <MaterialCommunityIcons
+                                            name="account"
+                                            size={20}
+                                            color={CustomColors.GRAY_DARK}
+                                        />
                                     </View>
                                     <Text style={styles.actionButtonLabel}>Update Account Details</Text>
                                 </View>
