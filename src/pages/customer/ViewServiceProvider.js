@@ -44,6 +44,8 @@ import Stars from 'react-native-stars';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import ProviderInfoDisplay from '@organisms/ProviderInfoDisplay';
 import ChatService from '@services/ChatService';
+import {getStatusBarHeight} from 'react-native-status-bar-height';
+
 
 const ViewServiceProvider = ({route}) => {
     const navigation = useNavigation();
@@ -82,13 +84,12 @@ const ViewServiceProvider = ({route}) => {
 
             setReviewList(reviewData.data);
 
-            console.log(photoListData.data) 
-            
-            console.log(reviewData.data) 
-            return true;    
-        } catch (error) {
+            console.log(photoListData.data);
 
-            console.log(error)
+            console.log(reviewData.data);
+            return true;
+        } catch (error) {
+            console.log(error);
             return true;
         }
     };
@@ -96,9 +97,8 @@ const ViewServiceProvider = ({route}) => {
         setRefreshing(true);
 
         fetchPostAndReviewData();
-        
-        setRefreshing(false);
 
+        setRefreshing(false);
     }, []);
 
     useEffect(() => {
@@ -125,6 +125,7 @@ const ViewServiceProvider = ({route}) => {
                     style={{flex: 1}}
                     onScroll={event => {
                         console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY - 30);
+                        console.log(getStatusBarHeight())
                         if (event.nativeEvent.contentOffset.y > tabBarOffsetY - 30) {
                             setIsPhotoListingScrollable(true);
 
@@ -219,11 +220,14 @@ const ViewServiceProvider = ({route}) => {
                                                         size={30}
                                                         onPress={async () => {
                                                             try {
-                                                                const chatroomId = await ChatService.getChatroomIdBetweenTwoUser(providerInfo.id);
-                    
+                                                                const chatroomId =
+                                                                    await ChatService.getChatroomIdBetweenTwoUser(
+                                                                        providerInfo.id,
+                                                                    );
+
                                                                 navigation.navigate('Chatroom', {
                                                                     chatroomId: chatroomId,
-                                                                })
+                                                                });
                                                             } catch (error) {
                                                                 console.log(error);
                                                             }
@@ -361,6 +365,11 @@ const ViewServiceProvider = ({route}) => {
                         )}
 
                         <View
+                            onLayout={event => {
+                                var {x, y, width, height} = event.nativeEvent.layout;
+
+                                setTabBarOffsetY(y);
+                            }}
                             style={{
                                 height: 36,
                             }}
@@ -385,7 +394,7 @@ const ViewServiceProvider = ({route}) => {
                             </SkeletonPlaceholder>
                         ) : (
                             <TabView
-                                style={{height: Dimensions.get('window').height-24}}
+                                style={{height: Dimensions.get('window').height, paddingTop:getStatusBarHeight()}}
                                 navigationState={navigationState}
                                 renderScene={({route}) => {
                                     switch (route.key) {

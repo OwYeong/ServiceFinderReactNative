@@ -56,7 +56,7 @@ const NewRequestDisplayComponent = () => {
     }, []);
 
     return (
-        <ScrollView contentContainerStyle={{flexGrow: 1}}>
+        <ScrollView nestedScrollEnabled={true} contentContainerStyle={{flexGrow: 1}}>
             <View style={{flex: 1, width: '100%', padding: 16, backgroundColor: CustomColors.GRAY_EXTRA_LIGHT}}>
                 {pendingRequests.length > 0 ? (
                     pendingRequests.map(request => (

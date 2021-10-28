@@ -36,6 +36,7 @@ const ProviderInfoDisplay = ({providerInfo, isScrollEnabled}) => {
                             ? providerInfo?.businessServiceDesc.trim().replaceAll('\\n', '\n')
                             : ''}
                     </Text>
+                    <View style={{height:24}}></View>
                 </View>
             </ScrollView>
         </View>
