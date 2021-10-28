@@ -77,8 +77,6 @@ const App: () => Node = () => {
     };
     var autoFetchLocked = false;
 
-   
-
     console.log('hahaha');
 
     useEffect(() => {
@@ -113,7 +111,6 @@ const App: () => Node = () => {
             }
         });
 
-
         return authenticationListener;
     }, []);
 
@@ -147,7 +144,7 @@ const App: () => Node = () => {
                         <Stack.Screen name="RegisterPage" component={RegisterPage} options={{headerShown: false}} />
                     </Stack.Navigator> */}
                             </NavigationContainer>
-
+                            
                             <FlashMessage
                                 textStyle={{
                                     fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
