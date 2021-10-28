@@ -45,6 +45,8 @@ const ProviderProfilePage = () => {
 
     const navigation = useNavigation();
 
+    const [screenHeight, setScreenHeight] = useState(0);
+
     const [navigationState, setNavigationState] = useState({
         index: 0,
         routes: [
@@ -99,236 +101,245 @@ const ProviderProfilePage = () => {
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} />
             <SafeAreaView style={{width: '100%', height: '100%'}}>
-                <ScrollView
-                    style={{flex: 1}}
-                    onScroll={event => {
-                        console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY);
+                <View
+                    style={{width: '100%', height: '100%'}}
+                    onLayout={event => {
+                        var {x, y, width, height} = event.nativeEvent.layout;
 
-                        if (event.nativeEvent.contentOffset.y > tabBarOffsetY) {
-                            setIsPhotoListingScrollable(true);
-                        } else {
-                            setIsPhotoListingScrollable(false);
-                        }
-                    }}
-                    contentContainerStyle={{flexGrow: 1}}
-                    nestedScrollEnabled={true}>
-                    <View style={styles.bigContainer}>
-                        <View style={{padding: 16}}>
-                            <View style={styles.imageContainer}>
-                                <TouchableHighlight
-                                    style={{borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: 'hidden'}}
-                                    onPress={() => {
-                                        coverImageActionSheet.current?.snapTo(1);
-                                    }}
-                                    activeOpacity={0.6}
-                                    underlayColor="#FFFFFF">
-                                    <View>
-                                        <SkeletonPlaceholder>
-                                            <View
-                                                style={{
-                                                    width: '100%',
-                                                    aspectRatio: 3.5 / 2,
-                                                    height: undefined,
-                                                    overflow: 'hidden',
-                                                }}></View>
-                                        </SkeletonPlaceholder>
-                                        <Image
-                                            style={[styles.coverImage, {opacity: isCoverImgLoading ? 0 : 1}]}
-                                            source={
-                                                !!providerInfo?.coverImgUrl
-                                                    ? {uri: providerInfo?.coverImgUrl}
-                                                    : require('@assets/images/default-coverImage.png')
-                                            }
-                                            onLoadStart={() => {
-                                                console.log('image load start');
-                                                setIsCoverImgLoading(true);
-                                            }}
-                                            onLoadEnd={() => {
-                                                console.log('image load end');
-                                                setIsCoverImgLoading(false);
-                                            }}
-                                            resizeMode="cover"
-                                        />
-                                    </View>
-                                </TouchableHighlight>
-                                <TouchableHighlight
-                                    style={[styles.businessProfileImageWrapper]}
-                                    onPress={() => {
-                                        businessLogoActionSheet.current?.snapTo(1);
-                                    }}
-                                    activeOpacity={0.6}
-                                    underlayColor="#FFFFFF">
-                                    <View>
-                                        <SkeletonPlaceholder>
-                                            <View
-                                                style={{
-                                                    width: 180,
-                                                    height: 180,
-                                                    marginLeft: -5,
-                                                    marginTop: -5,
-                                                    borderRadius: 90,
-                                                    overflow: 'hidden',
-                                                }}></View>
-                                        </SkeletonPlaceholder>
-                                        <Image
-                                            style={[
-                                                styles.businessProfileImage,
-                                                {opacity: isBusinessLogoLoading ? 0 : 1},
-                                            ]}
-                                            onLoadStart={() => {
-                                                console.log('image load start');
-                                                setIsBusinessLogoLoading(true);
-                                            }}
-                                            onLoadEnd={() => {
-                                                console.log('image load end');
-                                                setIsBusinessLogoLoading(false);
-                                            }}
-                                            source={
-                                                !!providerInfo?.businessLogoUrl
-                                                    ? {uri: providerInfo?.businessLogoUrl}
-                                                    : require('@assets/images/default-profileImage.png')
-                                            }
-                                        />
-                                    </View>
-                                </TouchableHighlight>
-                            </View>
-                            <Text style={styles.businessName}>{providerInfo?.businessName}</Text>
-                            <Text style={styles.serviceType}>
-                                {CommonFunction.getDisplayNameForServiceType(providerInfo?.serviceType)}
-                            </Text>
-                            <Text style={styles.pricing}>
-                                Starting from RM{providerInfo?.priceStart} to RM{providerInfo?.priceEnd}
-                            </Text>
-                            <View style={styles.actionBtnContainer}>
-                                <Button
-                                    style={{
-                                        flex: 1,
-                                        marginRight: 8,
-                                        borderRadius: 8,
-                                        backgroundColor: CustomColors.GRAY_LIGHT,
+                        setScreenHeight(height);
+                        console.log("myLayout" + height)
+                    }}>
+                    <ScrollView
+                        style={{flex: 1}}
+                        onScroll={event => {
+                            console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY-1);
 
-                                        elevation: 1,
-                                    }}
-                                    contentStyle={{
-                                        height: 40,
-                                    }}
-                                    labelStyle={{
-                                        fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-                                        marginTop: 10,
-                                        color: CustomColors.GRAY_DARK,
-                                    }}
-                                    icon="mode-edit"
-                                    mode="contained"
-                                    uppercase={false}
-                                    onPress={() => {
-                                        navigation.navigate('BusinessProfileEdit');
-                                    }}>
-                                    Edit Business Profile
-                                </Button>
-                                <IconButton
+                            if (event.nativeEvent.contentOffset.y > tabBarOffsetY-1) {
+                                setIsPhotoListingScrollable(true);
+                            } else {
+                                setIsPhotoListingScrollable(false);
+                            }
+                        }}
+                        contentContainerStyle={{flexGrow: 1}}
+                        nestedScrollEnabled={true}>
+                        <View style={styles.bigContainer}>
+                            <View style={{padding: 16}}>
+                                <View style={styles.imageContainer}>
+                                    <TouchableHighlight
+                                        style={{borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: 'hidden'}}
+                                        onPress={() => {
+                                            coverImageActionSheet.current?.snapTo(1);
+                                        }}
+                                        activeOpacity={0.6}
+                                        underlayColor="#FFFFFF">
+                                        <View>
+                                            <SkeletonPlaceholder>
+                                                <View
+                                                    style={{
+                                                        width: '100%',
+                                                        aspectRatio: 3.5 / 2,
+                                                        height: undefined,
+                                                        overflow: 'hidden',
+                                                    }}></View>
+                                            </SkeletonPlaceholder>
+                                            <Image
+                                                style={[styles.coverImage, {opacity: isCoverImgLoading ? 0 : 1}]}
+                                                source={
+                                                    !!providerInfo?.coverImgUrl
+                                                        ? {uri: providerInfo?.coverImgUrl}
+                                                        : require('@assets/images/default-coverImage.png')
+                                                }
+                                                onLoadStart={() => {
+                                                    console.log('image load start');
+                                                    setIsCoverImgLoading(true);
+                                                }}
+                                                onLoadEnd={() => {
+                                                    console.log('image load end');
+                                                    setIsCoverImgLoading(false);
+                                                }}
+                                                resizeMode="cover"
+                                            />
+                                        </View>
+                                    </TouchableHighlight>
+                                    <TouchableHighlight
+                                        style={[styles.businessProfileImageWrapper]}
+                                        onPress={() => {
+                                            businessLogoActionSheet.current?.snapTo(1);
+                                        }}
+                                        activeOpacity={0.6}
+                                        underlayColor="#FFFFFF">
+                                        <View>
+                                            <SkeletonPlaceholder>
+                                                <View
+                                                    style={{
+                                                        width: 180,
+                                                        height: 180,
+                                                        marginLeft: -5,
+                                                        marginTop: -5,
+                                                        borderRadius: 90,
+                                                        overflow: 'hidden',
+                                                    }}></View>
+                                            </SkeletonPlaceholder>
+                                            <Image
+                                                style={[
+                                                    styles.businessProfileImage,
+                                                    {opacity: isBusinessLogoLoading ? 0 : 1},
+                                                ]}
+                                                onLoadStart={() => {
+                                                    console.log('image load start');
+                                                    setIsBusinessLogoLoading(true);
+                                                }}
+                                                onLoadEnd={() => {
+                                                    console.log('image load end');
+                                                    setIsBusinessLogoLoading(false);
+                                                }}
+                                                source={
+                                                    !!providerInfo?.businessLogoUrl
+                                                        ? {uri: providerInfo?.businessLogoUrl}
+                                                        : require('@assets/images/default-profileImage.png')
+                                                }
+                                            />
+                                        </View>
+                                    </TouchableHighlight>
+                                </View>
+                                <Text style={styles.businessName}>{providerInfo?.businessName}</Text>
+                                <Text style={styles.serviceType}>
+                                    {CommonFunction.getDisplayNameForServiceType(providerInfo?.serviceType)}
+                                </Text>
+                                <Text style={styles.pricing}>
+                                    Starting from RM{providerInfo?.priceStart} to RM{providerInfo?.priceEnd}
+                                </Text>
+                                <View style={styles.actionBtnContainer}>
+                                    <Button
+                                        style={{
+                                            flex: 1,
+                                            marginRight: 8,
+                                            borderRadius: 8,
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+
+                                            elevation: 1,
+                                        }}
+                                        contentStyle={{
+                                            height: 40,
+                                        }}
+                                        labelStyle={{
+                                            fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                            marginTop: 10,
+                                            color: CustomColors.GRAY_DARK,
+                                        }}
+                                        icon="mode-edit"
+                                        mode="contained"
+                                        uppercase={false}
+                                        onPress={() => {
+                                            navigation.navigate('BusinessProfileEdit');
+                                        }}>
+                                        Edit Business Profile
+                                    </Button>
+                                    <IconButton
+                                        style={{
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                            borderRadius: 8,
+                                            margin: 0,
+                                            height: 40,
+                                            width: 60,
+                                            elevation: 1,
+                                        }}
+                                        icon="more-horiz"
+                                        color={CustomColors.GRAY_DARK}
+                                        size={24}
+                                        onPress={() => {
+                                            serviceProviderProfileActionSheet.current?.snapTo(1);
+                                        }}
+                                    />
+                                </View>
+
+                                <View
                                     style={{
-                                        backgroundColor: CustomColors.GRAY_LIGHT,
-                                        borderRadius: 8,
-                                        margin: 0,
-                                        height: 40,
-                                        width: 60,
-                                        elevation: 1,
-                                    }}
-                                    icon="more-horiz"
-                                    color={CustomColors.GRAY_DARK}
-                                    size={24}
-                                    onPress={() => {
-                                        serviceProviderProfileActionSheet.current?.snapTo(1);
+                                        marginTop: 24,
+                                        borderBottomColor: CustomColors.GRAY_LIGHT,
+                                        borderBottomWidth: 2,
                                     }}
                                 />
-                            </View>
+                                <View style={styles.businessInfoContainer}>
+                                    <Text style={styles.title}>Business description</Text>
+                                    <Text style={styles.desc}>
+                                        {!!providerInfo?.businessDesc
+                                            ? providerInfo?.businessDesc.replaceAll('\\n', '\n')
+                                            : 'No description'}
+                                    </Text>
+                                    <Text style={styles.title}>Service Description</Text>
+                                    <Text style={styles.desc}>
+                                        {!!providerInfo?.businessServiceDesc
+                                            ? providerInfo?.businessServiceDesc.replaceAll('\\n', '\n')
+                                            : 'No Service description'}
+                                    </Text>
+                                </View>
 
-                            <View
-                                style={{
-                                    marginTop: 24,
-                                    borderBottomColor: CustomColors.GRAY_LIGHT,
-                                    borderBottomWidth: 2,
-                                }}
-                            />
-                            <View style={styles.businessInfoContainer}>
-                                <Text style={styles.title}>Business description</Text>
-                                <Text style={styles.desc}>
-                                    {!!providerInfo?.businessDesc
-                                        ? providerInfo?.businessDesc.replaceAll('\\n', '\n')
-                                        : 'No description'}
-                                </Text>
-                                <Text style={styles.title}>Service Description</Text>
-                                <Text style={styles.desc}>
-                                    {!!providerInfo?.businessServiceDesc
-                                        ? providerInfo?.businessServiceDesc.replaceAll('\\n', '\n')
-                                        : 'No Service description'}
-                                </Text>
-                            </View>
-
-                            {/* <Button
+                                {/* <Button
                                 onPress={async () => {
                                     UserService.logOut();
                                 }}
                                 title="LogOut">
                                 logout  
                             </Button> */}
-                        </View>
-                        <View
-                            onLayout={event => {
-                                var {x, y, width, height} = event.nativeEvent.layout;
+                            </View>
+                            <View
+                                onLayout={event => {
+                                    var {x, y, width, height} = event.nativeEvent.layout;
 
-                                setTabBarOffsetY(y);
-                            }}></View>
-                        <TabView
-                            style={{height: Dimensions.get('window').height - 64 - 24}}
-                            navigationState={navigationState}
-                            renderScene={({route}) => {
-                                switch (route.key) {
-                                    case 'photos':
-                                        return (
-                                            <PhotoListingComponent
-                                                dataList={photosList}
-                                                isScrollEnabled={isPhotoListingScrollable}
-                                            />
-                                        );
-                                    case 'reviews':
-                                        return (
-                                            <ReviewDisplayComponent
-                                                dataList={reviewList}
-                                                averageRating={providerInfo?.averageRatings}
-                                                starStats={providerInfo?.starStats}
-                                            />
-                                        );
-                                    default:
-                                        return null;
-                                }
-                            }}
-                            renderTabBar={props => {
-                                return (
-                                    <TabBar
-                                        {...props}
-                                        inactiveColor={CustomColors.GRAY}
-                                        indicatorStyle={{backgroundColor: CustomColors.GRAY_DARK}}
-                                        style={{backgroundColor: 'white', elevation: 0}}
-                                        labelStyle={{
-                                            fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
-                                            fontSize: CustomTypography.FONT_SIZE_16,
-                                            color: CustomColors.GRAY_DARK,
-                                        }}
-                                    />
-                                );
-                            }}
-                            onIndexChange={index => {
-                                setNavigationState({...navigationState, index: index});
-                            }}
-                            renderPager={props => <PagerPan {...props} />}
-                            initialLayout={{
-                                width: Dimensions.get('window').width,
-                                height: Dimensions.get('window').height - 64 - 50,
-                            }}
-                        />
-                    </View>
-                </ScrollView>
+                                    setTabBarOffsetY(y);
+                                }}></View>
+                            <TabView
+                                style={{height: screenHeight}}
+                                navigationState={navigationState}
+                                renderScene={({route}) => {
+                                    switch (route.key) {
+                                        case 'photos':
+                                            return (
+                                                <PhotoListingComponent
+                                                    dataList={photosList}
+                                                    isScrollEnabled={isPhotoListingScrollable}
+                                                />
+                                            );
+                                        case 'reviews':
+                                            return (
+                                                <ReviewDisplayComponent
+                                                    dataList={reviewList}
+                                                    averageRating={providerInfo?.averageRatings}
+                                                    starStats={providerInfo?.starStats}
+                                                />
+                                            );
+                                        default:
+                                            return null;
+                                    }
+                                }}
+                                renderTabBar={props => {
+                                    return (
+                                        <TabBar
+                                            {...props}
+                                            inactiveColor={CustomColors.GRAY}
+                                            indicatorStyle={{backgroundColor: CustomColors.GRAY_DARK}}
+                                            style={{backgroundColor: 'white', elevation: 0}}
+                                            labelStyle={{
+                                                fontFamily: CustomTypography.FONT_FAMILY_MEDIUM,
+                                                fontSize: CustomTypography.FONT_SIZE_16,
+                                                color: CustomColors.GRAY_DARK,
+                                            }}
+                                        />
+                                    );
+                                }}
+                                onIndexChange={index => {
+                                    setNavigationState({...navigationState, index: index});
+                                }}
+                                renderPager={props => <PagerPan {...props} />}
+                                initialLayout={{
+                                    width: Dimensions.get('window').width,
+                                    height: Dimensions.get('window').height - 64 - 50 - 24,
+                                }}
+                            />
+                        </View>
+                    </ScrollView>
+                </View>
             </SafeAreaView>
             <Portal>
                 <BottomSheet
