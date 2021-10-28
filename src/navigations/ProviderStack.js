@@ -118,7 +118,7 @@ const ProviderStack = () => {
                             }
                             return focused ? (
                                 <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
-                                    Bookings
+                                    Schedule
                                 </Animatable.Text>
                             ) : null;
                         },
@@ -175,7 +175,7 @@ const ProviderStack = () => {
                                     useNativeDriver: true,
                                 }).start();
                             }
-                            focused ? (
+                            return focused ? (
                                 <Animatable.Text animation="bounceIn" style={[styles.labelStyle, {color: color}]}>
                                     Notification
                                 </Animatable.Text>
