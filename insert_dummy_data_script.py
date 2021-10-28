@@ -39,10 +39,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Car Wash
-            - Car Polish
-            - Car Cleaning
+         We provide services such as :\\n- Car Wash\\n- Car Polish\\n- Car Cleaning\\n
          ''',
          'additionalForm': [
              {
@@ -130,10 +127,7 @@ service_provider_dummies = [
             'phoneNumber': '+0312345678',
             'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Car Washing
-            - Car Waxing
-            - Car Vacuum
+         We provide services such as :\\n- Car Washing\\n- Car Waxing\\n- Car Vacuum\\n
          ''',
          'additionalForm': [
              {
@@ -221,9 +215,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Wind Screen replacement
-            - Wind Screen Sun Shade
+         We provide services such as :\\n- Wind Screen replacement\\n- Wind Screen Sun Shade\\n
          ''',
          'additionalForm': [
 
@@ -286,10 +278,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Computer Repair
-            - HardWare replacement
-            - Os Reformatting
+         We provide services such as :\\n- Computer Repair\\n- HardWare replacement\\n- Os Reformatting\\n
          ''',
          'additionalForm': [
 
@@ -302,7 +291,7 @@ service_provider_dummies = [
          'averageRatings': 0,
          'priceEnd': '300',
          'totalEarnings': 1500,
-         'businessDesc': '''Tech Hypermart Sdn. Bhd. began its journey as an established computer hardware distributor company in Malaysia in 1997. Throughout the many years we have been in service, Techhypermart has grown steadily and profitably, making a name for ourselves among leading IT technology companies within Malaysia. The company was selected as an authorized IPP (Intel Premium Provider) by Intel in 2002, which identifies us as the preferred source for Intel products and technologies. Additionally, Tech Hypermart Sdn. Bhd. is also entitled as the Premier Business Partner of Hewlett Package (HP), Preference Reseller of Epson, Authorized Dealer of LG, Canon products and many more. Here at Techhypermart, our products and services are designed to satisfy the needs of a wide variety of consumers - from casual to tech-savvy - with well-trained associates who offer technical solutions in an immersive shopping environment. Uniquely focused on computers and other IT related products, Techhypermart offers more computers and electronic devices than any other retailer and IT repair services that are second to none. We are committed to providing high quality products and services, keeping the needs of our customers, suppliers and employees at the forefront of our mind.''',
+         'businessDesc': '''Tech Hypermart Sdn. Bhd. began its journey as an established computer hardware distributor company in Malaysia in 1997. Throughout the many years we have been in service, Techhypermart has grown steadily and profitably, making a name for ourselves among leading IT technology companies within Malaysia. The company was selected as an authorized IPP (Intel Premium Provider) by Intel in 2002, which identifies us as the preferred source for Intel products and technologies. \\nAdditionally, Tech Hypermart Sdn. Bhd. is also entitled as the Premier Business Partner of Hewlett Package (HP), Preference Reseller of Epson, Authorized Dealer of LG, Canon products and many more. Here at Techhypermart, our products and services are designed to satisfy the needs of a wide variety of consumers - from casual to tech-savvy - with well-trained associates who offer technical solutions in an immersive shopping environment. Uniquely focused on computers and other IT related products, Techhypermart offers more computers and electronic devices than any other retailer and IT repair services that are second to none. We are committed to providing high quality products and services, keeping the needs of our customers, suppliers and employees at the forefront of our mind.''',
          'popularity': {
              'AUG_2021': 0,
              'SEP_2021': 0,
@@ -352,9 +341,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Phone Repair
-            - Screen Protector install
+         We provide services such as :\\n- Phone Repair\\n- Screen Protector install
          ''',
          'additionalForm': [
 
@@ -367,7 +354,7 @@ service_provider_dummies = [
          'averageRatings': 0,
          'priceEnd': '100',
          'totalEarnings': 1500,
-         'businessDesc': '''We always provide the most competitive & affordable market price! We ensure you with our best level of services, offline and online shopping satisfaction with most efficient delivery within Malaysia! Wide range of variety with over 1000 SKUs which including more than 30 brands of smartphone, tablet, gadgets, accessories, IOT (Internet Of Thing), Smarthome & wearables which are available at affordable market price with ready stocks! Live Demo are available to touch & feel before purhcase at all our outlets. We only provide original manufacturer sets and original imported set. We do supply attractive, useable and quality accessories which more than 300 wide range of choices and price starts from RM1 (Daily Promotion)! All device come with official / in-house warranty. Original Malaysia Set device with 1 year to 2 years Official Warranty by Authorised Service Center & Original Imported Set device with 2 Years In-House Warranty By Mobile 2 Go [ Mobile To Go Sdn Bhd (1222138-D) ] Accessories choices included the latest Gadgets / Audio Speaker / Bluetooth Portable / Power bank / External Storage / Sport Electronics Gadgets / Home & Living Assistant and Many more!''',
+         'businessDesc': '''We always provide the most competitive & affordable market price! We ensure you with our best level of services, offline and online shopping satisfaction with most efficient delivery within Malaysia! Wide range of variety with over 1000 SKUs which including more than 30 brands of smartphone, tablet, gadgets, accessories, IOT (Internet Of Thing), Smarthome & wearables which are available at affordable market price with ready stocks! Live Demo are available to touch & feel before purhcase at all our outlets. \\nWe only provide original manufacturer sets and original imported set. We do supply attractive, useable and quality accessories which more than 300 wide range of choices and price starts from RM1 (Daily Promotion)! All device come with official / in-house warranty. Original Malaysia Set device with 1 year to 2 years Official Warranty by Authorised Service Center & Original Imported Set device with 2 Years In-House Warranty By Mobile 2 Go [ Mobile To Go Sdn Bhd (1222138-D) ] Accessories choices included the latest Gadgets / Audio Speaker / Bluetooth Portable / Power bank / External Storage / Sport Electronics Gadgets / Home & Living Assistant and Many more!''',
          'popularity': {
              'AUG_2021': 0,
              'SEP_2021': 0,
@@ -417,9 +404,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Personal Fitness Train
-            - Yoga course
+         We provide services such as :\\n- Personal Fitness Training\\n- Yoga course
          ''',
          'additionalForm': [
 
@@ -482,11 +467,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Chinese Lesson
-            - English Lesson
-            - Tamil Lesson
-            - Malay Lesson
+         We provide services such as :\\n- Chinese Lesson\\n- English Lesson\\n- Tamil Lesson\\n- Malay Lesson
          ''',
          'additionalForm': [
 
@@ -549,10 +530,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Halal Catering Services
-            - Non-Halal Catering Services
-            - Vegeteran Catering Services
+         We provide services such as :\\n- Halal Catering Services\\n- Non-Halal Catering Services\\n- Vegeteran Catering Services
          ''',
          'additionalForm': [
 
@@ -615,10 +593,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Cameraman Service
-            - Wedding Videographer
-            - Video/Photo Editing
+         We provide services such as :\\n- Cameraman Service\\n- Wedding Videographer\\n- Video/Photo Editing
          ''',
          'additionalForm': [
 
@@ -681,10 +656,7 @@ service_provider_dummies = [
          'phoneNumber': '+0312345678',
          'firstJoined': firestore.firestore.SERVER_TIMESTAMP,
          'businessServiceDesc': '''
-         We provide services such as :
-            - Wedding Makeup
-            - Wedding Organizing
-            - Wedding Hair Stylist
+         We provide services such as :\\n- Wedding Makeup\\n- Wedding Organizing\\n- Wedding Hair Stylist
          ''',
          'additionalForm': [
 
