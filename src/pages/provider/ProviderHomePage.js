@@ -461,8 +461,9 @@ const styles = StyleSheet.create({
         backgroundColor: CustomColors.GRAY_EXTRA_LIGHT,
     },
     welcomeText: {
+        flex:1,
         fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-        fontSize: CustomTypography.FONT_SIZE_24,
+        fontSize: CustomTypography.FONT_SIZE_20,
         color: CustomColors.GRAY_DARK,
     },
     lineGraphHeader: {

@@ -100,9 +100,9 @@ const ProviderSchedulePage = () => {
                 <View style={styles.bigContainer}>
                     <View style={styles.headerContainer}>
                         <Text style={styles.pageTitle}>Jobs Schedule</Text>
-                        <View style={{flexDirection:'row'}}>
+                        <View style={{flexDirection: 'row'}}>
                             <TouchableRipple
-                                style={{borderRadius: 30, marginRight:8}}
+                                style={{borderRadius: 30, marginRight: 8}}
                                 borderless
                                 rippleColor="rgba(0, 0, 0, .32)"
                                 onPress={() => {
@@ -180,15 +180,21 @@ const ProviderSchedulePage = () => {
                         showTodayButton
                         todayBottomMargin={36}
                         disabledOpacity={0.6}>
-                        <View style={{overflow: 'hidden', paddingBottom: 1.8}}>
+                        <View
+                            style={{
+                                overflow: 'hidden',
+                                paddingBottom: 2,
+                                borderBottomWidth: 2,
+                                borderColor: CustomColors.GRAY_EXTRA_LIGHT,
+                                shadowColor: '#000',
+                                shadowOffset: {width: 5, height: 5},
+                                shadowOpacity: 12,
+                                shadowRadius: 6,
+                                elevation:0
+                            }}>
                             <ExpandableCalendar
                                 style={{
-                                    overflow:'visible',
-                                    shadowColor: '#000',
-                                    shadowOffset: {width: 1, height: 1},
-                                    shadowOpacity: 0.2,
-                                    shadowRadius: 2,
-                                    elevation: 3,
+                                    overflow: 'visible',
                                 }}
                                 hideKnob
                                 styles={{
