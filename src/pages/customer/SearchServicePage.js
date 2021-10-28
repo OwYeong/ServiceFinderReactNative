@@ -42,6 +42,7 @@ const SearchServicePage = ({route}) => {
     const [isSearching, setIsSearching] = useState(false);
     const [isEnterPressed, setIsEnterPressed] = useState(false);
     const [searchResults, setSearchResults] = useState({isLoadingMoreData: false, data: []});
+    const [lastKeywordSearched, setLastKeywordSearched] = useState("");
 
     const searchBarAnimatedValue = useRef(new Animated.Value(0)).current;
 
@@ -186,8 +187,9 @@ const SearchServicePage = ({route}) => {
                         ]}
                         onSubmitEditing={({text}) => {
                             console.log('Search softkey pressed!', text);
-                            if (!!searchInput) {
+                            if (!!searchInput && lastKeywordSearched != searchInput) {
                                 searchServiceProvider(searchInput);
+                                setLastKeywordSearched(searchInput)
                             }
                         }}
                         onChangeText={text => {
