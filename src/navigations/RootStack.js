@@ -27,6 +27,7 @@ import ChatroomPage from '@pages/ChatroomPage';
 import EditAccountProfile from '@pages/EditAccountProfile';
 import ChangePassword from '@pages/ChangePassword';
 import ChangePhone from '@pages/ChangePhone';
+import ManageSchedule from '@pages/provider/ManageSchedule';
 
 const Stack = createStackNavigator();
 
@@ -229,6 +230,14 @@ const RootStack = ({isAuth, isLoading, loginBlock, loggedInAcctype}) => {
                             <Stack.Screen
                                 name="Chatroom"
                                 component={ChatroomPage}
+                                options={{
+                                    animationEnabled: true,
+                                    headerShown: false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="ManageSchedule"
+                                component={ManageSchedule}
                                 options={{
                                     animationEnabled: true,
                                     headerShown: false,
