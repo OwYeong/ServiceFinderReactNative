@@ -48,6 +48,7 @@
         <meta-data  android:name="com.dieam.reactnativepushnotification.notification_channel_description"
                 android:value="YOUR NOTIFICATION CHANNEL DESCRIPTION"/>
 
+        <meta-data  android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@mipmap/ic_notification" />
 
         <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationPublisher" />
         <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationBootEventReceiver">

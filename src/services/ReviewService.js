@@ -11,44 +11,42 @@ import ProviderService from './ProviderService';
 import RequestService from './RequestService';
 
 const ReviewService = {
-    getAllReview: (providerId = auth().currentUser.uid) => {
-        return new Promise((resolve, reject) => {
-            let reviewCollection = firestore().collection('reviews');
-            reviewCollection
-                .where('serviceProviderId', '==', providerId)
-                .orderBy('postedDateTime', 'desc')
-                .get()
-                .then(querySnapshot => {
-                    if (querySnapshot.size > 0) {
-                        const reviews = [];
+    getAllReview: (callback, providerId = auth().currentUser.uid) => {
+        let reviewCollection = firestore().collection('reviews');
 
-                        querySnapshot.forEach(docSnapshot => {
-                            let review = {
-                                id: docSnapshot.id,
-                                ...docSnapshot.data(),
-                                postedDateTime: docSnapshot.data().postedDateTime.toDate().toString(),
-                            };
-                            reviews.push(review);
-                        });
+        return reviewCollection
+            .where('serviceProviderId', '==', providerId)
+            .orderBy('postedDateTime', 'desc')
+            .onSnapshot(
+                querySnapshot => {
+                    try {
+                        if (querySnapshot.size > 0) {
+                            const reviews = [];
 
-                        const result = {
-                            data: reviews,
-                        };
+                            querySnapshot.forEach(docSnapshot => {
+                                let review = {
+                                    id: docSnapshot.id,
+                                    ...docSnapshot.data(),
+                                    postedDateTime: docSnapshot.data().postedDateTime.toDate().toString(),
+                                };
+                                reviews.push(review);
+                            });
 
-                        resolve(result);
-                    } else {
-                        const result = {
-                            data: [],
-                        };
+                            callback(reviews);
+                        } else {
+                            callback([]);
+                        }
 
-                        resolve(result);
+                    } catch (error) {
+                        console.log(error.stack);
+                        console.log('Error -> ChatService.getAllMessageInChatroom\n');
                     }
-                })
-                .catch(error => {
-                    console.log('Error -> ReviewService.getAllReview\n');
-                    reject(error);
-                });
-        });
+                },
+                error => {
+                    console.log('error');
+                    console.error(error);
+                },
+            );
     },
     getReviewByRequestId: requestId => {
         return new Promise((resolve, reject) => {
@@ -103,8 +101,8 @@ const ReviewService = {
                                     targetUserInfo.id,
                                     Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REQUEST,
                                     {
-                                        requestId: data.requestId
-                                    }
+                                        requestId: data.requestId,
+                                    },
                                 );
                             }
                             //Update Request

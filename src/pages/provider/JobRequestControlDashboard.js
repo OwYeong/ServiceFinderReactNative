@@ -772,6 +772,7 @@ const JobRequestControlDashboard = ({route}) => {
                                             type: 'info',
                                             position: 'center',
                                             titleStyle: {marginTop: 5},
+                                            style:{height:80},
                                             backgroundColor: 'rgba(0,0,0,0.6)', // background color
                                             color: 'white', // text color
                                             hideOnPress: true,
