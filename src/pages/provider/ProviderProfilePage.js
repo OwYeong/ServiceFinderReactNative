@@ -77,15 +77,11 @@ const ProviderProfilePage = () => {
             .catch(err => {
                 console.log(err);
             });
-        ReviewService.getAllReview()
-            .then(data => {
-                setReviewList(data.data);
-                console.log(data.data);
-                // <PhotoListingComponent dataList={photosList} />
-            })
-            .catch(err => {
-                console.log(err);
-            });
+        const unsubcriber = ReviewService.getAllReview(setReviewList);
+
+        return () => {
+            unsubcriber();
+        }
     }, []);
 
     useFocusEffect(

@@ -56,6 +56,7 @@ import ReviewService from '@services/ReviewService';
 import firebase from '@react-native-firebase/app';
 import {useSelector} from 'react-redux';
 import auth from '@react-native-firebase/auth';
+import LoadingModal from '@organisms/LoadingModal';
 
 const WriteReviewPage = ({route}) => {
     const userInfo = useSelector(state => state.loginState.userInfo);
@@ -71,6 +72,11 @@ const WriteReviewPage = ({route}) => {
     const [starCount, setStarCount] = useState(false);
     const [message, setMessage] = useState('');
 
+    const [loadingModal, setLoadingModal] = useState({
+        isVisible: false,
+        modalTitle: 'Submitting review...',
+    });
+
     const submitFeedback = async () => {
         try {
             const reviewData = {
@@ -83,6 +89,11 @@ const WriteReviewPage = ({route}) => {
                 requestId: requestId
                 
             };
+
+            setLoadingModal({
+                isVisible: true,
+                modalTitle: 'Submitting review...',
+            });
             const newlyAddedReview = await ReviewService.createReview(reviewData);
 
             if(!!newlyAddedReview){
@@ -99,6 +110,11 @@ const WriteReviewPage = ({route}) => {
                 });
                 navigation.goBack();
             }
+
+            setLoadingModal({
+                isVisible: false,
+                modalTitle: 'Submitting review...',
+            });
             
         } catch (error) {
             showMessage({
@@ -111,6 +127,10 @@ const WriteReviewPage = ({route}) => {
                 hideOnPress: true,
                 autoHide: true,
                 duration: 2000,
+            });
+            setLoadingModal({
+                isVisible: false,
+                modalTitle: 'Submitting review...',
             });
         }
     };
@@ -237,6 +257,14 @@ const WriteReviewPage = ({route}) => {
                         ) : null}
                     </View>
                 </ScrollView>
+                <LoadingModal
+                        animationIn={'bounceIn'}
+                        animationOut={'bounceOut'}
+                        animationOutTiming={150}
+                        isVisible={loadingModal.isVisible}
+                        modalTitle={loadingModal.modalTitle}
+                        statusBarTranslucent={true}
+                        useNativeDriver={true}></LoadingModal>
                 {isFetchingData ? (
                     <View
                         style={{

@@ -20,7 +20,7 @@ const NewlyJoinedProviderDisplay = ({
     return (
         <Surface style={[styles.container, style]} needsOffscreenAlphaCompositing={true} >
             <ImageBackground style={styles.businessCoverImg} source={!!coverImageUrl?{uri: coverImageUrl}: require('@assets/images/default-coverImage.png')}></ImageBackground>
-            <View style={styles.contentWrapper}>
+            <View style={[styles.contentWrapper,{backgroundColor:!!coverImageUrl?'rgba(38, 48, 89, .5)':'rgba(38, 48, 89, .2)'}]}>
                 <Text style={styles.serviceType}>{CommonFunction.getDisplayNameForServiceType(serviceType)}</Text>
                 <Text style={styles.monthlyAppointment}>Joined on {moment(new Date(joinedDate)).format('DD MMM')}</Text>
                 <View style={styles.businessInfoWrapper}>

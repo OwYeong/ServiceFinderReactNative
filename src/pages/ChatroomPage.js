@@ -72,7 +72,7 @@ const ChatroomPage = ({user, route}) => {
                     user: {
                         ...newMessage.user,
                         name: providerInfo?.businessName,
-                        avatar: providerInfo?.businessLogoUrl,
+                        avatar: providerInfo?.businessLogoUrl || null,
                     },
                 };
             }

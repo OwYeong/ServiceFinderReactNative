@@ -80,13 +80,6 @@ const ViewServiceProvider = ({route}) => {
 
             setPhotosList(photoListData.data);
 
-            const reviewData = await ReviewService.getAllReview(providerId);
-
-            setReviewList(reviewData.data);
-
-            console.log(photoListData.data);
-
-            console.log(reviewData.data);
             return true;
         } catch (error) {
             console.log(error);
@@ -111,9 +104,11 @@ const ViewServiceProvider = ({route}) => {
         }, providerId);
 
         fetchPostAndReviewData();
+        const reviewUnsubcriber = ReviewService.getAllReview(setReviewList, providerId);
 
         return () => {
             unsubscriber();
+            reviewUnsubcriber();
         };
     }, []);
 

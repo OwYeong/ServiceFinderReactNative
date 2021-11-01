@@ -300,7 +300,7 @@ const BookServicePage = ({route}) => {
                     },
                     serviceProvider: {
                         businessCategory: providerInfo?.businessCategory,
-                        businessLogoUrl: providerInfo?.businessLogoUrl,
+                        businessLogoUrl: providerInfo?.businessLogoUrl || null,
                         businessName: providerInfo?.businessName,
                         serviceType: providerInfo?.serviceType,
                         userId: providerInfo?.id,
@@ -372,7 +372,7 @@ const BookServicePage = ({route}) => {
                     },
                     serviceProvider: {
                         businessCategory: providerInfo?.businessCategory,
-                        businessLogoUrl: providerInfo?.businessLogoUrl,
+                        businessLogoUrl: providerInfo?.businessLogoUrl || null,
                         businessName: providerInfo?.businessName,
                         serviceType: providerInfo?.serviceType,
                         userId: providerInfo?.id,
@@ -443,6 +443,10 @@ const BookServicePage = ({route}) => {
     };
 
     const payAndProceed = async () => {
+        setLoadingModal({
+            isVisible: true,
+            modalTitle: 'Verifying payment...',
+        });
         // 1. fetch Intent Client Secret from backend
         const clientSecret = await PaymentService.fetchPaymentIntentClientSecret(10.0);
 
@@ -466,10 +470,7 @@ const BookServicePage = ({route}) => {
             return;
         }
 
-        setLoadingModal({
-            isVisible: true,
-            modalTitle: 'Verifying payment...',
-        });
+        
 
         const {error, paymentIntent} = await confirmPayment(clientSecret, {
             type: 'Card',
