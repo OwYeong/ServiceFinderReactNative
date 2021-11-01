@@ -689,7 +689,7 @@ const ProviderProfilePage = () => {
                     bottomSheerColor="#FFFFFF"
                     // ref="BottomSheet"
                     initialPosition={0}
-                    snapPoints={[0, 450]}
+                    snapPoints={[0, 500]}
                     isBackDrop={true}
                     isBackDropDismissByPress={true}
                     isRoundBorderWithTipHeader={true}
