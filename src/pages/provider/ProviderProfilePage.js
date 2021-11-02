@@ -77,11 +77,14 @@ const ProviderProfilePage = () => {
             .catch(err => {
                 console.log(err);
             });
-        const unsubcriber = ReviewService.getAllReview(setReviewList);
+        const unsubcriber = ReviewService.getAllReview(data => {
+            setReviewList(data);
+            ProviderService.fetchProviderDataToRedux();
+        });
 
         return () => {
             unsubcriber();
-        }
+        };
     }, []);
 
     useFocusEffect(
@@ -103,14 +106,14 @@ const ProviderProfilePage = () => {
                         var {x, y, width, height} = event.nativeEvent.layout;
 
                         setScreenHeight(height);
-                        console.log("myLayout" + height)
+                        console.log('myLayout' + height);
                     }}>
                     <ScrollView
                         style={{flex: 1}}
                         onScroll={event => {
-                            console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY-1);
+                            console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY - 1);
 
-                            if (event.nativeEvent.contentOffset.y > tabBarOffsetY-1) {
+                            if (event.nativeEvent.contentOffset.y > tabBarOffsetY - 1) {
                                 setIsPhotoListingScrollable(true);
                             } else {
                                 setIsPhotoListingScrollable(false);
@@ -486,8 +489,8 @@ const ProviderProfilePage = () => {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => {
-                                    setCoverImagePath(null);
-                                    businessLogoActionSheet.current.snapTo(0);
+                                    coverImageActionSheet.current.snapTo(0);
+                                    ProviderService.useDefaultCoverImage();
                                 }}>
                                 <View style={styles.actionButton}>
                                     <View
@@ -603,13 +606,13 @@ const ProviderProfilePage = () => {
                                             businessLogoActionSheet.current.snapTo(0);
                                             setIsBusinessLogoLoading(true);
                                             // Upload businessLogo Image
-                                            var coverImageUploadPromise = ProviderService.uploadBusinessLogoToStorage(
+                                            var businessLogoUploadPromise = ProviderService.uploadBusinessLogoToStorage(
                                                 auth().currentUser.uid,
                                                 image.path,
                                                 image.mime,
                                             );
 
-                                            coverImageUploadPromise
+                                            businessLogoUploadPromise
                                                 .then(businessLogoUrl => {
                                                     ProviderService.updateProviderData({
                                                         businessLogoUrl: businessLogoUrl,
@@ -652,12 +655,13 @@ const ProviderProfilePage = () => {
                                         }}>
                                         <FontAwesome name="camera" size={24} color={CustomColors.GRAY_DARK} />
                                     </View>
-                                    <Text style={styles.actionButtonLabel}>Snap Business Profile from camera</Text>
+                                    <Text style={styles.actionButtonLabel}>Snap Business Logo from camera</Text>
                                 </View>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => {
                                     businessLogoActionSheet.current.snapTo(0);
+                                    ProviderService.useDefaultBusinessLogo();
                                 }}>
                                 <View style={styles.actionButton}>
                                     <View
