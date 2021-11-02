@@ -152,7 +152,11 @@ const ProviderService = {
 
             var serviceProviderCollection = firestore()
                 .collection('serviceProviders')
-                .where('firstJoined', '>', firestore.Timestamp.fromDate(moment().startOf('day').subtract(30, 'days').toDate()))
+                .where(
+                    'firstJoined',
+                    '>',
+                    firestore.Timestamp.fromDate(moment().startOf('day').subtract(30, 'days').toDate()),
+                )
                 .orderBy(`firstJoined`, 'desc');
 
             var providerWithinAreaOfCustomerLocation = [];
@@ -539,6 +543,21 @@ const ProviderService = {
                 });
         });
     },
+    useDefaultCoverImage: (userId = auth().currentUser.uid) => {
+        return new Promise((resolve, reject) => {
+            ProviderService.updateProviderData({
+                coverImgUrl: null,
+            },userId)
+                .then(() => {
+                    ProviderService.fetchProviderDataToRedux();
+                    resolve('done');
+                })
+                .catch(error => {
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
     uploadBusinessLogoToStorage: (userId, businessLogoPath, mimeType) => {
         return new Promise((resolve, reject) => {
             var businessLogoImageReference = null;
@@ -568,6 +587,21 @@ const ProviderService = {
                     reject('Provider Service - Error occured when uploading business logo image.');
                     console.log('Provider Service - Error occured when uploading business logo image.');
                     console.log(err);
+                });
+        });
+    },
+    useDefaultBusinessLogo: (userId = auth().currentUser.uid) => {
+        return new Promise((resolve, reject) => {
+            ProviderService.updateProviderData({
+                businessLogoUrl: null,
+            },userId)
+                .then(() => {
+                    ProviderService.fetchProviderDataToRedux();
+                    resolve('done');
+                })
+                .catch(error => {
+                    console.log(error);
+                    reject(error);
                 });
         });
     },
