@@ -542,20 +542,23 @@ const RequestService = {
         return new Promise((resolve, reject) => {
             try {
                 const requestsCollection = firestore().collection('requests');
-                console.log('creating request', data);
+                
+                // create a service request record in Firebase firestore
                 requestsCollection
                     .add({
                         ...data,
                     })
                     .then(async docRef => {
-                        console.log('Request data successfully created!');
+                        console.log('Service Request successfully created!');
 
                         try {
-                            const targetUserInfo = await UserService.getUserInfo(data.serviceProvider.userId);
+                            const targetUserInfo = await UserService.getUserInfo(data.serviceProvider.userId);// Get Service Provider info
 
                             if (!!targetUserInfo.fcmToken) {
+                                // if Firebase cloud messaging token is available
                                 console.log('sending notification to' + targetUserInfo.fcmToken);
 
+                                // push notification to Service provider Device.
                                 await NotificationService.sendNotificationToDevice(
                                     targetUserInfo.fcmToken,
                                     `You have a new job request`,
@@ -575,9 +578,9 @@ const RequestService = {
                         console.log(err);
                         reject('Some error occur');
                     });
-            } catch (err) {
-                console.log('errr');
+            } catch (err) {                
                 console.log(err);
+                console.log('Some error occur');
             }
         });
     },

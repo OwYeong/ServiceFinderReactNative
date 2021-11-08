@@ -272,17 +272,15 @@ const UserService = {
             return new Promise(async (resolve, reject) => {
                 try {
                     await GoogleSignin.hasPlayServices();
-                    console.log('gmail trying');
-                    const {accessToken, idToken} = await GoogleSignin.signIn();
-                    console.log('gmail trying');
+
+                    const {accessToken, idToken} = await GoogleSignin.signIn();// prompt login credential
 
                     const credential = auth.GoogleAuthProvider.credential(idToken, accessToken);
 
                     auth()
                         .signInWithCredential(credential)
                         .then(authUser => {
-                            console.log('gmail inside');
-                            console.log(authUser);
+                            //add user data from gmail provider to firebase firestore
                             UserService.createUserDataIfNotExist(
                                 {
                                     firstName: authUser.additionalUserInfo.profile.family_name,
@@ -296,10 +294,9 @@ const UserService = {
                                 authUser.user.uid,
                             )
                                 .then(async data => {
-                                    const fcmToken = await AsyncStorage.getItem('fcmToken');
-                                    console.log('fcmToken', fcmToken);
+                                    const fcmToken = await AsyncStorage.getItem('fcmToken');// get fcm token of this device
 
-                                    await UserService.updateFcmTokenInUserData(fcmToken);
+                                    await UserService.updateFcmTokenInUserData(fcmToken);// Store the firebook cloud messaging token for notification push purposes
                                     await UserService.fetchLoggedInUserDataToRedux();
                                     resolve('Success');
                                 })
@@ -346,6 +343,7 @@ const UserService = {
                     // Use the Access Token to create a facebook credential.
                     const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
 
+                    // add user data from facebook to Firebase Firestore
                     auth()
                         .signInWithCredential(facebookCredential)
                         .then(authUser => {
@@ -362,10 +360,9 @@ const UserService = {
                                 authUser.user.uid,
                             )
                                 .then(async data => {
-                                    const fcmToken = await AsyncStorage.getItem('fcmToken');
-                                    console.log('fcmToken', fcmToken);
+                                    const fcmToken = await AsyncStorage.getItem('fcmToken');// get fcm token of this device
 
-                                    await UserService.updateFcmTokenInUserData(fcmToken);
+                                    await UserService.updateFcmTokenInUserData(fcmToken);// Store the firebook cloud messagin token for notification push purposes
                                     await UserService.fetchLoggedInUserDataToRedux();
 
                                     resolve('success');

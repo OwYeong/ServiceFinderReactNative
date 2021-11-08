@@ -4,13 +4,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RemotePushController = () => {
     useEffect(() => {
+        // Setup background service to listen for Firebase cloud messaging signal 
         PushNotification.configure({
-            // (optional) Called when Token is generated (iOS and Android)
             onRegister: async function (token) {
                 try {
-                    console.log('TOKEN:', token);
+                    console.log('FCM TOKEN:', token);
 
-                    await AsyncStorage.setItem('fcmToken', token.token);
+                    await AsyncStorage.setItem('fcmToken', token.token);// Store FCM token in device local storage
                 } catch (err) {
                     console.log('Error occurs when storing fck token to AsyncStorage')
                     console.log(err);
@@ -19,9 +19,10 @@ const RemotePushController = () => {
 
             // (required) Called when a remote or local notification is opened or received
             onNotification: function (notification) {
+                //Receive signal from Firebase Cloud Messaging
                 console.log('REMOTE NOTIFICATION ==>', notification);
 
-                // process the notification here
+                // Push the notification to device
                 PushNotification.localNotification({
                     /* Android Only Properties */
                     channelId: 'default-channel-id', // (required) channelId, if the channel doesn't exist, notification will not trigger.
