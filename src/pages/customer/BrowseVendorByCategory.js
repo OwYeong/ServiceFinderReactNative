@@ -6,7 +6,7 @@ import {ScrollView, StatusBar, StyleSheet, Text, View, Image, UIManager, LayoutA
 import {IconButton, TouchableRipple} from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import NoResultIllustration from '@assets/images/no-result-found-illustration';
-import {TERMINATORLESS_TYPES, VISITOR_KEYS} from '@babel/types';
+// import {TERMINATORLESS_TYPES, VISITOR_KEYS} from '@babel/types';
 import ProviderService from '@services/ProviderService';
 import {Rating} from 'react-native-ratings';
 import _ from 'lodash';
