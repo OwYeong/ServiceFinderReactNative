@@ -35,7 +35,7 @@ import RootStack from '@navigations/RootStack';
 import {setLoginBlock} from '@slices/appSlice';
 import UserService from '@services/UserService';
 import FlashMessage from 'react-native-flash-message';
-import {PortalProvider, PortalHost} from '@gorhom/portal';
+import {PortalProvider} from '@gorhom/portal';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 
 import ImageCropPicker from 'react-native-image-crop-picker';
