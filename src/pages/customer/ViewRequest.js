@@ -84,9 +84,6 @@ const ViewRequest = ({route}) => {
                 setIsFetchingData(false);
             }, 1000);
 
-            return () => {
-                unsubscriber();
-            };
         }, requestId);
 
         return () => {
