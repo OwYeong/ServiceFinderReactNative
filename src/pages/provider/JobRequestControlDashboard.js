@@ -32,7 +32,6 @@ import {
     Surface,
     ActivityIndicator,
 } from 'react-native-paper';
-import {Portal} from '@gorhom/portal';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {TabView, TabBar, SceneMap, PagerPan} from 'react-native-tab-view';
 import RequestService from '@services/RequestService';
@@ -116,8 +115,6 @@ const JobRequestControlDashboard = ({route}) => {
         ) {
             realTimeLocationWatcher = Geolocation.watchPosition(
                 position => {
-                    console.log('my real time position');
-                    console.log(position);
                     setRealTimeLocation({
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
@@ -228,11 +225,13 @@ const JobRequestControlDashboard = ({route}) => {
                                 <Button
                                     onPress={async () => {
                                         try {
-                                            const chatroomId = await ChatService.getChatroomIdBetweenTwoUser(requestData?.customerInfo?.userId);
+                                            const chatroomId = await ChatService.getChatroomIdBetweenTwoUser(
+                                                requestData?.customerInfo?.userId,
+                                            );
 
                                             navigation.navigate('Chatroom', {
                                                 chatroomId: chatroomId,
-                                            })
+                                            });
                                         } catch (error) {
                                             console.log(error);
                                         }
@@ -596,420 +595,403 @@ const JobRequestControlDashboard = ({route}) => {
                         <ActivityIndicator animating={true} color={CustomColors.WHITE} />
                     </View>
                 ) : null}
-                <Portal>
-                    <BottomSheet
-                        ref={jobRequestActionSheet}
-                        // ref="BottomSheet"
-                        initialPosition={0}
-                        snapPoints={[0, 130]}
-                        isBackDrop={true}
-                        isBackDropDismissByPress={true}
-                        isRoundBorderWithTipHeader={true}
-                        // backDropColor="red"
-                        // isModal
-                        // containerStyle={{backgroundColor:"red"}}
-                        // tipStyle={{backgroundColor:"red"}}
-                        // headerStyle={{backgroundColor:"red"}}
-                        // bodyStyle={{backgroundColor:"red",flex:1}}
-                        body={
-                            <View style={{paddingVertical: 16}}>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        jobRequestActionSheet.current.snapTo(0);
-                                        setCancelJobDialog({isVisible: true, requestId: requestId});
-                                    }}>
-                                    <View style={styles.actionButton}>
-                                        <View
-                                            style={{
-                                                width: 50,
-                                                height: 50,
-                                                borderRadius: 25,
-                                                overflow: 'hidden',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                backgroundColor: CustomColors.GRAY_LIGHT,
-                                            }}>
-                                            <MaterialCommunityIcons
-                                                name="cancel"
-                                                size={24}
-                                                color={CustomColors.GRAY_DARK}
-                                            />
-                                        </View>
-                                        <Text style={styles.actionButtonLabel}>Cancel this Job</Text>
+                <BottomSheet
+                    ref={jobRequestActionSheet}
+                    // ref="BottomSheet"
+                    initialPosition={0}
+                    snapPoints={[0, 130]}
+                    isBackDrop={true}
+                    isBackDropDismissByPress={true}
+                    isRoundBorderWithTipHeader={true}
+                    // backDropColor="red"
+                    // isModal
+                    // containerStyle={{backgroundColor:"red"}}
+                    // tipStyle={{backgroundColor:"red"}}
+                    // headerStyle={{backgroundColor:"red"}}
+                    // bodyStyle={{backgroundColor:"red",flex:1}}
+                    body={
+                        <View style={{paddingVertical: 16}}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    jobRequestActionSheet.current.snapTo(0);
+                                    setCancelJobDialog({isVisible: true, requestId: requestId});
+                                }}>
+                                <View style={styles.actionButton}>
+                                    <View
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 25,
+                                            overflow: 'hidden',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: CustomColors.GRAY_LIGHT,
+                                        }}>
+                                        <MaterialCommunityIcons
+                                            name="cancel"
+                                            size={24}
+                                            color={CustomColors.GRAY_DARK}
+                                        />
                                     </View>
-                                </TouchableOpacity>
-                            </View>
-                        }
-                    />
-                </Portal>
+                                    <Text style={styles.actionButtonLabel}>Cancel this Job</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    }
+                />
             </SafeAreaView>
 
-            <Portal>
-                <Dialog
-                    visible={cancelJobDialog.isVisible}
-                    onDismiss={() => {
-                        setCancelJobDialog({isVisible: false});
-                    }}>
-                    <Dialog.Title>Cancel Job Confirmation</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>
-                            Are you sure you want to cancel this job? Deposits will be refund to the customer and this
-                            action cannot be reverted.
-                        </Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button
-                            style={{width: 80}}
-                            color={CustomColors.GRAY}
-                            onPress={() => {
-                                setCancelJobDialog({isVisible: false});
-                            }}>
-                            No
-                        </Button>
-                        <Button
-                            style={{width: 80}}
-                            onPress={() => {
-                                RequestService.vendorCancelRequest(requestId, requestData.customerInfo.userId)
-                                    .then(data => {
-                                        showMessage({
-                                            message: 'Request successfully cancelled.',
-                                            type: 'info',
-                                            position: 'center',
-                                            titleStyle: {marginTop: 5},
-                                            backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                            color: 'white', // text color
-                                            hideOnPress: true,
-                                            autoHide: true,
-                                            duration: 1000,
-                                        });
-                                        setCancelJobDialog({isVisible: false});
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                                setCancelJobDialog({isVisible: false});
-                            }}>
-                            Yes
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
-            <Portal>
-                <Dialog
-                    visible={googleMapRedirectDialog.isVisible}
-                    onDismiss={() => {
-                        setGoogleMapRedirectDialog({isVisible: false});
-                    }}>
-                    <Dialog.Title>Redirect to Google Maps</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>
-                            Do you want to view the actual location at google map? you will be redirect to google map
-                            app.
-                        </Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button
-                            style={{width: 80}}
-                            color={CustomColors.GRAY}
-                            onPress={() => {
-                                setGoogleMapRedirectDialog({isVisible: false});
-                            }}>
-                            No
-                        </Button>
-                        <Button
-                            style={{width: 80}}
-                            onPress={() => {
-                                var url = `https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${googleMapRedirectDialog.redirectCoordinate}`;
-                                Linking.canOpenURL(url)
-                                    .then(supported => {
-                                        if (!supported) {
-                                            console.log("Can't handle url: " + url);
-                                        } else {
-                                            return Linking.openURL(url);
-                                        }
-                                    })
-                                    .catch(err => console.error('An error occurred', err));
-
-                                setGoogleMapRedirectDialog({isVisible: false});
-                            }}>
-                            Yes
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
-            <Portal>
-                <Dialog
-                    visible={startJobDialog.isVisible}
-                    onDismiss={() => {
-                        setStartJobDialog({isVisible: false});
-                    }}>
-                    <Dialog.Title>Start job confirmation</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>
-                            Are you sure you want to start this job? This will notify the customer and this action
-                            cannot be reverted.
-                        </Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button
-                            style={{width: 80}}
-                            color={CustomColors.GRAY}
-                            onPress={() => {
-                                setStartJobDialog({isVisible: false});
-                            }}>
-                            No
-                        </Button>
-                        <Button
-                            style={{width: 80}}
-                            onPress={() => {
-                                RequestService.startJobRequest(
-                                    startJobDialog.requestId,
-                                    requestData.customerInfo.userId,
-                                )
-                                    .then(data => {
-                                        showMessage({
-                                            message: 'Request Successfully started. Customer may now see your location',
-                                            type: 'info',
-                                            position: 'center',
-                                            titleStyle: {marginTop: 5},
-                                            style:{height:80},
-                                            backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                            color: 'white', // text color
-                                            hideOnPress: true,
-                                            autoHide: true,
-                                            duration: 1000,
-                                        });
-                                        setStartJobDialog({isVisible: false});
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }}>
-                            Yes
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
-            <Portal>
-                <Dialog
-                    visible={doneJobDialog.isVisible}
-                    onDismiss={() => {
-                        setDoneJobDialog({isVisible: false});
-                        setPaymentReceived({...paymentReceived, value: '', error: ''});
-                    }}>
-                    <Dialog.Title>Job completed confirmation</Dialog.Title>
-                    <Dialog.Content>
-                        <Text
-                            style={{
-                                fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
-                                fontSize: CustomTypography.FONT_SIZE_12,
-                            }}>
-                            Are you sure you want to set this job to completed? Please enter the payment you received
-                            for this jobs as a record in the system.
-                        </Text>
-                        <TextInput
-                            mode="outlined"
-                            style={[styles.inputPrompt]}
-                            left={<TextInput.Affix text="RM" />}
-                            label="Payment Received"
-                            name="paymentReceived"
-                            placeholder="Payment Received"
-                            keyboardType="numeric"
-                            value={paymentReceived.value}
-                            onChangeText={input => {
-                                console.log(input);
-                                if (!input) {
-                                    setPaymentReceived({
-                                        ...paymentReceived,
-                                        value: input,
-                                        error: 'Payment receive is a mandatory input.',
-                                    });
-                                    return;
-                                }
-                                if (!input.match(/^\d+(\.\d+)?$/g)) {
-                                    setPaymentReceived({
-                                        ...paymentReceived,
-                                        value: input,
-                                        error: 'Please enter a positive number.',
-                                    });
-                                    return;
-                                }
-
-                                setPaymentReceived({...paymentReceived, error: '', value: input});
-                            }}
-                        />
-                        {!!paymentReceived.error ? (
-                            <HelperText type="error" style={styles.errorText} visible={true}>
-                                {paymentReceived.error}
-                            </HelperText>
-                        ) : null}
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button
-                            style={{width: 80}}
-                            color={CustomColors.GRAY}
-                            onPress={() => {
-                                setDoneJobDialog({isVisible: false});
-                                setPaymentReceived({...paymentReceived, value: '', error: ''});
-                            }}>
-                            No
-                        </Button>
-                        <Button
-                            style={{width: 80}}
-                            onPress={() => {
-                                if (!paymentReceived.value) {
-                                    setPaymentReceived({
-                                        ...paymentReceived,
-                                        error: 'Payment receive is a mandatory input.',
-                                    });
-                                    return;
-                                }
-                                if (!paymentReceived.value.match(/^\d+(\.\d+)?$/g)) {
-                                    setPaymentReceived({
-                                        ...paymentReceived,
-                                        error: 'Please enter a positive and valid number.',
-                                    });
-                                    return;
-                                }
-
-                                RequestService.completeJobRequest(
-                                    doneJobDialog.requestId,
-                                    requestData.customerInfo.userId,
-                                    parseFloat(paymentReceived.value),
-                                )
-                                    .then(data => {
-                                        showMessage({
-                                            message: 'Request Successfully Completed.',
-                                            type: 'info',
-                                            position: 'center',
-                                            titleStyle: {marginTop: 5},
-                                            backgroundColor: 'rgba(0,0,0,0.6)', // background color
-                                            color: 'white', // text color
-                                            hideOnPress: true,
-                                            autoHide: true,
-                                            duration: 1000,
-                                        });
-                                        setDoneJobDialog({isVisible: false});
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }}>
-                            Yes
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
-            <Portal>
-                <Dialog
-                    style={{backgroundColor: CustomColors.WHITE}}
-                    visible={customerFormInputDisplayDialog.isVisible}
-                    dismissable={false}
-                    needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
-                    onDismiss={() => {
-                        setCustomerFormInputDisplayDialog({...customerFormInputDisplayDialog, isVisible: false});
-                    }}>
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
+            <Dialog
+                visible={cancelJobDialog.isVisible}
+                onDismiss={() => {
+                    setCancelJobDialog({isVisible: false});
+                }}>
+                <Dialog.Title>Cancel Job Confirmation</Dialog.Title>
+                <Dialog.Content>
+                    <Text>
+                        Are you sure you want to cancel this job? Deposits will be refund to the customer and this
+                        action cannot be reverted.
+                    </Text>
+                </Dialog.Content>
+                <Dialog.Actions>
+                    <Button
+                        style={{width: 80}}
+                        color={CustomColors.GRAY}
+                        onPress={() => {
+                            setCancelJobDialog({isVisible: false});
                         }}>
-                        <Text style={styles.dialogTitle}>Customer Form Response</Text>
-                        <IconButton
-                            icon="close"
-                            size={24}
-                            color={CustomColors.GRAY_DARK}
-                            onPress={() => {
-                                setCustomerFormInputDisplayDialog({isVisible: false, customerFormResponse: []});
-                            }}></IconButton>
-                    </View>
+                        No
+                    </Button>
+                    <Button
+                        style={{width: 80}}
+                        onPress={() => {
+                            RequestService.vendorCancelRequest(requestId, requestData.customerInfo.userId)
+                                .then(data => {
+                                    showMessage({
+                                        message: 'Request successfully cancelled.',
+                                        type: 'info',
+                                        position: 'center',
+                                        titleStyle: {marginTop: 5},
+                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                        color: 'white', // text color
+                                        hideOnPress: true,
+                                        autoHide: true,
+                                        duration: 1000,
+                                    });
+                                    setCancelJobDialog({isVisible: false});
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                            setCancelJobDialog({isVisible: false});
+                        }}>
+                        Yes
+                    </Button>
+                </Dialog.Actions>
+            </Dialog>
+            <Dialog
+                visible={googleMapRedirectDialog.isVisible}
+                onDismiss={() => {
+                    setGoogleMapRedirectDialog({isVisible: false});
+                }}>
+                <Dialog.Title>Redirect to Google Maps</Dialog.Title>
+                <Dialog.Content>
+                    <Text>
+                        Do you want to view the actual location at google map? you will be redirect to google map app.
+                    </Text>
+                </Dialog.Content>
+                <Dialog.Actions>
+                    <Button
+                        style={{width: 80}}
+                        color={CustomColors.GRAY}
+                        onPress={() => {
+                            setGoogleMapRedirectDialog({isVisible: false});
+                        }}>
+                        No
+                    </Button>
+                    <Button
+                        style={{width: 80}}
+                        onPress={() => {
+                            var url = `https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${googleMapRedirectDialog.redirectCoordinate}`;
+                            Linking.canOpenURL(url)
+                                .then(supported => {
+                                    if (!supported) {
+                                        console.log("Can't handle url: " + url);
+                                    } else {
+                                        return Linking.openURL(url);
+                                    }
+                                })
+                                .catch(err => console.error('An error occurred', err));
 
-                    <Dialog.ScrollArea style={{paddingHorizontal: 0, paddingVertical: 0}}>
-                        <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{flexGrow: 1}}>
-                            <View style={{widht: '100%', flex: 1, paddingHorizontal: 16, paddingVertical: 24}}>
-                                {customerFormInputDisplayDialog.customerFormResponse.map((currentQuestion, index) => (
-                                    <View
-                                        style={styles.questionSetupWrapper}
-                                        needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
-                                        key={currentQuestion.id}>
-                                        <Text style={[styles.inputTitle, {marginTop: 8, marginLeft: 8}]}>
-                                            {currentQuestion.questionName}
-                                        </Text>
-                                        {currentQuestion.questionType == Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? (
-                                            <TextInput
-                                                disabled
-                                                mode="outlined"
-                                                label="Customer response"
-                                                multiline
-                                                placeholder="Your question"
-                                                style={[styles.inputPrompt]}
-                                                value={currentQuestion.response}></TextInput>
-                                        ) : null}
+                            setGoogleMapRedirectDialog({isVisible: false});
+                        }}>
+                        Yes
+                    </Button>
+                </Dialog.Actions>
+            </Dialog>
+            <Dialog
+                visible={startJobDialog.isVisible}
+                onDismiss={() => {
+                    setStartJobDialog({isVisible: false});
+                }}>
+                <Dialog.Title>Start job confirmation</Dialog.Title>
+                <Dialog.Content>
+                    <Text>
+                        Are you sure you want to start this job? This will notify the customer and this action cannot be
+                        reverted.
+                    </Text>
+                </Dialog.Content>
+                <Dialog.Actions>
+                    <Button
+                        style={{width: 80}}
+                        color={CustomColors.GRAY}
+                        onPress={() => {
+                            setStartJobDialog({isVisible: false});
+                        }}>
+                        No
+                    </Button>
+                    <Button
+                        style={{width: 80}}
+                        onPress={() => {
+                            RequestService.startJobRequest(startJobDialog.requestId, requestData.customerInfo.userId)
+                                .then(data => {
+                                    showMessage({
+                                        message: 'Request Successfully started. Customer may now see your location',
+                                        type: 'info',
+                                        position: 'center',
+                                        titleStyle: {marginTop: 5},
+                                        style: {height: 80},
+                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                        color: 'white', // text color
+                                        hideOnPress: true,
+                                        autoHide: true,
+                                        duration: 1000,
+                                    });
+                                    setStartJobDialog({isVisible: false});
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                        }}>
+                        Yes
+                    </Button>
+                </Dialog.Actions>
+            </Dialog>
+            <Dialog
+                visible={doneJobDialog.isVisible}
+                onDismiss={() => {
+                    setDoneJobDialog({isVisible: false});
+                    setPaymentReceived({...paymentReceived, value: '', error: ''});
+                }}>
+                <Dialog.Title>Job completed confirmation</Dialog.Title>
+                <Dialog.Content>
+                    <Text
+                        style={{
+                            fontFamily: CustomTypography.FONT_FAMILY_REGULAR,
+                            fontSize: CustomTypography.FONT_SIZE_12,
+                        }}>
+                        Are you sure you want to set this job to completed? Please enter the payment you received for
+                        this jobs as a record in the system.
+                    </Text>
+                    <TextInput
+                        mode="outlined"
+                        style={[styles.inputPrompt]}
+                        left={<TextInput.Affix text="RM" />}
+                        label="Payment Received"
+                        name="paymentReceived"
+                        placeholder="Payment Received"
+                        keyboardType="numeric"
+                        value={paymentReceived.value}
+                        onChangeText={input => {
+                            console.log(input);
+                            if (!input) {
+                                setPaymentReceived({
+                                    ...paymentReceived,
+                                    value: input,
+                                    error: 'Payment receive is a mandatory input.',
+                                });
+                                return;
+                            }
+                            if (!input.match(/^\d+(\.\d+)?$/g)) {
+                                setPaymentReceived({
+                                    ...paymentReceived,
+                                    value: input,
+                                    error: 'Please enter a positive number.',
+                                });
+                                return;
+                            }
 
-                                        {currentQuestion.questionType ==
-                                        Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? null : (
-                                            <View style={{marginTop: 16}}>
-                                                {currentQuestion.options.map((option, i) => (
-                                                    <View
-                                                        style={{flexDirection: 'row', alignItems: 'center'}}
-                                                        key={option.optionId}>
-                                                        {currentQuestion.questionType ==
-                                                        Constants.QUESTIONNAIRE_TYPE.CHECK_BOX ? (
-                                                            <Checkbox
-                                                                style={{marginTop: 5}}
-                                                                status={
-                                                                    currentQuestion.response.includes(
-                                                                        option.optionId.toString(),
-                                                                    )
-                                                                        ? 'checked'
-                                                                        : 'unchecked'
-                                                                }
-                                                                disabled
-                                                            />
-                                                        ) : null}
-                                                        {currentQuestion.questionType ==
-                                                        Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ? (
-                                                            <RadioButton
-                                                                status={
-                                                                    currentQuestion.response == option.optionId
-                                                                        ? 'checked'
-                                                                        : 'unchecked'
-                                                                }
-                                                                disabled
-                                                            />
-                                                        ) : null}
-                                                        <TextInput
+                            setPaymentReceived({...paymentReceived, error: '', value: input});
+                        }}
+                    />
+                    {!!paymentReceived.error ? (
+                        <HelperText type="error" style={styles.errorText} visible={true}>
+                            {paymentReceived.error}
+                        </HelperText>
+                    ) : null}
+                </Dialog.Content>
+                <Dialog.Actions>
+                    <Button
+                        style={{width: 80}}
+                        color={CustomColors.GRAY}
+                        onPress={() => {
+                            setDoneJobDialog({isVisible: false});
+                            setPaymentReceived({...paymentReceived, value: '', error: ''});
+                        }}>
+                        No
+                    </Button>
+                    <Button
+                        style={{width: 80}}
+                        onPress={() => {
+                            if (!paymentReceived.value) {
+                                setPaymentReceived({
+                                    ...paymentReceived,
+                                    error: 'Payment receive is a mandatory input.',
+                                });
+                                return;
+                            }
+                            if (!paymentReceived.value.match(/^\d+(\.\d+)?$/g)) {
+                                setPaymentReceived({
+                                    ...paymentReceived,
+                                    error: 'Please enter a positive and valid number.',
+                                });
+                                return;
+                            }
+
+                            RequestService.completeJobRequest(
+                                doneJobDialog.requestId,
+                                requestData.customerInfo.userId,
+                                parseFloat(paymentReceived.value),
+                            )
+                                .then(data => {
+                                    showMessage({
+                                        message: 'Request Successfully Completed.',
+                                        type: 'info',
+                                        position: 'center',
+                                        titleStyle: {marginTop: 5},
+                                        backgroundColor: 'rgba(0,0,0,0.6)', // background color
+                                        color: 'white', // text color
+                                        hideOnPress: true,
+                                        autoHide: true,
+                                        duration: 1000,
+                                    });
+                                    setDoneJobDialog({isVisible: false});
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                        }}>
+                        Yes
+                    </Button>
+                </Dialog.Actions>
+            </Dialog>
+            <Dialog
+                style={{backgroundColor: CustomColors.WHITE}}
+                visible={customerFormInputDisplayDialog.isVisible}
+                dismissable={false}
+                needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
+                onDismiss={() => {
+                    setCustomerFormInputDisplayDialog({...customerFormInputDisplayDialog, isVisible: false});
+                }}>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingHorizontal: 16,
+                        paddingVertical: 8,
+                    }}>
+                    <Text style={styles.dialogTitle}>Customer Form Response</Text>
+                    <IconButton
+                        icon="close"
+                        size={24}
+                        color={CustomColors.GRAY_DARK}
+                        onPress={() => {
+                            setCustomerFormInputDisplayDialog({isVisible: false, customerFormResponse: []});
+                        }}></IconButton>
+                </View>
+
+                <Dialog.ScrollArea style={{paddingHorizontal: 0, paddingVertical: 0}}>
+                    <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{flexGrow: 1}}>
+                        <View style={{widht: '100%', flex: 1, paddingHorizontal: 16, paddingVertical: 24}}>
+                            {customerFormInputDisplayDialog.customerFormResponse.map((currentQuestion, index) => (
+                                <View
+                                    style={styles.questionSetupWrapper}
+                                    needsOffscreenAlphaCompositing={true} //Fix Elevation animating issue
+                                    key={currentQuestion.id}>
+                                    <Text style={[styles.inputTitle, {marginTop: 8, marginLeft: 8}]}>
+                                        {currentQuestion.questionName}
+                                    </Text>
+                                    {currentQuestion.questionType == Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? (
+                                        <TextInput
+                                            disabled
+                                            mode="outlined"
+                                            label="Customer response"
+                                            multiline
+                                            placeholder="Your question"
+                                            style={[styles.inputPrompt]}
+                                            value={currentQuestion.response}></TextInput>
+                                    ) : null}
+
+                                    {currentQuestion.questionType == Constants.QUESTIONNAIRE_TYPE.TEXT_ANSWER ? null : (
+                                        <View style={{marginTop: 16}}>
+                                            {currentQuestion.options.map((option, i) => (
+                                                <View
+                                                    style={{flexDirection: 'row', alignItems: 'center'}}
+                                                    key={option.optionId}>
+                                                    {currentQuestion.questionType ==
+                                                    Constants.QUESTIONNAIRE_TYPE.CHECK_BOX ? (
+                                                        <Checkbox
+                                                            style={{marginTop: 5}}
+                                                            status={
+                                                                currentQuestion.response.includes(
+                                                                    option.optionId.toString(),
+                                                                )
+                                                                    ? 'checked'
+                                                                    : 'unchecked'
+                                                            }
                                                             disabled
-                                                            mode="flat"
-                                                            label=""
-                                                            placeholder="Option name"
-                                                            style={[
-                                                                styles.inputPrompt,
-                                                                {
-                                                                    flex: 1,
-                                                                    height: 36,
-                                                                    marginHorizontal: 8,
-                                                                    marginTop: 0,
-                                                                    backgroundColor: 'transparent',
-                                                                },
-                                                            ]}
-                                                            value={option.optionName}
                                                         />
-                                                        <View style={{width: 30, height: 30}}></View>
-                                                    </View>
-                                                ))}
-                                            </View>
-                                        )}
-                                    </View>
-                                ))}
-                            </View>
-                        </ScrollView>
-                    </Dialog.ScrollArea>
-                </Dialog>
-            </Portal>
+                                                    ) : null}
+                                                    {currentQuestion.questionType ==
+                                                    Constants.QUESTIONNAIRE_TYPE.MULTIPLE_CHOICE ? (
+                                                        <RadioButton
+                                                            status={
+                                                                currentQuestion.response == option.optionId
+                                                                    ? 'checked'
+                                                                    : 'unchecked'
+                                                            }
+                                                            disabled
+                                                        />
+                                                    ) : null}
+                                                    <TextInput
+                                                        disabled
+                                                        mode="flat"
+                                                        label=""
+                                                        placeholder="Option name"
+                                                        style={[
+                                                            styles.inputPrompt,
+                                                            {
+                                                                flex: 1,
+                                                                height: 36,
+                                                                marginHorizontal: 8,
+                                                                marginTop: 0,
+                                                                backgroundColor: 'transparent',
+                                                            },
+                                                        ]}
+                                                        value={option.optionName}
+                                                    />
+                                                    <View style={{width: 30, height: 30}}></View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+                            ))}
+                        </View>
+                    </ScrollView>
+                </Dialog.ScrollArea>
+            </Dialog>
         </View>
     );
 };

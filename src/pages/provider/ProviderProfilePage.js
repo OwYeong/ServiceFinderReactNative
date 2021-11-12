@@ -106,7 +106,6 @@ const ProviderProfilePage = () => {
                         var {x, y, width, height} = event.nativeEvent.layout;
 
                         setScreenHeight(height);
-                        console.log('myLayout' + height);
                     }}>
                     <ScrollView
                         style={{flex: 1}}

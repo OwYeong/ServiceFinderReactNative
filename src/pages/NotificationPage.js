@@ -89,7 +89,6 @@ const NotificationPage = () => {
                                                     case Constants.NOTIFICATION_ACTION.NAVIGATE_TO_REVIEW:
                                                         const isReviewAvailable = await ReviewService.getReviewByRequestId(notification?.actionPayload?.requestId);
 
-                                                        console.log(isReviewAvailable)
                                                         if(isReviewAvailable) {
                                                             navigation.navigate('ViewRequest', {requestId: notification?.actionPayload?.requestId});
                                                         } else {

@@ -13,7 +13,6 @@ const CustomFormikTextInput = props => {
 
     const hasError = errors[name] && touched[name];
 
-    if (hasError) console.log('has error ' + name);
     return (
         <Fragment>
             <TextInput

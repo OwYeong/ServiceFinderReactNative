@@ -35,7 +35,7 @@ import RootStack from '@navigations/RootStack';
 import {setLoginBlock} from '@slices/appSlice';
 import UserService from '@services/UserService';
 import FlashMessage from 'react-native-flash-message';
-import {PortalProvider, PortalHost} from '@gorhom/portal';
+import {PortalProvider} from '@gorhom/portal';
 import BottomSheet from 'react-native-bottomsheet-reanimated';
 
 import ImageCropPicker from 'react-native-image-crop-picker';
@@ -77,7 +77,6 @@ const App: () => Node = () => {
     };
     var autoFetchLocked = false;
 
-    console.log('hahaha');
 
     useEffect(() => {
         GoogleSignin.configure({
@@ -88,9 +87,7 @@ const App: () => Node = () => {
 
         const authenticationListener = auth().onAuthStateChanged(user => {
             // LocalNotification()
-            console.log('yoyo, authenticated');
-            console.log(user);
-            console.log(user?.providerData);
+            console.log('User is authenticated');
             if (!user) {
                 autoFetchLocked = true;
             }
@@ -115,8 +112,6 @@ const App: () => Node = () => {
     }, []);
 
     useEffect(() => {
-        console.log('logged in use');
-        console.log(userInfo);
         if (!!userInfo) {
             setIsAuth(true);
         }

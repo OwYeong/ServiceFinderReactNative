@@ -121,7 +121,6 @@ const RegisterPage = () => {
     const registerAccount = values => {
         const {firstName, lastName, email, password} = values;
 
-        console.log('gagagaga');
 
         UserService.customer.registerAccount(firstName, lastName, email, password)
             .then(msg => {
@@ -287,7 +286,6 @@ const RegisterPage = () => {
                                                     <TextInput.Icon
                                                         name="visibility"
                                                         onPress={() => {
-                                                            console.log('hellow');
                                                             setIsPasswordHide(false);
                                                         }}
                                                     />

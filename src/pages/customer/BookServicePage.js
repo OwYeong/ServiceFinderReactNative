@@ -553,7 +553,6 @@ const BookServicePage = ({route}) => {
             }
 
             if (!!providerInfo?.workingHours) {
-                console.log('hehehe');
                 if (
                     moment(selectedDateTime).hours() < providerInfo?.workingHours?.startHour ||
                     moment(selectedDateTime).hours() >= providerInfo?.workingHours?.endHour

@@ -521,7 +521,6 @@ const ManageSchedule = () => {
                                     style={{width: 100}}
                                     onPress={async () => {
                                         try {
-                                            console.log(selecteEndHourIn24h);
                                             const selecteEndHourIn24h = moment(
                                                 `${selectedEndHour.selectedHour[0]} ${selectedEndHour.selectedHour[1]}`,
                                                 ['h A'],

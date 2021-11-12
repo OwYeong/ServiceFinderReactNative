@@ -145,7 +145,6 @@ const ChangePassword = () => {
                                                     <TextInput.Icon
                                                         name="visibility"
                                                         onPress={() => {
-                                                            console.log('hellow');
                                                             setIsPasswordHide(false);
                                                         }}
                                                     />

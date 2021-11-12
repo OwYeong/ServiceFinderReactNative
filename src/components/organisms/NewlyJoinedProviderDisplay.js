@@ -16,7 +16,7 @@ const NewlyJoinedProviderDisplay = ({
     style
 }) => {
     const navigation = useNavigation();
-    console.log(coverImageUrl);
+    
     return (
         <Surface style={[styles.container, style]} needsOffscreenAlphaCompositing={true} >
             <ImageBackground style={styles.businessCoverImg} source={!!coverImageUrl?{uri: coverImageUrl}: require('@assets/images/default-coverImage.png')}></ImageBackground>
