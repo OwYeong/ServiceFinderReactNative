@@ -455,10 +455,6 @@ const SetupBusinessProfileStepper = () => {
     };
 
     useEffect(() => {
-        console.log('hellow');
-    }, [addressQuery]);
-
-    useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {});
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             if (addressSearchBarRef.current.isFocused()) {
@@ -481,8 +477,7 @@ const SetupBusinessProfileStepper = () => {
 
     const finishSetup = withAdditionalForm => {
         setLoadingModal({isVisible: true, modalTitle: 'Finishing Setup'});
-        console.log('cover img pat{}h ', userInput.businessProfile.coverImagePath);
-        console.log('business logo img path ', userInput.businessProfile.businessLogoPath);
+        
         var promises = [];
 
         const isUserSetupCoverImage = !!userInput.businessProfile.coverImagePath;
@@ -760,7 +755,6 @@ const SetupBusinessProfileStepper = () => {
                                                                                         }
                                                                                         borderless
                                                                                         onPress={() => {
-                                                                                            console.log('prfesseed');
                                                                                             onChange(name)(key);
                                                                                             // handleChange('serviceType')('');
                                                                                         }}
@@ -1036,7 +1030,6 @@ const SetupBusinessProfileStepper = () => {
                                         style={{width: '100%', marginTop: 16}}
                                         onLayout={event => {
                                             var {x, y, width, height} = event.nativeEvent.layout;
-                                            console.log('onlayout', event.nativeEvent.layout);
 
                                             setSearchBary(y);
                                         }}>
@@ -1065,7 +1058,6 @@ const SetupBusinessProfileStepper = () => {
                                                     inputStyle={{padding: 0, margin: 0, fontSize: 14}}
                                                     onFocus={event => {
                                                         // `bind` the function if you're using ES6 classes
-                                                        console.log('y is ', searchBary);
 
                                                         serviceCoverageSectionScrollViewRef.current.scrollTo({
                                                             x: 0,
@@ -1183,7 +1175,6 @@ const SetupBusinessProfileStepper = () => {
                                                         });
                                                         setAddressQuery(response.addresses[0].address.freeformAddress);
 
-                                                        console.log('asd');
                                                         // addressSearchBarRef.current.setNativeProps({ selection:{ start:0 } })
                                                     })
                                                     .catch(err => {

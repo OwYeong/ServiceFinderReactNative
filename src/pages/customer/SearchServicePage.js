@@ -74,7 +74,6 @@ const SearchServicePage = ({route}) => {
                 return {...category, isExpanded: false};
             });
 
-            console.log('setted');
             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
             setServiceCategories(categoriesWithExpandedAttr);
         } catch (error) {
@@ -93,7 +92,7 @@ const SearchServicePage = ({route}) => {
             setIsSearching(true);
 
             const results = await SearchService.searchProviderInCustomerLocation(searchKeyword);
-            console.log('after SEarch');
+            
             setSearchResults({
                 isLoadingMoreData: false,
                 lastDocumentInList: results.lastVisibleDocument,

@@ -86,7 +86,6 @@ const PhoneVerification = () => {
     });
 
     const onPressFlag = () => {
-        console.log('presss flag');
         setShowCountryPicker(true);
     };
 

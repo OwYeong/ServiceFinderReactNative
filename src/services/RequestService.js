@@ -450,7 +450,6 @@ const RequestService = {
                     });
                 } else {
                 }
-                console.log('clasg check');
                 console.log(result);
                 const isTimetableClashOccur = result.length > 0;
                 resolve(isTimetableClashOccur);

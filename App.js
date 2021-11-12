@@ -77,7 +77,6 @@ const App: () => Node = () => {
     };
     var autoFetchLocked = false;
 
-    console.log('hahaha');
 
     useEffect(() => {
         GoogleSignin.configure({
@@ -88,9 +87,7 @@ const App: () => Node = () => {
 
         const authenticationListener = auth().onAuthStateChanged(user => {
             // LocalNotification()
-            console.log('yoyo, authenticated');
-            console.log(user);
-            console.log(user?.providerData);
+            console.log('User is authenticated');
             if (!user) {
                 autoFetchLocked = true;
             }
@@ -115,8 +112,6 @@ const App: () => Node = () => {
     }, []);
 
     useEffect(() => {
-        console.log('logged in use');
-        console.log(userInfo);
         if (!!userInfo) {
             setIsAuth(true);
         }

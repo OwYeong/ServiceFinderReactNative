@@ -94,8 +94,6 @@ const CustomerHomepage = () => {
     const fetchNewlyJoinedProvider = async () => {
         try {
             const newlyJoinedProviders = await ProviderService.getProviderJoinedInLast30DayWithPagination();
-            console.log('YESYES');
-            console.log(newlyJoinedProviders);
 
             setIsFetchingNewlyJoinedProvider(false);
             setNewlyJoinedProviderList({
@@ -171,7 +169,6 @@ const CustomerHomepage = () => {
                     popularServiceList.lastDocumentInList,
                 );
 
-                console.log('im called');
 
                 setTimeout(() => {
                     setPopularServiceList({
@@ -271,7 +268,6 @@ const CustomerHomepage = () => {
                                 style={styles.headerGradient}>
                                 <TouchableWithoutFeedback
                                     onPress={() => {
-                                        console.log('haha');
                                         navigation.navigate('LocationPicker');
                                     }}>
                                     <View style={styles.locationWrapper}>
@@ -296,7 +292,6 @@ const CustomerHomepage = () => {
                                         onLayout={event => {
                                             var {x, y, width, height} = event.nativeEvent.layout;
 
-                                            console.log('gagaga' + y);
 
                                             setSearchBarxy({x: x, y: y});
                                         }}>

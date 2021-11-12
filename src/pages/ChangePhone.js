@@ -73,7 +73,6 @@ const ChangePhone = () => {
     });
 
     const onPressFlag = () => {
-        console.log('presss flag');
         setShowCountryPicker(true);
     };
 

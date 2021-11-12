@@ -115,8 +115,6 @@ const JobRequestControlDashboard = ({route}) => {
         ) {
             realTimeLocationWatcher = Geolocation.watchPosition(
                 position => {
-                    console.log('my real time position');
-                    console.log(position);
                     setRealTimeLocation({
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,

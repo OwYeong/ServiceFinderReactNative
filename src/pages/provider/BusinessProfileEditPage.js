@@ -522,7 +522,6 @@ const BusinessProfileEditPage = () => {
                                                                     style={styles.categoryButtonWrapper}
                                                                     borderless
                                                                     onPress={() => {
-                                                                        console.log('prfesseed');
                                                                         onChange(name)(key);
                                                                         // handleChange('serviceType')('');
                                                                     }}
@@ -729,7 +728,6 @@ const BusinessProfileEditPage = () => {
                                             style={{width: '100%', marginTop: 16}}
                                             onLayout={event => {
                                                 var {x, y, width, height} = event.nativeEvent.layout;
-                                                console.log('onlayout', event.nativeEvent.layout);
 
                                                 setSearchBary(y);
                                             }}>
@@ -758,7 +756,6 @@ const BusinessProfileEditPage = () => {
                                                         inputStyle={{padding: 0, margin: 0, fontSize: 14}}
                                                         onFocus={event => {
                                                             // `bind` the function if you're using ES6 classes
-                                                            console.log('y is ', searchBary);
 
                                                             scrollViewRef.current.scrollTo({
                                                                 x: 0,
@@ -880,7 +877,6 @@ const BusinessProfileEditPage = () => {
                                                                 response.addresses[0].address.freeformAddress,
                                                             );
 
-                                                            console.log('asd');
                                                             // addressSearchBarRef.current.setNativeProps({ selection:{ start:0 } })
                                                         })
                                                         .catch(err => {

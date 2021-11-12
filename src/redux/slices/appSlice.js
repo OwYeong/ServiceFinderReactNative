@@ -11,7 +11,6 @@ export const appSlice = createSlice({
             state.isLoading = action.payload;
         },
         setLoginBlock: (state, action) => {
-            console.log('hello im called')
             state.loginBlock = action.payload;
         },
     },
