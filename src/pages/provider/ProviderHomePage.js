@@ -316,7 +316,7 @@ const ProviderHomePage = () => {
                                                 color: CustomColors.SUCCESS,
                                                 marginTop: 16,
                                             }}>
-                                            RM {providerInfo?.totalEarnings || '0'}
+                                            RM {providerInfo?.totalEarnings.toFixed(2) || '0'}
                                         </Text>
                                         <Text
                                             style={{
@@ -430,7 +430,7 @@ const ProviderHomePage = () => {
                                                 color: '#ffd52b',
                                                 marginTop: 16,
                                             }}>
-                                            {providerInfo?.averageRatings} stars
+                                            {providerInfo?.averageRatings.toFixed(2)} stars
                                         </Text>
                                         <Text
                                             style={{
