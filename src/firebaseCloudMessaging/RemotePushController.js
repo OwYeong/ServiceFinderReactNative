@@ -1,6 +1,9 @@
 import React, {useEffect} from 'react';
 import PushNotification from 'react-native-push-notification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RequestService from '@services/RequestService';
+import NotificationService from '@services/NotificationService';
+import moment from 'moment';
 
 const RemotePushController = () => {
     useEffect(() => {
@@ -18,9 +21,26 @@ const RemotePushController = () => {
             },
 
             // (required) Called when a remote or local notification is opened or received
-            onNotification: function (notification) {
+            onNotification: async function (notification) {
                 //Receive signal from Firebase Cloud Messaging
                 console.log('REMOTE NOTIFICATION ==>', notification);
+
+                if(notification.title == "Your request has been accepted" && !!notification.data){
+                    try{
+                        const requestId = notification?.data?.requestId;
+
+                        if(!!requestId) {
+                            const requestData = await RequestService.getRequestByIdOneTimeRead(requestId);
+
+                            NotificationService.scheduleNotificationLocally('You have a service appointment in 30 minutes.', `You have a service request with ${requestData?.serviceProvider?.businessName} later at ${moment(new Date(requestData?.requestTimeSlot?.start)).format('hh:mm A')}`, moment(new Date(requestData?.requestTimeSlot?.start)).subtract(30, 'minutes').toDate());
+
+
+                        }
+                    } catch(error){
+                        console.log("error when scheduling local notification")
+                        console.log(error)
+                    }
+                }
 
                 // Push the notification to device
                 PushNotification.localNotification({
