@@ -11,6 +11,7 @@ import {
     TouchableHighlight,
     TouchableOpacity,
     useWindowDimensions,
+    RefreshControl,
     View,
 } from 'react-native';
 import {CustomColors, CustomMixins, CustomTypography} from '@styles';
@@ -66,6 +67,19 @@ const ProviderProfilePage = () => {
 
     const [isBusinessLogoLoading, setIsBusinessLogoLoading] = useState(false);
     const [isCoverImgLoading, setIsCoverImgLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        
+        ReviewService.getAllReviewOneTimeRead().then(data => {
+            setReviewList(data);
+        });
+
+        ProviderService.fetchProviderDataToRedux();
+        setRefreshing(false);
+
+    }, []);
 
     useEffect(() => {
         ProviderService.getAllPost()
@@ -96,6 +110,8 @@ const ProviderProfilePage = () => {
             });
         }, []),
     );
+
+    
     return (
         <View style={{backgroundColor: 'white'}}>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} />
@@ -109,6 +125,9 @@ const ProviderProfilePage = () => {
                     }}>
                     <ScrollView
                         style={{flex: 1}}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={20} />
+                        }
                         onScroll={event => {
                             console.log(event.nativeEvent.contentOffset.y, ' > ', tabBarOffsetY - 1);
 
