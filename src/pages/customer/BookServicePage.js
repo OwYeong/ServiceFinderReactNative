@@ -254,6 +254,7 @@ const BookServicePage = ({route}) => {
                         backgroundColor: 'rgba(0,0,0,0.6)', // background color
                         color: 'white', // text color
                         titleStyle: {marginTop: 5},
+                        style: {height: 80},
                         hideOnPress: true,
                         autoHide: true,
                         duration: 2000,

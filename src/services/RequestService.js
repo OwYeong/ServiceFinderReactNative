@@ -526,6 +526,10 @@ const RequestService = {
                                 }
                             );
                         }
+
+                        const requestData =  await RequestService.getRequestByIdOneTimeRead(documentId);
+
+                        NotificationService.scheduleNotificationLocally('You have a service request in 30 minutes.', `You have a service request with ${requestData?.customerInfo?.lastName} ${requestData?.customerInfo?.firstName} later at ${moment(new Date(requestData?.requestTimeSlot?.start)).format('hh:mm A')}`, moment(new Date(requestData?.requestTimeSlot?.start)).subtract(30, 'minutes').toDate());
                         resolve('Request successfully accepted!');
                     } catch (err) {
                         console.log(err);

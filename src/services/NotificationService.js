@@ -3,6 +3,7 @@ import {FCM_SERVER_TOKEN} from '@env';
 import firestore from '@react-native-firebase/firestore';
 import firebase from '@react-native-firebase/app';
 import auth from '@react-native-firebase/auth';
+import PushNotification from 'react-native-push-notification';
 
 const NotificationService = {
     sendNotificationToDevice: (userFcmToken, title, body, receiveBy = null, action = null, actionPayload = null) => {
@@ -28,23 +29,29 @@ const NotificationService = {
         }
 
         return new Promise((resolve, reject) => {
+            var postRequestBody = {
+                to: userFcmToken,
+                notification: {
+                    title: title,
+                    body: body,
+                },
+            };
+
+            if(!!actionPayload){
+                postRequestBody = {
+                    ...postRequestBody,
+                    data: actionPayload,
+
+                }
+            }
+
             axios
-                .post(
-                    'https://fcm.googleapis.com/fcm/send',
-                    {
-                        to: userFcmToken,
-                        notification: {
-                            title: title,
-                            body: body,
-                        },
+                .post('https://fcm.googleapis.com/fcm/send', postRequestBody, {
+                    headers: {
+                        Authorization: `key=${FCM_SERVER_TOKEN}`,
+                        'Content-Type': 'application/json',
                     },
-                    {
-                        headers: {
-                            Authorization: `key=${FCM_SERVER_TOKEN}`,
-                            'Content-Type': 'application/json',
-                        },
-                    },
-                )
+                })
                 .then(response => {
                     resolve('success');
                 })
@@ -66,7 +73,6 @@ const NotificationService = {
                     if (querySnapshot.size > 0) {
                         const notifications = [];
                         querySnapshot.forEach(docSnapshot => {
-
                             let notification = {
                                 id: docSnapshot.id,
                                 ...docSnapshot.data(),
@@ -92,6 +98,14 @@ const NotificationService = {
                     console.error(error);
                 },
             );
+    },
+    scheduleNotificationLocally: (title, message, dateTime) => {
+        PushNotification.localNotificationSchedule({
+            channelId: 'default-channel-id', // (required) channelId, if the channel doesn't exist, notification will not trigger.
+            title: title,
+            message: message,
+            date: dateTime,
+        });
     },
 };
 
