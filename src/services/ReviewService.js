@@ -36,7 +36,6 @@ const ReviewService = {
                         } else {
                             callback([]);
                         }
-
                     } catch (error) {
                         console.log(error.stack);
                         console.log('Error -> ChatService.getAllMessageInChatroom\n');
@@ -47,6 +46,38 @@ const ReviewService = {
                     console.error(error);
                 },
             );
+    },
+    getAllReviewOneTimeRead: (providerId = auth().currentUser.uid) => {
+        return new Promise((resolve, reject) => {
+            let popularService = firestore().collection('posts');
+
+            let reviewCollection = firestore().collection('reviews');
+            reviewCollection
+                .where('serviceProviderId', '==', providerId)
+                .orderBy('postedDateTime', 'desc')
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.size > 0) {
+                        const reviews = [];
+
+                        querySnapshot.forEach(docSnapshot => {
+                            let review = {
+                                id: docSnapshot.id,
+                                ...docSnapshot.data(),
+                                postedDateTime: docSnapshot.data().postedDateTime.toDate().toString(),
+                            };
+                            reviews.push(review);
+                        });
+                        resolve(reviews);
+                    } else {
+                        resolve([]);
+                    }
+                })
+                .catch(error => {
+                    console.log('Error -> ProviderService.getPopularServiceOfTheMonthWithPagination\n');
+                    reject(error);
+                });
+        });
     },
     getReviewByRequestId: requestId => {
         return new Promise((resolve, reject) => {

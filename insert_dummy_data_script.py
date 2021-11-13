@@ -74,14 +74,14 @@ service_provider_dummies = [
          'businessCategory': 'car',
          'businessLogoUrl': 'https://firebasestorage.googleapis.com/v0/b/servicefinder-84d4d.appspot.com/o/userData%2FezYmEBCIrCS0H11eyNDgqQC5hlg2%2FbusinessLogo.png?alt=media&token=4652a4b9-db46-4199-9b2a-147e0c4bea24',
          'serviceType': 'carWash',
-         'averageRatings': 5.0,
+         'averageRatings': 4.8,
          'priceEnd': '100',
          'totalEarnings': 1500,
-         'businessDesc': '''CARs International has been operating in the car beauty care services in all the majority of the shopping malls since 1973.  CARs offers many ranges of professional restoration services, each carried out to the utmost level of care and quality according to the ISO:9001 tenets.  Car owners can have their vehicles pampered with services such as paint restoration and protection, paint sealant treatment, vacuuming, interior and engine cleaning.''',
+         'businessDesc': '''CARs International has been operating in the car beauty care services in all the majority of the shopping malls since 1973. \\n\\nCARs offers many ranges of professional restoration services, each carried out to the utmost level of care and quality according to the ISO:9001 tenets.  Car owners can have their vehicles pampered with services such as paint restoration and protection, paint sealant treatment, vacuuming, interior and engine cleaning.''',
          'popularity': {
-             'AUG_2021': 0,
-             'SEP_2021': 0,
-             'OCT_2021': 0,
+             'AUG_2021': 4,
+             'SEP_2021': 5,
+             'OCT_2021': 3,
              'NOV_2021': 0,
              'DEC_2021': 0,
              'JAN_2022': 0,
@@ -91,11 +91,11 @@ service_provider_dummies = [
          },
          'jobsCompleted': 100.0,
          'starStats': {
-             'numOf5Star': 5,
+             'numOf5Star': 4,
              'numOf3Star': 0,
              'numOf2Star': 0,
              'numOf1Star': 0,
-             'numOf4Star': 0
+             'numOf4Star': 1
          },
          'priceStart': '20',
          'serviceCoverage': {
@@ -162,7 +162,7 @@ service_provider_dummies = [
          'businessCategory': 'car',
          'businessLogoUrl': 'https://firebasestorage.googleapis.com/v0/b/servicefinder-84d4d.appspot.com/o/userData%2FPHQqjtdLamPbRMvkIQtkVvNqkYt2%2FbusinessLogo.png?alt=media&token=a3ea8b55-4fb4-42cf-a4b3-3087e40f49cf',
          'serviceType': 'carWash',
-         'averageRatings': 4.8,
+         'averageRatings': 0,
          'priceEnd': '150',
          'totalEarnings': 1500,
          'businessDesc': '''C2W GLOBAL SDN BHD, Is the first company that is currently operating as a mobile car wash and sanitation service in Malaysia. Call2wash has been providing automobile detailing and disinfection service around Klang Valley for the past 7 years. We are driven by market demand to provide excellent vehicle wash solutions, for passenger vehicles and commercial vehicles. Call2wash has made it all possible bringing the car wash right to your car park. Turning it conveniently into a wash bay with our rider at your doorstep.''',
