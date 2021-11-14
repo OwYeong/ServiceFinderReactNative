@@ -103,9 +103,6 @@ const UpcomingServiceListing = () => {
                                             {moment(new Date(request.requestTimeSlot.start)).format(
                                                 'YYYY-MM-DD hh:mm A',
                                             )}
-                                            {request.serviceStatus == Constants.SERVICE_STATUS.SERVICE_IN_PROGRESS
-                                                ? 'zz'
-                                                : null}
                                         </Text>
                                     </View>
                                     <View style={{flexDirection: 'row', alignItems: 'flex-start', marginTop: 16}}>
