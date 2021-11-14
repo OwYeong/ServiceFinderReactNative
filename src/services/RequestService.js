@@ -674,7 +674,7 @@ const RequestService = {
                                 }
                             );
                         }
-                        await ProviderService.updateProviderTotalEarningAndNumOfJobCompleted(paymentReceived);
+                        await ProviderService.updateProviderTotalEarningAndNumOfJobCompleted(paymentReceived+10);
                         await ProviderService.fetchProviderDataToRedux();
                         resolve('Request successfully started!');
                     } catch (err) {
