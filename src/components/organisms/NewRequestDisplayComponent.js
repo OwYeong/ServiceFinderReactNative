@@ -261,9 +261,7 @@ const NewRequestDisplayComponent = () => {
                                                                     <Checkbox
                                                                         style={{marginTop: 5}}
                                                                         status={
-                                                                            currentQuestion.response.includes(
-                                                                                option.optionId.toString(),
-                                                                            )
+                                                                            currentQuestion.response.indexOf(option.optionId) != -1
                                                                                 ? 'checked'
                                                                                 : 'unchecked'
                                                                         }
