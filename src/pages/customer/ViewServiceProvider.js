@@ -412,6 +412,7 @@ const ViewServiceProvider = ({route}) => {
                                                 <ReviewDisplayComponent
                                                     dataList={reviewList}
                                                     averageRating={providerInfo?.averageRatings || 0}
+                                                    isScrollEnabled={isPhotoListingScrollable}
                                                     starStats={
                                                         providerInfo?.starStats || {
                                                             numOf1Star: 0,
