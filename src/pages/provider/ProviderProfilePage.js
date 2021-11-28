@@ -323,6 +323,7 @@ const ProviderProfilePage = () => {
                                                 <ReviewDisplayComponent
                                                     dataList={reviewList}
                                                     averageRating={providerInfo?.averageRatings}
+                                                    isScrollEnabled={isPhotoListingScrollable}
                                                     starStats={providerInfo?.starStats}
                                                 />
                                             );
